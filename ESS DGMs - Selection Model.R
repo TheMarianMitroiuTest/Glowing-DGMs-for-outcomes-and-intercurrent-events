@@ -73,13 +73,12 @@ options(mc.cores = parallel::detectCores()) # M1 with parallel, Old1 without par
 
 Scenario <- c("A")
 
-# simulation
+# simulation parameters
 
-
-set.seed(2147483629)
+set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 1# number of generated datasets # number of trials per scaling factor
-scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5)
+m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
+scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
 #c(0.25, 0.5, 1, 2, 2.5) steps for scaling factor
