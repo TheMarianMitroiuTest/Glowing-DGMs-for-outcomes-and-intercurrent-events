@@ -6,7 +6,7 @@
 #### Simulation study 
 #### Scenario A "early separation and treatment effect maintained"
 
-#test
+#test test
 
 ### DGM
 rm(list=ls())
