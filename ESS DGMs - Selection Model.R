@@ -45,6 +45,7 @@ library(lmerTest)
 library(parameters)
 library(sandwich)
 library(lmtest)
+library(optimx)
 #library(clubSandwich)
 
 
@@ -86,7 +87,7 @@ scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the 
 
 
 
-n <- 190# number of patients
+n <- 2000# number of patients
 
 CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
 colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
@@ -338,7 +339,7 @@ for (s in 1:length(scaling_factor)) {
  
     p<- ggplot(data = d, aes(x = visit, y = MADRS10, group = id)) 
     plot1 <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(0, 50)) ; plot1
+      scale_y_continuous(limits = c(-10, 60)) ; plot1
     
     
     
@@ -487,7 +488,7 @@ for (s in 1:length(scaling_factor)) {
       #                           ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week5", "NA",
        #                                 ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week6", "NA", d_mis_L[,10]))))
     
-    View(d_mis_L)
+    #View(d_mis_L)
     
     d_mis_L$LoE_YES <- ifelse(d_mis_L[,5]==1 & d_mis_L[,10]==0, 1, 0)
     describe(d_mis_L$LoE_YES)
@@ -634,7 +635,7 @@ for (s in 1:length(scaling_factor)) {
     p<- ggplot(data = d_mis_L, aes(x = Visit, y = MADRS10, group = id, color=Behavior)) 
     #p + geom_line() + facet_grid(~ Treat) 
     plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(0, 50)); plot_all
+      scale_y_continuous(limits = c(-10, 60)); plot_all
     
     
 
@@ -642,14 +643,14 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_L_LoE <- d_mis_L[d_mis_L$LoE_YES==1,] # subset only patients that experienced LoE
     d_mis_L_AE <- d_mis_L[d_mis_L$AE_Yes==1,] # subset only patients that experienced AE
-    
+    d_mis_L_NoIE <- d_mis_L[d_mis_L$LoE_YES==0 & d_mis_L$AE_Yes==0,] # subset only patients that did not experience any IE
     
 
     
     # just LoE patients with true trajectory
     p<- ggplot(data = d_mis_L_LoE, aes(x = Visit, y = MADRS10, group = id))
     plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(0, 50)); plot_LoE
+      scale_y_continuous(limits = c(-10, 60)); plot_LoE
     
     #View(d_mis_L)
     
@@ -658,13 +659,13 @@ for (s in 1:length(scaling_factor)) {
     # just AE patients with true trajectory
     p<- ggplot(data = d_mis_L_AE, aes(x = Visit, y = MADRS10, group = id))
     plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(0, 50)) ; plot_AE
+      scale_y_continuous(limits = c(-10, 60)) ; plot_AE
     
     
     # just No IE patients with true trajectory
     p<- ggplot(data = d_mis_L_NoIE, aes(x = Visit, y = MADRS10, group = id))
    plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-     scale_y_continuous(limits = c(0, 50)); plot_NoIE
+     scale_y_continuous(limits = c(-10, 60)); plot_NoIE
     
     
     
@@ -716,13 +717,16 @@ for (s in 1:length(scaling_factor)) {
 }
 
 
+
+
+
 (plot1 / plot_all) /
 
 (plot_LoE / plot_AE / plot_NoIE)
 
 
 
-plot1 / plot_all / plot_LoE / plot_AE / plot_NoIE
+plot_all / plot_LoE / plot_AE / plot_NoIE
 
 
 (plot_all / plot_all) | (plot_all/plot_all)
@@ -772,66 +776,66 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
 
 # Use simulated trial with highest percentage of IE
 
-#View(SimTrial_sm_5000_1_5)
-describe(SimTrial_sm_5000_1_5)
+#View(SimTrial_sm_2000_1_5)
+describe(SimTrial_sm_2000_1_5)
 
 # prepare the dataset for reparameterisation to not have any treatment coefficient at baseline
 
-SimTrial_sm_190_1_5$V0 <- 0
-SimTrial_sm_190_1_5$V0[SimTrial_sm_190_1_5$Visit == "Baseline"] <- 1
+SimTrial_sm_2000_1_5$V0 <- 0
+SimTrial_sm_2000_1_5$V0[SimTrial_sm_2000_1_5$Visit == "Baseline"] <- 1
 
-SimTrial_sm_190_1_5$V7 <- 0
-SimTrial_sm_190_1_5$V7[SimTrial_sm_190_1_5$Visit == "Week1"] <- 1
+SimTrial_sm_2000_1_5$V7 <- 0
+SimTrial_sm_2000_1_5$V7[SimTrial_sm_2000_1_5$Visit == "Week1"] <- 1
 
-SimTrial_sm_190_1_5$V14 <- 0
-SimTrial_sm_190_1_5$V14[SimTrial_sm_190_1_5$Visit == "Week2"] <- 1
+SimTrial_sm_2000_1_5$V14 <- 0
+SimTrial_sm_2000_1_5$V14[SimTrial_sm_2000_1_5$Visit == "Week2"] <- 1
 
-SimTrial_sm_190_1_5$V21 <- 0
-SimTrial_sm_190_1_5$V21[SimTrial_sm_190_1_5$Visit == "Week3"] <- 1
+SimTrial_sm_2000_1_5$V21 <- 0
+SimTrial_sm_2000_1_5$V21[SimTrial_sm_2000_1_5$Visit == "Week3"] <- 1
 
-SimTrial_sm_190_1_5$V28 <- 0
-SimTrial_sm_190_1_5$V28[SimTrial_sm_190_1_5$Visit == "Week4"] <- 1
+SimTrial_sm_2000_1_5$V28 <- 0
+SimTrial_sm_2000_1_5$V28[SimTrial_sm_2000_1_5$Visit == "Week4"] <- 1
 
-SimTrial_sm_190_1_5$V35 <- 0
-SimTrial_sm_190_1_5$V35[SimTrial_sm_190_1_5$Visit == "Week5"] <- 1
+SimTrial_sm_2000_1_5$V35 <- 0
+SimTrial_sm_2000_1_5$V35[SimTrial_sm_2000_1_5$Visit == "Week5"] <- 1
 
-SimTrial_sm_190_1_5$V42 <- 0
-SimTrial_sm_190_1_5$V42[SimTrial_sm_190_1_5$Visit == "Week6"] <- 1
-SimTrial_sm_190_1_5
-
-
+SimTrial_sm_2000_1_5$V42 <- 0
+SimTrial_sm_2000_1_5$V42[SimTrial_sm_2000_1_5$Visit == "Week6"] <- 1
+SimTrial_sm_2000_1_5
 
 
-head(SimTrial_sm_190_1_5)
 
-class(SimTrial_sm_190_1_5$Treat)
+
+head(SimTrial_sm_2000_1_5)
+
+class(SimTrial_sm_2000_1_5$Treat)
 
 
 fit<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
            Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-         data= SimTrial_sm_190_1_5,
+         data= SimTrial_sm_2000_1_5,
          correlation = corSymm(form=~1 | id),
          #weights = varIdent(form = ~ 1 | Visit),
          method="REML")
 
-#View(SimTrial_sm_5000_1_5)
+#View(SimTrial_sm_2000_1_5)
 
 summary(fit)
 getVarCov(fit, individual = 1)
 
-describe(SimTrial_sm_190_1_5)
+describe(SimTrial_sm_2000_1_5)
 
 
 # Pattern for LoE at trial level
 fit_LoE_trial<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                      Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-          data = SimTrial_sm_190_1_5[SimTrial_sm_190_1_5$LoE_YES==1,] ,
+          data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$LoE_YES==1,] ,
           correlation = corSymm(form=~1 | id),
-          weights = varIdent(form = ~ 1 | Visit),
+          #weights = varIdent(form = ~ 1 | Visit),
           method="REML")
 
 
-#View(SimTrial_sm_5000_1_5)
+#View(SimTrial_sm_2000_1_5)
 
 
 summary(fit_LoE_trial)
@@ -840,7 +844,7 @@ getVarCov(fit_LoE_trial, individual = 8)
 
 # Pattern for AE in experimental arm
 fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
-                    data = SimTrial_sm_5000_1_5[SimTrial_sm_5000_1_5$AE_Exp_Yes==1,] ,
+                    data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes==1,] ,
                     correlation = corSymm(form=~1 | id),
                     weights = varIdent(form = ~ 1 | Visit),
                     method="REML")
@@ -859,7 +863,7 @@ getVarCov(fit_AE_exp, individual = '2')
 # Pattern for AE in control arm
 fit_AE_control<-gls(MADRS10 ~ MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                       Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-                    data = SimTrial_sm_5000_1_5[SimTrial_sm_5000_1_5$AE_Control_Yes==1,] ,
+                    data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,] ,
                 correlation = corSymm(form=~1 | id),
                 weights = varIdent(form = ~ 1 | Visit),
                 method="REML")
@@ -867,15 +871,15 @@ fit_AE_control<-gls(MADRS10 ~ MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
 summary(fit_AE_control)
 getVarCov(fit_AE_control, individual = '28')
 
-describe(SimTrial_sm_5000_1_5[SimTrial_sm_5000_1_5$AE_Control_Yes==1,])
+describe(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
 
-#View(SimTrial_sm_5000_1_5[SimTrial_sm_5000_1_5$AE_Control_Yes==1,])
+#View(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
 
 
 # Pattern for no intercurrent events at trial level
 fit_no_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-               data = SimTrial_sm_5000_1_5[SimTrial_sm_5000_1_5$Behavior== "No IE", ] ,
+               data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Behavior== "No IE", ] ,
                     correlation = corSymm(form=~1 | id),
                     weights = varIdent(form = ~ 1 | Visit),
                     method="REML")
@@ -891,32 +895,32 @@ getVarCov(fit_no_IE, individual = 3)
 
 # code to extract the logit models for LoE at trial level, AE in experimental arm and AE in control arm
 ### obtain the logistic regression models for LoE at trial level, AE in experimental arm and AE in control arm
-class(SimTrial_sm_5000_1_5$AE_Control_Yes)
-SimTrial_sm_5000_1_5$AE_Control_Yes <- factor(SimTrial_sm_5000_1_5$AE_Control_Yes)
+class(SimTrial_sm_2000_1_5$AE_Control_Yes)
+SimTrial_sm_2000_1_5$AE_Control_Yes <- factor(SimTrial_sm_2000_1_5$AE_Control_Yes)
 
-class(SimTrial_sm_5000_1_5$AE_Exp_Yes)
-SimTrial_sm_5000_1_5$AE_Exp_Yes <- factor(SimTrial_sm_5000_1_5$AE_Exp_Yes)
+class(SimTrial_sm_2000_1_5$AE_Exp_Yes)
+SimTrial_sm_2000_1_5$AE_Exp_Yes <- factor(SimTrial_sm_2000_1_5$AE_Exp_Yes)
 
 
-trial_AE_exp <- SimTrial_sm_5000_1_5[SimTrial_sm_5000_1_5$Treat==1,]
-trial_AE_control <- SimTrial_sm_5000_1_5[SimTrial_sm_5000_1_5$Treat==0,]
+trial_AE_exp <- SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Treat==1,]
+trial_AE_control <- SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Treat==0,]
 
 
 
 # LoE at trial level logit(Pr(LoE))= fi_LoE * (Y_i0 - Y_i6)
 logit_LoE <- glm(LoE_Yes ~ -1 + CfB,
-                 data = SimTrial_sm_5000_1_5,
+                 data = SimTrial_sm_2000_1_5,
                  family = "binomial")
 
 summary(logit_LoE)
 
-predicted_LoE <- predict(logit_LoE, type="response", newdata=SimTrial_sm_5000_1_5)
+predicted_LoE <- predict(logit_LoE, type="response", newdata=SimTrial_sm_2000_1_5)
 
-SimTrial_sm_5000_1_5$predicted_LoE <- predicted_LoE
+SimTrial_sm_2000_1_5$predicted_LoE <- predicted_LoE
 
-View(SimTrial_sm_5000_1_5[,c(5, 20)])
+View(SimTrial_sm_2000_1_5[,c(5, 20)])
 
-probz_predicted_LoE_Yes <- SimTrial_sm_5000_1_5$predicted_LoE[SimTrial_sm_5000_1_5$LoE_Yes==1]
+probz_predicted_LoE_Yes <- SimTrial_sm_2000_1_5$predicted_LoE[SimTrial_sm_2000_1_5$LoE_Yes==1]
 up_boundary_prob_LoE <- max(probz_predicted_LoE_Yes)  ; up_boundary_prob_LoE
 low_boundary_prob_LoE <- min(probz_predicted_LoE_Yes) ; low_boundary_prob_LoE
 
@@ -981,18 +985,18 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 
 #View(SimTrial_sm_190_1_5)
 
-class(SimTrial_sm_1000_1_5$Visit)
-SimTrial_sm_1000_1_5$Visit <- as.numeric(SimTrial_sm_1000_1_5$Visit)-1
+class(SimTrial_sm_2000_1_5$Visit)
+SimTrial_sm_2000_1_5$Visit <- as.numeric(SimTrial_sm_2000_1_5$Visit)-1
 
 
-fit_lmer <- lmer(MADRS10 ~ Visit + Visit : Treat + (1 + Visit|id), data = SimTrial_sm_1000_1_5, REML = T)
+fit_lmer <- lmer(MADRS10 ~ Visit + Visit : Treat + (1 + Visit|id), data = SimTrial_sm_2000_1_5, REML = T)
 summary(fit_lmer)
 
 
 fit_lme <- lme(fixed = MADRS10 ~ Visit + Visit : Treat, 
               random = ~ 1 + Visit| id,
               method ="REML", 
-               data = SimTrial_sm_1000_1_5)
+               data = SimTrial_sm_2000_1_5)
 
 summary(fit_lme)
 
@@ -1665,7 +1669,10 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_L_LoE <- d_mis_L[d_mis_L$LoE_YES==1,] # subset only patients that experienced LoE
     d_mis_L_AE <- d_mis_L[d_mis_L$AE_Yes==1,] # subset only patients that experienced AE
-    d_mis_L_NoIE <- d_mis_L[d_mis_L$LoE_YES==0 & d_mis_L$AE_Yes==0,] # subset only patients that experienced AE
+    d_mis_L_NoIE <- d_mis_L[d_mis_L$LoE_YES==0 & d_mis_L$AE_Yes==0,] # subset only patients that did not experience any IE
+    
+  #  View(d_mis_L)
+    
     
     # All patients with true trajectory with different colours by LoE (Y/N)
     p<- ggplot(data = d_mis_LL, aes(x = Visit, y = MADRS10, group = id, color=LoE_YES))
