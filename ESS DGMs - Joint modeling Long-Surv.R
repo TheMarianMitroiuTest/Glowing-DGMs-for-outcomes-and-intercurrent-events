@@ -92,7 +92,7 @@ bi_covm <- matrix(c(24.611, 0.5869809, 0.5869809, 1.157), nrow = 2)
 bi <- mvrnorm(n, bi_means, bi_covm)	
 eps.sd <-3.247 
 
-c1 <- -0.5
+
 
 
 visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	
@@ -145,7 +145,7 @@ hist(d$bi_1[d$Treat==1])
 
 #d_no_LoE$t.LoE <- d_no_LoE$LoE_yes <- 0
 
-
+c1 <- -0.5
 
 lambda_LoE 	<- 3.5			# scale parameter
 nu_LoE 		<- 	0.9		# shape parameter
@@ -239,7 +239,7 @@ c2 <- -1
 lambda_AE_exp 	<- 3			# scale parameter
 nu_AE_exp 		<- 	1.2		# shape parameter
 
-LP2 <- (d_c_exp$bi_0 + d_c_exp$bi_1)/100 +  c2 * (as.numeric(d_c_exp$Treat)-1)
+LP2 <- (d_c_exp$bi_0 + d_c_exp$bi_1)/100 +  c2
 describe(LP2)
 
 #hist(d$bi_1)
