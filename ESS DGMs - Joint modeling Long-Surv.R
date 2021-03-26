@@ -83,16 +83,6 @@ n <- 190 # number of patients
 
 
 
-
-
-
-
-
-
-
-
-
-
 set.seed(2147483629)
 b0 <- 29.5
 b1 <- -0.55
@@ -157,16 +147,16 @@ hist(d$bi_1[d$Treat==1])
 
 
 
-lambda 	<- 3.5			# scale parameter
-nu 		<- 	0.9		# shape parameter
+lambda_LoE 	<- 3.5			# scale parameter
+nu_LoE 		<- 	0.9		# shape parameter
 
 
-LP <- (d$bi_0 + d$bi_1)/100 +  c1 * (as.numeric(d$Treat)-1)
-describe(LP)
+LP1 <- (d$bi_0 + d$bi_1)/100 +  c1 * (as.numeric(d$Treat)-1)
+describe(LP1)
 
 #hist(d$bi_1)
 
-t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lambda * exp(LP))) ^ (1/nu) ; t.event_LoE
+t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lambda_LoE * exp(LP1))) ^ (1/nu_LoE) ; t.event_LoE
 # how do I steer the rule here? I need to subset somehow on the positive slopes to "indicate" LoE, And the same for AE in experimental arm and in control arm.
 
 #1. add here the probability to rbinom(independent) 
@@ -239,9 +229,50 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 # Cox model and survival for AE in experimental arm
 
 
-# subset on (very) negative slopes in experimental arm
+
 d_c_exp <- d[d$Treat==1,]
 d_c_control <- d[d$Treat==0,]
+
+c2 <- -1
+
+
+lambda_AE_exp 	<- 3			# scale parameter
+nu_AE_exp 		<- 	1.2		# shape parameter
+
+LP2 <- (d_c_exp$bi_0 + d_c_exp$bi_1)/100 +  c2 * (as.numeric(d_c_exp$Treat)-1)
+describe(LP2)
+
+#hist(d$bi_1)
+
+t.event_AE_exp <- (-log(rep(runif(length(unique(d_c_exp$id))), each=length(visits)))/(lambda_AE_exp * exp(LP2))) ^ (1/nu_AE_exp) ; t.event_AE_exp
+# how do I steer the rule here? I need to subset somehow on the positive slopes to "indicate" LoE, And the same for AE in experimental arm and in control arm.
+describe(t.event_AE_exp)
+
+hist(t.event_AE_exp)
+describe(d_c_exp)
+
+
+
+
+d_c_exp$t.event_AE_exp <- t.event_AE_exp
+
+t.event_AE_exp <- round(t.event_AE_exp*(0.83) + 2 , digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+# stricter like the above or more loosely distributed with high fidelity to the Weibull distribution
+
+
+describe(t.event_AE_exp)
+d_c_exp$t.AE_exp <- t.event_AE_exp
+
+d_c_exp$t.AE_exp <- d_c_exp$t.AE_exp * rep(rbinom(length(unique(d_c_exp$id)), 1, 0.5), each = length(visits))
+
+#cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
+
+d_c_exp$AE_yes <-factor(ifelse(d_c_exp$t.AE_exp !=0, 1, 0))
+describe(d_c_exp$AE_yes)
+
+d_c_exp$t.AE_exp[d_c_exp$t.AE_exp==0] <- c("No LoE")
+
+describe(d_c_exp$t.AE_exp)
 
 
 
@@ -251,35 +282,35 @@ d_c_control <- d[d$Treat==0,]
 
 
 
-t.event_AE <- (-log(rep(runif(length(unique(d_exp$id))), each=length(visits)))/(lambda * exp((d_exp$bi_0 + d_exp$bi_1)/1000))) ^ (1/nu) ; t.event_AE
+#t.event_AE <- (-log(rep(runif(length(unique(d_exp$id))), each=length(visits)))/(lambda * exp((d_exp$bi_0 + d_exp$bi_1)/1000))) ^ (1/nu) ; t.event_AE
 
-t.event_AE <- round(t.event_AE*42/7, digits=0); t.event_AE
-d_exp$t.AE <- t.event_AE
-
-
-describe(d_c_exp_AE$bi_1)
+#t.event_AE <- round(t.event_AE*42/7, digits=0); t.event_AE
+#d_exp$t.AE <- t.event_AE
 
 
+#describe(d_c_exp_AE$bi_1)
 
-head(d_c_exp_no_AE)
 
-d_c_cAEexp <- rbind(d_c_exp_AE, d_c_exp_no_AE)
-head(d_c_exp_AE)
-d_c_cAEexp
+
+#head(d_c_exp_no_AE)
+
+#d_c_cAEexp <- rbind(d_c_exp_AE, d_c_exp_no_AE)
+#head(d_c_exp_AE)
+#d_c_cAEexp
 
 
 #View(d_c_cAEexp)
 
 
 # just AE in experimental arm
-p<- ggplot(data = d_c_cAEexp[d_c_cAEexp$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+p<- ggplot(data = d_c_exp[d_c_exp$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))
 
 
 
 # AE in experimental arm and the others
-p<- ggplot(data = d_c_cAEexp, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+p<- ggplot(data = d_c_exp, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))
 
@@ -302,53 +333,161 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 # subset on slightly-positive slopes in control arm
 #resume here
-describe(d_c_control$bi_1)
+#describe(d_c_control$bi_1)
 
-d_c_control_AE <- d_c_control[d_c_control$bi_1>0.15,]
-d_c_control_no_AE <- d_c_control[d_c_control$bi_1<=0.15,]
-d_c_control_no_AE$AE_yes <- d_c_control_no_AE$t.AE <- 0
-
-
-t.event_AE <- (-log(rep(runif(length(unique(d_c_control_AE$id))), each=length(visits)))/(lambda * exp((d_c_control_AE$bi_0 + d_c_control_AE$bi_1)/1000))) ^ (1/nu) ; t.event_AE
-
-t.event_AE <- round(t.event_AE*42/7, digits=0); t.event_AE
-d_c_control_AE$t.AE <- t.event_AE
-
-d_c_control_AE$AE_yes <- factor(ifelse(d_c_control_AE$t.AE == 2, 1,0))
+#d_c_control_AE <- d_c_control[d_c_control$bi_1>0.15,]
+#d_c_control_no_AE <- d_c_control[d_c_control$bi_1<=0.15,]
+#d_c_control_no_AE$AE_yes <- d_c_control_no_AE$t.AE <- 0
 
 
+#t.event_AE <- (-log(rep(runif(length(unique(d_c_control_AE$id))), each=length(visits)))/(lambda * exp((d_c_control_AE$bi_0 + d_c_control_AE$bi_1)/1000))) ^ (1/nu) ; t.event_AE
 
-head(d_c_control_AE)
-head(d_c_control_no_AE)
+#t.event_AE <- round(t.event_AE*42/7, digits=0); t.event_AE
+#d_c_control_AE$t.AE <- t.event_AE
 
-d_c_cAEcontrol <- rbind(d_c_control_AE, d_c_control_no_AE)
+#d_c_control_AE$AE_yes <- factor(ifelse(d_c_control_AE$t.AE == 2, 1,0))
 
-d_c_cAEcontrol
+
+
+#head(d_c_control_AE)
+#head(d_c_control_no_AE)
+
+#d_c_cAEcontrol <- rbind(d_c_control_AE, d_c_control_no_AE)
+
+#d_c_cAEcontrol
 
 #View(d_c_cAEcontrol)
 
 
 # just AE in control arm
-p<- ggplot(data = d_c_cAEcontrol[d_c_cAEcontrol$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(0, 50))
+#p<- ggplot(data = d_c_cAEcontrol[d_c_cAEcontrol$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+#p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+#  scale_y_continuous(limits = c(0, 50))
 
 
 
 # AE in control arm and the others
-p<- ggplot(data = d_c_cAEcontrol, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(0, 50))
+#p<- ggplot(data = d_c_cAEcontrol, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+#p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+ # scale_y_continuous(limits = c(0, 50))
 
 
-head(d_c)
-head(d_c_cAEexp)
-head(d_c_cAEcontrol)
+#head(d_c)
+#head(d_c_cAEexp)
+#head(d_c_cAEcontrol)
 
 
+  
+  
+    
+  c3 <- 1
+  
+  lambda_AE_control 	<- 2			# scale parameter
+  nu_AE_control 		<- 	3.5	# shape parameter
+  
+  
+  LP3 <- (d_c_control$bi_0 + d_c_control$bi_1)/100 +  c3
+  describe(LP3)
+  
+
+  t.event_AE_control <- (-log(rep(runif(length(unique(d_c_control$id))), each=length(visits)))/(lambda_AE_control * exp(LP3))) ^ (1/nu_AE_control) ; t.event_AE_control
+  # how do I steer the rule here? I need to subset somehow on the positive slopes to "indicate" LoE, And the same for AE in experimental arm and in control arm.
+  describe(t.event_AE_control)
+  
+  hist(t.event_AE_control)
+  describe(d_c_control)
+  
+  
+  
+  d_c_control$t.event_AE_control <- t.event_AE_control
+  
+  t.event_AE_control <- round(t.event_AE_control*(1) + 2 , digits=0) 
+  
+  describe(t.event_AE_control)
+  d_c_control$t.AE_control <- t.event_AE_control
+  
+  d_c_control$t.AE_control <- d_c_control$t.AE_control * rep(rbinom(length(unique(d_c_control$id)), 1, 0.5), each = length(visits))
+  
+  #cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
+  
+  d_c_control$AE_yes <-factor(ifelse(d_c_control$t.AE_control !=0, 1, 0))
+  describe(d_c_control$AE_yes)
+  
+  d_c_control$t.AE_control[d_c_control$t.AE_control==0] <- c("No LoE")
+  
+  describe(d_c_control$t.AE_control)
+  
+  
+  
+  #d_c_exp_AE <- d_c_exp[d_c_exp$bi_1<-1,]
+  #d_c_exp_no_AE <- d_c_exp[d_c_exp$bi_1>=-1,]
+  #d_c_exp_no_AE$AE_yes <- d_c_exp_no_AE$t.AE <- 0
+  
+  
+  
+  #t.event_AE <- (-log(rep(runif(length(unique(d_exp$id))), each=length(visits)))/(lambda * exp((d_exp$bi_0 + d_exp$bi_1)/1000))) ^ (1/nu) ; t.event_AE
+  
+  #t.event_AE <- round(t.event_AE*42/7, digits=0); t.event_AE
+  #d_exp$t.AE <- t.event_AE
+  
+  
+  #describe(d_c_exp_AE$bi_1)
+  
+  
+  
+  #head(d_c_exp_no_AE)
+  
+  #d_c_cAEexp <- rbind(d_c_exp_AE, d_c_exp_no_AE)
+  #head(d_c_exp_AE)
+  #d_c_cAEexp
+  
+  
+  #View(d_c_cAEexp)
+  
+  
+  # just AE in control arm
+  p<- ggplot(data = d_c_control[d_c_control$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+  p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+    scale_y_continuous(limits = c(-10, 60))
+  
+  
+  
+  # AE in control arm and the others
+  p<- ggplot(data = d_c_control, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+  p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+    scale_y_continuous(limits = c(-10, 60))
+  
+  
+  # change parameters to get more at week 2
+  
+  d_c_exp$t.event_AE_control <-0
+  d_c_exp$t.AE_control <-0
+  
+  
+  d_c_control$t.event_AE_exp <-0
+  d_c_control$t.AE_exp <-0
+  
+  head(d_c_exp)
+  head(d_c_control)
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 
-d_c_c_all <- rbind(d_c_cAEexp, d_c_cAEcontrol)
+d_c_c_all <- rbind(d_c_exp, d_c_control)
 
 describe(d_c_c_all)
 
@@ -368,10 +507,10 @@ d_united$AE_yes <- factor(d_united$AE_yes)
 d_united$AE_YES <- ifelse(d_united$AE_yes==1, 1, 0)
 d_united$LoE_YES <- ifelse(d_united$AE_yes==0 & d_united$LoE_yes==1, 1, 0)
 
+View(d_united)
 
-
-d_united$Behavior <- ifelse(d_united[,12]==1, "AE",
-                            ifelse(d_united[,12]==0 & d_united[,13]==1, "LoE", "No IE"))
+d_united$Behavior <- ifelse(d_united$AE_YES==1, "AE",
+                            ifelse(d_united$AE_YES==0 & d_united$LoE_YES==1, "LoE", "No IE"))
 
 #View(d_united)
 

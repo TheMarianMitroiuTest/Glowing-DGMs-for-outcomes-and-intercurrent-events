@@ -1228,7 +1228,7 @@ for (s in 1:length(scaling_factor)) {
     d <- data.frame(
       id = rep(1:n, each = length(visits)),
       visit = visits,
-      Treat = rep(rbinom(n, 1, 0.5), each = length(visits)),
+      Treat = rep(cccccc, each = length(visits)),
       MADRS10 = rep(NA, n)); d # mean(Treat)
     
     
