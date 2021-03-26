@@ -146,14 +146,14 @@ hist(d$bi_0[d$Treat==1])
 hist(d$bi_1[d$Treat==0])
 hist(d$bi_1[d$Treat==1])
 
- #subset on positive slopes
-hist(d$bi_1[d$Treat==1 & d$bi_1>0])
+#subset on positive slopes
+#hist(d$bi_1[d$Treat==1 & d$bi_1>0])
 
-d_LoE <- d[d$bi_1>0,]
-d_no_LoE <- d[d$bi_1<=0,]
+#d_LoE <- d[d$bi_1>0,]
+#d_no_LoE <- d[d$bi_1<=0,]
 
 
-d_no_LoE$t.LoE <- d_no_LoE$LoE_yes <- 0
+#d_no_LoE$t.LoE <- d_no_LoE$LoE_yes <- 0
 
 
 
@@ -183,18 +183,25 @@ t.event_LoE <- round(t.event_LoE*(4.16) + 1 , digits=0)
 describe(t.event_LoE)
 d$t.LoE <- t.event_LoE
 
+d$t.LoE <- d$t.LoE * rep(rbinom(n, 1, 0.5), each = length(visits))
 
-d$LoE_yes <- factor(ifelse(d$t.LoE == 3, 1,0))
+#cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
 
-describe(t.event_LoE)
+d$LoE_yes <-factor(ifelse(d$t.LoE !=0, 1, 0))
+describe(d$LoE_yes)
+
+d$t.LoE[d$t.LoE==0] <- c("No LoE")
+
+describe(d$t.LoE)
+
 
 cbind(d$Treat,d$bi_0, d$bi_1, t.event_LoE, d$t.LoE)
 
 
 
 
-    #View(d[,c(1, 3, 4, 5, 8, 9)])
-    #View(d)
+#View(d[,c(1, 3, 4, 5, 8, 9)])
+#View(d)
 
 
 describe(t.event_LoE[d$Treat==1])
@@ -227,7 +234,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 
 
- #####################################################
+#####################################################
 #####################################################
 # Cox model and survival for AE in experimental arm
 
@@ -238,9 +245,9 @@ d_c_control <- d[d$Treat==0,]
 
 
 
-d_c_exp_AE <- d_c_exp[d_c_exp$bi_1<-1,]
-d_c_exp_no_AE <- d_c_exp[d_c_exp$bi_1>=-1,]
-d_c_exp_no_AE$AE_yes <- d_c_exp_no_AE$t.AE <- 0
+#d_c_exp_AE <- d_c_exp[d_c_exp$bi_1<-1,]
+#d_c_exp_no_AE <- d_c_exp[d_c_exp$bi_1>=-1,]
+#d_c_exp_no_AE$AE_yes <- d_c_exp_no_AE$t.AE <- 0
 
 
 
@@ -364,7 +371,7 @@ d_united$LoE_YES <- ifelse(d_united$AE_yes==0 & d_united$LoE_yes==1, 1, 0)
 
 
 d_united$Behavior <- ifelse(d_united[,12]==1, "AE",
-                     ifelse(d_united[,12]==0 & d_united[,13]==1, "LoE", "No IE"))
+                            ifelse(d_united[,12]==0 & d_united[,13]==1, "LoE", "No IE"))
 
 #View(d_united)
 
@@ -415,22 +422,22 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 
 
- describe(d_united)
- 
- 
- 
- 
- 
- 
- lp <- seq(-2, 2, 0.1)
- plot(lp)
- lambda <-10
- nu <- 0.5
- plot(exp(lp))
- 
- 
- time_ie<- - ( log(runif(length(lp)))/(lambda * exp(lp)) )^1/nu
- plot(time_ie)
- 
- 
+describe(d_united)
+
+
+
+
+
+
+lp <- seq(-2, 2, 0.1)
+plot(lp)
+lambda <-10
+nu <- 0.5
+plot(exp(lp))
+
+
+time_ie<- - ( log(runif(length(lp)))/(lambda * exp(lp)) )^1/nu
+plot(time_ie)
+
+
 
