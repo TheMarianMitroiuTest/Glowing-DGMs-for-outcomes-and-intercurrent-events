@@ -275,6 +275,8 @@ for (s in 1:length(scaling_factor)) {
     }
     
     
+    #sqrt(var(d$MADRS10[d$visit==42]))
+    
     ## flooring and ceiling
     #d[, 4] <- ifelse(d[, 4] < 0, 0,
     #                ifelse(d[, 4]>60, 60, d[, 4]))
@@ -343,34 +345,43 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    #fit<-gls(MADRS10 ~ visit * Treat + Baseline, 
-     #        data=d,
-      #       correlation = corSymm(form=~1 | id),
-       #      method="REML")
+    fit<-gls(MADRS10 ~ visit * Treat + Baseline, 
+             data=d,
+             correlation = corSymm(form=~1 | id),
+             #weights = varIdent(form = ~ 1 | visit),
+             method="REML")
     
 
     
 
-    #summary(fit)
+    summary(fit)
     
-
+    
+    #sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"])
+    
+    #sqrt(vcov(fit)["Treat", "Treat"])
+    
+    #sqrt(getVarCov(fit)[1,1]/n)
+    
+    
+    
+    re_covm2
     #fit$coefficients[c(7,13)]
     
     #sum(fit$coefficients[c(7,13)]); treatmenteffect
     
     d$visit <- as.numeric(d$visit)-1
     
-    #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
-     #          random=~1 + visit | id,
-      #        method="REML", 
-             #correlation = corSymm(form=~1|id),
-            #na.action=na.omit,
-       #   data=d)
+    fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
+               random=~1 + visit | id,
+              method="REML", 
+             correlation = corSymm(form=~1|id),
+            data=d)
     
     
     
     
-    fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 + visit|id), data = d, REML = T)
+    fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
     
     
     summary(fit_lmer)
