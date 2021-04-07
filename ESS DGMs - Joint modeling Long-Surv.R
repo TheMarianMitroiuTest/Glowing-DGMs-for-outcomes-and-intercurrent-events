@@ -563,7 +563,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 describe(d_united)
 
-
+ 
 
 
 # to annotate the code
