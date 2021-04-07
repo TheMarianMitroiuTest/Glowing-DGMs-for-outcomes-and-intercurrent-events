@@ -86,7 +86,7 @@ scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the 
 
 
 
-n <- 190# number of patients
+n <- 2000# number of patients
 
 CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
 colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
@@ -372,19 +372,19 @@ for (s in 1:length(scaling_factor)) {
     
     d$visit <- as.numeric(d$visit)-1
     
-    fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
-               random=~1 + visit | id,
-              method="REML", 
-             correlation = corSymm(form=~1|id),
-            data=d)
+    #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
+     #          random=~1 + visit | id,
+      #        method="REML", 
+       #      correlation = corSymm(form=~1|id),
+        #    data=d)
     
     
     
     
-    fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
+    #fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
     
     
-    summary(fit_lmer)
+    #summary(fit_lmer)
     
     #summary(fit_lme)
     
