@@ -365,12 +365,12 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    re_covm2
+    #re_covm2
     #fit$coefficients[c(7,13)]
     
     #sum(fit$coefficients[c(7,13)]); treatmenteffect
     
-    d$visit <- as.numeric(d$visit)-1
+    #d$visit <- as.numeric(d$visit)-1
     
     #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
      #          random=~1 + visit | id,
@@ -649,7 +649,6 @@ for (s in 1:length(scaling_factor)) {
     
     
 
-   
     
     d_mis_L_LoE <- d_mis_L[d_mis_L$LoE_YES==1,] # subset only patients that experienced LoE
     d_mis_L_AE <- d_mis_L[d_mis_L$AE_Yes==1,] # subset only patients that experienced AE
