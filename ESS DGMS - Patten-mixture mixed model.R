@@ -81,7 +81,7 @@ Scenario <- c("A")
 
 set.seed(2147483629)
 #set.seed(2147483399)
-m.iterations <- 1# number of generated datasets # number of trials per scaling factor
+m.iterations <- 20# number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) #c(0.20, 0.40, 0.60, 0.80, 1) # to cover a range of IE % from ~5%-45% in total
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
@@ -90,13 +90,13 @@ scaling_factor <-  c(1) #c(0.20, 0.40, 0.60, 0.80, 1) # to cover a range of IE %
 
 
 
-n <- 800# number of patients
+n <- 190# number of patients
 
 
 # percentages/proportions of Intercurrent Events
-prop_LoE <- c(0.36, 0.37, 0.38, 0.39, 0.40); mean(prop_LoE) # c(0.383) 
-prop_AE_exp <- c(0.020, 0.025, 0.03, 0.035, 0.04); mean(prop_AE_exp) # c(0.0298) 
-prop_AE_control <-  c(0.010, 0.0125, 0.0150, 0.0175, 0.020) ; mean(prop_AE_control) # c(0.0158)
+prop_LoE <- 0.38 #c(0.36, 0.37, 0.38, 0.39, 0.40); mean(prop_LoE) # c(0.383) 
+prop_AE_exp <- 0.04#c(0.020, 0.025, 0.03, 0.035, 0.04); mean(prop_AE_exp) # c(0.0298) 
+prop_AE_control <-  0.02#c(0.010, 0.0125, 0.0150, 0.0175, 0.020) ; mean(prop_AE_control) # c(0.0158)
 
 
 #CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
@@ -113,7 +113,7 @@ pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3)
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 
-s <-1
+#s <-1
 
 start_time <- Sys.time()
 
@@ -163,7 +163,7 @@ for (s in 1:length(scaling_factor)) {
         11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
     
     
-    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_proof)	; re_LoE_all
+    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_LoE_all)	; re_LoE_all
     #View(re_LoE_all)
     
     re_LoE_all <- as.matrix(re_LoE_all)
@@ -205,6 +205,8 @@ for (s in 1:length(scaling_factor)) {
     beta_v5_treatment_LoE_all <- -0.737112
     beta_v6_treatment_LoE_all <- 0#-1.909406  #-1.318160
     
+    #0.38*5
+    
     treatmenteffect_LoE_all <-  beta_v6_treatment_LoE_all ; treatmenteffect_LoE_all
     
     # following this model:
@@ -221,7 +223,6 @@ for (s in 1:length(scaling_factor)) {
                                                            ifelse(d_LoE_all[i, 2]==35, d_LoE_all[i-5,4] + beta_week5_LoE_all + d_LoE_all[i,5] +  beta_v5_treatment_LoE_all * d_LoE_all[i, 3],
                                                                   d_LoE_all[i-6,4] + beta_week6_LoE_all + d_LoE_all[i,5] +  beta_v6_treatment_LoE_all * d_LoE_all[i, 3]))))))
     }
-    
     
     
     #View(d)
@@ -298,22 +299,22 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    fit_LoE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                       Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-                     data=d_LoE_all,
-                     correlation = corSymm(form=~1 | id),
-                     weights = varIdent(form = ~ 1 | visit), 
-                     method="REML")
+    #fit_LoE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
+     #                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+      #               data=d_LoE_all,
+       #              correlation = corSymm(form=~1 | id),
+        #             weights = varIdent(form = ~ 1 | visit), 
+         #            method="REML")
     
     
     
     
-    summary(fit_LoE_all)
+    #summary(fit_LoE_all)
     
     
-    fit_LoE_all$coefficients[c(13)]
+    #fit_LoE_all$coefficients[c(13)]
     
-    sum(fit_LoE_all$coefficients[c(13)]); treatmenteffect_LoE_all
+    #sum(fit_LoE_all$coefficients[c(13)]); treatmenteffect_LoE_all
     
     # indicator variable
     d_LoE_all$Pattern <- c("LoE_all")
@@ -348,7 +349,7 @@ for (s in 1:length(scaling_factor)) {
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
     
     
-    re_AE_exp <- mvrnorm(n_AE_exp, re_means, re_covm_proof)	; re_AE_exp
+    re_AE_exp <- mvrnorm(n_AE_exp, re_means, re_covm_AE_exp)	; re_AE_exp
     #View(re)
     
     re_AE_exp <- as.matrix(re_AE_exp)
@@ -374,7 +375,7 @@ for (s in 1:length(scaling_factor)) {
     d_AE_exp<-as.matrix(d_AE_exp)
     
     # Scenario A -> pattern of AE in  experimental arm
-    beta.baseline_AE_exp <- 28.214968
+    beta.baseline_AE_exp <- 29.951049
     beta_week1_AE_exp <- -6.477987
     beta_week2_AE_exp <- -11.141631
     beta_week3_AE_exp <- -10.058028
@@ -467,16 +468,16 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
-                    data=d_AE_exp,
-                    correlation = corSymm(form=~1 | id),
-                    weights = varIdent(form = ~ 1 | visit), 
-                    method="REML")
+    #fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
+     #               data=d_AE_exp,
+      #              correlation = corSymm(form=~1 | id),
+       #             weights = varIdent(form = ~ 1 | visit), 
+        #            method="REML")
     
     
     
     
-    summary(fit_AE_exp)
+    #summary(fit_AE_exp)
     
     # indicator variable
     d_AE_exp$Pattern <- c("AE_exp")
@@ -506,7 +507,7 @@ for (s in 1:length(scaling_factor)) {
         12.939, 24.085, 22.957, 27.577, 38.056, 46.553, 44.032), nrow = 7)
     
     
-    re_AE_control <- mvrnorm(n_AE_control, re_means, re_covm_proof)	; re_AE_control
+    re_AE_control <- mvrnorm(n_AE_control, re_means, re_covm_AE_control)	; re_AE_control
     #View(re_AE_control)
     
     re_AE_control <- matrix(re_AE_control, ncol=7)
@@ -535,7 +536,7 @@ for (s in 1:length(scaling_factor)) {
     d_AE_control<-as.matrix(d_AE_control)
     
     # Scenario A -> pattern of LoE in both experimental and control arms
-    beta.baseline_AE_control <- 31.031848
+    beta.baseline_AE_control <- 29.951049
     beta_week1_AE_control <- 3.056887
     beta_week2_AE_control <- 5.611661
     beta_week3_AE_control <- 2.769695
@@ -632,16 +633,16 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    fit_AE_control<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
-                        data=d_AE_control,
-                        correlation = corSymm(form=~1 | id),
-                        weights = varIdent(form = ~ 1 | visit), 
-                        method="REML")
+    #fit_AE_control<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
+     #                   data=d_AE_control,
+      #                  correlation = corSymm(form=~1 | id),
+       #                 weights = varIdent(form = ~ 1 | visit), 
+        #                method="REML")
     
     
     
     
-    summary(fit_AE_control)
+    #summary(fit_AE_control)
     
     # indicator variable
     d_AE_control$Pattern <- c("AE_control")
@@ -669,7 +670,7 @@ for (s in 1:length(scaling_factor)) {
         11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
     
     
-    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_proof)	; re_No_IE
+    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
     #View(re)
     
     re_No_IE <- as.matrix(re_No_IE)
@@ -698,7 +699,7 @@ for (s in 1:length(scaling_factor)) {
     d_No_IE<-as.matrix(d_No_IE)
     
     # Scenario A -> pattern of No IE in both experimental and control arms
-    beta.baseline_No_IE <- 29.696133
+    beta.baseline_No_IE <- 29.951049
     beta_week1_No_IE <- -2.061548
     beta_week2_No_IE <- -3.864898
     beta_week3_No_IE <- -4.360199
@@ -711,7 +712,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_No_IE <- -0.724476
     beta_v4_treatment_No_IE <- -1.037980
     beta_v5_treatment_No_IE <- -1.420660
-    beta_v6_treatment_No_IE <- 0#-4.195854 # -1.904595
+    beta_v6_treatment_No_IE <- -6.25#-4.195854 # -1.904595
     
     
     
@@ -809,25 +810,25 @@ for (s in 1:length(scaling_factor)) {
     d_No_IE$V42[d_No_IE$visit == 42] <- 1
     
     
-    fit_No_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                     Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-                   data=d_No_IE,
-                   correlation = corSymm(form=~1 | id),
-                   weights = varIdent(form = ~ 1 | visit), 
-                   method="REML")
+    #fit_No_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
+     #                Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+      #             data=d_No_IE,
+       #            correlation = corSymm(form=~1 | id),
+        #           weights = varIdent(form = ~ 1 | visit), 
+         #          method="REML")
     
     
-    summary(fit_No_IE)
+    #summary(fit_No_IE)
     
     
-    getVarCov(fit_No_IE)
-    vcov(fit_No_IE)
-    re_covm_proof
+    #getVarCov(fit_No_IE)
+    #vcov(fit_No_IE)
+    #re_covm_proof
     
     
-    fit_No_IE$coefficients[c(13)]
+    #fit_No_IE$coefficients[c(13)]
     
-    sum(fit_No_IE$coefficients[c(13)]); treatmenteffect_No_IE
+    #sum(fit_No_IE$coefficients[c(13)]); treatmenteffect_No_IE
     
     # indicator variable
     d_No_IE$Pattern <- c("No_IE")
@@ -910,31 +911,28 @@ for (s in 1:length(scaling_factor)) {
     
     
     fit_pmmm<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                    Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42 + Pattern*visit, 
+                    Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
                   data=d_pmmm,
-                  correlation = corCompSymm(form=~1 | id),
+                  correlation = corSymm(form=~1 | id),
                   weights = varIdent(form = ~ 1 | visit), 
                   method="REML")
     
     # make an analysis model that is the same as the DGM.
     # write down the model
     
-    head(d_pmmm)
-  describe(d_pmmm$Pattern)
-  
+    
     summary(fit_pmmm)
     
     describe(d_pmmm)
     
     t.test(d_pmmm$MADRS10[d_pmmm$Treat==1 & d_pmmm$visit==42], d_pmmm$MADRS10[d_pmmm$Treat==0 & d_pmmm$visit==42])
-    224/7
-    2072/7
-    3234/7
-    
+ 
     
     
     #describe(d_pmmm)
     getVarCov(fit_pmmm, individual = 1)
+    
+    re_covm_LoE_all
     
     treatmenteffect_pmmm <- sampled_prop_LoE * beta_v6_treatment_LoE_all +
       
@@ -979,7 +977,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     delta[m, ] <- sum(fit_pmmm$coefficients[c(13)])
-    
+    #mean(delta)
     #bias_f[m, ] <- sum(fit_pmmm$coefficients[c(7,13)]) - treatmenteffect
     
     #delta_error <- sqrt(vcov(fit_pmmm)["Treat1", "Treat1"] + vcov(fit_pmmm)["visit42:Treat1", "visit42:Treat1"] + 2*vcov(fit_pmmm)["Treat1", "visit42:Treat1"]) 
