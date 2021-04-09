@@ -840,7 +840,7 @@ for (s in 1:length(scaling_factor)) {
     d_No_IE$No_IE <- 1
     d_No_IE$AE_Yes <- d_No_IE$AE_exp + d_No_IE$AE_control
     
-    #
+    #start with a model with only LoE_all and No_ie and fit the model there.
     
     
     
@@ -910,23 +910,27 @@ for (s in 1:length(scaling_factor)) {
     
     
     fit_pmmm<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                    Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+                    Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42 + Pattern*visit, 
                   data=d_pmmm,
-                  correlation = corSymm(form=~1 | id),
+                  correlation = corCompSymm(form=~1 | id),
                   weights = varIdent(form = ~ 1 | visit), 
                   method="REML")
     
     # make an analysis model that is the same as the DGM.
     # write down the model
     
-    
-    
-    
+    head(d_pmmm)
+  describe(d_pmmm$Pattern)
+  
     summary(fit_pmmm)
     
     describe(d_pmmm)
     
     t.test(d_pmmm$MADRS10[d_pmmm$Treat==1 & d_pmmm$visit==42], d_pmmm$MADRS10[d_pmmm$Treat==0 & d_pmmm$visit==42])
+    224/7
+    2072/7
+    3234/7
+    
     
     
     #describe(d_pmmm)
