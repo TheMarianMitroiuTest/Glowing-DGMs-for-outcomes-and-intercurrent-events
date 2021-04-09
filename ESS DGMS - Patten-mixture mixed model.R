@@ -163,7 +163,7 @@ for (s in 1:length(scaling_factor)) {
         11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
     
     
-    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_LoE_all)	; re_LoE_all
+    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_proof)	; re_LoE_all
     #View(re_LoE_all)
     
     re_LoE_all <- as.matrix(re_LoE_all)
@@ -348,7 +348,7 @@ for (s in 1:length(scaling_factor)) {
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
     
     
-    re_AE_exp <- mvrnorm(n_AE_exp, re_means, re_covm_AE_exp)	; re_AE_exp
+    re_AE_exp <- mvrnorm(n_AE_exp, re_means, re_covm_proof)	; re_AE_exp
     #View(re)
     
     re_AE_exp <- as.matrix(re_AE_exp)
@@ -506,7 +506,7 @@ for (s in 1:length(scaling_factor)) {
         12.939, 24.085, 22.957, 27.577, 38.056, 46.553, 44.032), nrow = 7)
     
     
-    re_AE_control <- mvrnorm(n_AE_control, re_means, re_covm_AE_control)	; re_AE_control
+    re_AE_control <- mvrnorm(n_AE_control, re_means, re_covm_proof)	; re_AE_control
     #View(re_AE_control)
     
     re_AE_control <- matrix(re_AE_control, ncol=7)
@@ -669,7 +669,7 @@ for (s in 1:length(scaling_factor)) {
         11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
     
     
-    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
+    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_proof)	; re_No_IE
     #View(re)
     
     re_No_IE <- as.matrix(re_No_IE)
@@ -819,6 +819,12 @@ for (s in 1:length(scaling_factor)) {
     
     summary(fit_No_IE)
     
+    
+    getVarCov(fit_No_IE)
+    vcov(fit_No_IE)
+    re_covm_proof
+    
+    
     fit_No_IE$coefficients[c(13)]
     
     sum(fit_No_IE$coefficients[c(13)]); treatmenteffect_No_IE
@@ -906,9 +912,14 @@ for (s in 1:length(scaling_factor)) {
     fit_pmmm<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                     Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
                   data=d_pmmm,
-                  correlation = corCompSymm(form=~1 | id),
+                  correlation = corSymm(form=~1 | id),
                   weights = varIdent(form = ~ 1 | visit), 
                   method="REML")
+    
+    # make an analysis model that is the same as the DGM.
+    # write down the model
+    
+    
     
     
     summary(fit_pmmm)
