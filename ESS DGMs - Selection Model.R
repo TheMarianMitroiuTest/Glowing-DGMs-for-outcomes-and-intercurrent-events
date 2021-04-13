@@ -7,6 +7,16 @@
 #### Scenario A "early separation and treatment effect maintained"
 
 
+
+
+
+
+
+prop.test(c(4, 14), c(55, 52))
+
+
+
+
 ### DGM
 rm(list=ls())
 library(MASS)
