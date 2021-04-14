@@ -77,7 +77,7 @@ Scenario <- c("A")
 # simulation
 
 
-n <- 190 # number of patients
+n <- 40 # number of patients
 
 
 
@@ -514,6 +514,7 @@ d_united$Behavior <- ifelse(d_united$AE_YES==1, "AE",
 
 #View(d_united)
 
+#describe(d_united$Behavior)
 
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
@@ -524,16 +525,23 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 # Plot trajectories
 
 # just LoE
-p<- ggplot(data = d_united[d_united$LoE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
+p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
+plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern")
 
 
 #just AE
 # AE
-p<- ggplot(data = d_united[d_united$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
+p<- ggplot(data = d_united[d_united$AE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - AE pattern")
+
+#just No IE
+# AE
+p<- ggplot(data = d_united[d_united$Behavior=="No IE",], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - No IE pattern")
+
 
 
 
@@ -552,12 +560,12 @@ p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, co
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))
 
-
-
 # All behaviors
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
+plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - All patterns")
+
+(plot_all / plot_LoE) | (plot_AE / plot_NoIE)
 
 
 

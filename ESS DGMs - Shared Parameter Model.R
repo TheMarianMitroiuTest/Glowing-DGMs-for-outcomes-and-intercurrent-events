@@ -249,6 +249,9 @@ describe(d)
     
     
     
+
+    
+    
     
     
     fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat, 
@@ -262,7 +265,21 @@ describe(d)
     
     
     
-
+    getVarCov(fit_lme,type = c("conditional"))
+    
+    #vcov(fit_lme)
+    
+    
+    #sqrt(9.0522)
+    
+    
+    
+    #(4*3^2)/(0.1^2)
+    #3600 trials vs 502 in the MMRM
+    # need to derive the marginal covariance structure and from there to take the variance?
+    
+    
+    #t(matrix(c(0, 1, 1, 0), nrow=2))
     
     
     
