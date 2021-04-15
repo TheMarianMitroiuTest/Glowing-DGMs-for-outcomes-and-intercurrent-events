@@ -120,8 +120,8 @@ n <- 190# number of patients
     
     d$Pr_LoE <- Pr_LoE
     
-    d$LoE_yes[d$Treat==1] <- ifelse(Pr_LoE[d$Treat==1]>0.5331, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==1])), 1, 0.7), each = length(visits))
-    d$LoE_yes[d$Treat==0] <- ifelse(Pr_LoE[d$Treat==0]>0.5081, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==0])), 1, 0.7), each = length(visits))
+    d$LoE_yes[d$Treat==1] <- ifelse(Pr_LoE[d$Treat==1]<0.532, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==1])), 1, 0.7), each = length(visits))
+    d$LoE_yes[d$Treat==0] <- ifelse(Pr_LoE[d$Treat==0]>0.5075, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==0])), 1, 0.7), each = length(visits))
   
     #####################################################
     # Logit model and Probabilities for AE in experimental arm
@@ -147,7 +147,7 @@ n <- 190# number of patients
     d$Pr_AE_exp[d$Treat==1] <- Pr_AE_exp
     
     
-    d$AE_yes[d$Treat==1] <- ifelse(Pr_AE_exp<0.2648, 1, 0)
+    d$AE_yes[d$Treat==1] <- ifelse(Pr_AE_exp>0.9944527, 1, 0)
     
     
     
@@ -164,7 +164,7 @@ n <- 190# number of patients
     d$Pr_AE_control[d$Treat==0] <- Pr_AE_control
     
     
-    d$AE_yes[d$Treat==0] <- ifelse(Pr_AE_control>0.38, 1, 0) # add rbinom probabilities
+    d$AE_yes[d$Treat==0] <- ifelse(Pr_AE_control>0.55, 1, 0) # add rbinom probabilities
     
     
 
@@ -203,17 +203,23 @@ n <- 190# number of patients
     
     # just LoE
     p<- ggplot(data = d[d$LoE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(-10, 60))
+    plot_LoE <-  p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("SPM-LoE pattern")
     
     
     #just AE
     # AE
     p<- ggplot(data = d[d$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(-10, 60))
+    plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("SPM-AE pattern")
     
     
+    
+    #just No IE
+    # No IE
+    p<- ggplot(data = d[d$Behavior=="No IE",], aes(x = visit, y = MADRS10_collected, group = id)) 
+    plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("SPM-No IE pattern")
     
     
     
@@ -234,24 +240,20 @@ n <- 190# number of patients
     
     # All behaviors
     p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(-10, 60))
+    plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("SPM-All patterns")
     
     
 describe(d)
     
-    
+(plot_all / plot_LoE) | (plot_AE / plot_NoIE)
     
     
     fit_lmer <- lmer(MADRS10_collected ~ visit + visit:Treat + (1 + visit|id), data = d, REML = T)
     
     summary(fit_lmer)
     
-    
-    
 
-    
-    
     
     
     fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat, 
@@ -264,8 +266,10 @@ describe(d)
     getVarCov(fit_lme, type= "marginal")
     
     
-    
     getVarCov(fit_lme,type = c("conditional"))
+    
+    
+    getVarCov(fit_lme,type = c("random.effects"))
     
     #vcov(fit_lme)
     
