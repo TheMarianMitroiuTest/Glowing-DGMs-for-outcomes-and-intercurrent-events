@@ -96,7 +96,7 @@ scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the 
 
 
 
-n <- 2000# number of patients
+n <- 190# number of patients
 
 CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
 colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
@@ -191,6 +191,7 @@ colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 
+s<-5
 
 start_time <- Sys.time()
 
@@ -655,7 +656,7 @@ for (s in 1:length(scaling_factor)) {
     p<- ggplot(data = d_mis_L, aes(x = Visit, y = MADRS10, group = id, color=Behavior)) 
     #p + geom_line() + facet_grid(~ Treat) 
     plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60)); plot_all
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("SM-All patterns"); plot_all
     
     
 
@@ -669,7 +670,7 @@ for (s in 1:length(scaling_factor)) {
     # just LoE patients with true trajectory
     p<- ggplot(data = d_mis_L_LoE, aes(x = Visit, y = MADRS10, group = id))
     plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60)); plot_LoE
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("SM-LoE pattern"); plot_LoE
     
     #View(d_mis_L)
     
@@ -678,13 +679,13 @@ for (s in 1:length(scaling_factor)) {
     # just AE patients with true trajectory
     p<- ggplot(data = d_mis_L_AE, aes(x = Visit, y = MADRS10, group = id))
     plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(-10, 60)) ; plot_AE
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("SM-AE pattern") ; plot_AE
     
     
     # just No IE patients with true trajectory
     p<- ggplot(data = d_mis_L_NoIE, aes(x = Visit, y = MADRS10, group = id))
    plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-     scale_y_continuous(limits = c(-10, 60)); plot_NoIE
+     scale_y_continuous(limits = c(-10, 60))+ ggtitle("SM-No IEs pattern"); plot_NoIE
     
     
     
@@ -745,7 +746,7 @@ for (s in 1:length(scaling_factor)) {
 
 
 
-plot_all / plot_LoE / plot_AE / plot_NoIE
+(plot_all / plot_LoE) | (plot_AE / plot_NoIE)
 
 
 (plot_all / plot_all) | (plot_all/plot_all)

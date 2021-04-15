@@ -115,7 +115,7 @@ pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3)
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 
-#s <-1
+s <-1
 
 start_time <- Sys.time()
 
@@ -193,19 +193,19 @@ for (s in 1:length(scaling_factor)) {
     
     # Scenario A -> pattern of LoE in both experimental and control arms
     beta.baseline_LoE_all <- 29.951049
-    beta_week1_LoE_all <- -0.117613
-    beta_week2_LoE_all <- 0.556190
-    beta_week3_LoE_all <- 0.053362
-    beta_week4_LoE_all <- 0.947715 
-    beta_week5_LoE_all <- 1.562001
-    beta_week6_LoE_all <- 1.450964
+    beta_week1_LoE_all <- 0.93#-0.117613
+    beta_week2_LoE_all <- 2.3#0.556190
+    beta_week3_LoE_all <- 2.2#0.053362
+    beta_week4_LoE_all <- 3#0.947715 
+    beta_week5_LoE_all <- 4#1.562001
+    beta_week6_LoE_all <- 2#1.450964
     
-    beta_v1_treatment_LoE_all <- -0.271627
-    beta_v2_treatment_LoE_all <- -0.024667
-    beta_v3_treatment_LoE_all <- -0.712452
-    beta_v4_treatment_LoE_all <- -0.816656
-    beta_v5_treatment_LoE_all <- -0.737112
-    beta_v6_treatment_LoE_all <- 0#-1.909406  #-1.318160
+    beta_v1_treatment_LoE_all <- -0.5#-0.271627
+    beta_v2_treatment_LoE_all <- -1#-0.024667
+    beta_v3_treatment_LoE_all <- -1.6#-0.712452
+    beta_v4_treatment_LoE_all <- -2.15#-0.816656
+    beta_v5_treatment_LoE_all <- -2.75#-0.737112
+    beta_v6_treatment_LoE_all <- -2#-1.909406  #-1.318160
     
     #0.38*5
     
@@ -271,8 +271,8 @@ for (s in 1:length(scaling_factor)) {
     
     
     p<- ggplot(data = d_LoE_all, aes(x = visit, y = MADRS10, group = id)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-20, 75))
+    plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-LoE pattern")
     
     
     #View(d_LoE_all)
@@ -378,12 +378,12 @@ for (s in 1:length(scaling_factor)) {
     
     # Scenario A -> pattern of AE in  experimental arm
     beta.baseline_AE_exp <- 29.951049
-    beta_week1_AE_exp <- -6.477987
-    beta_week2_AE_exp <- -11.141631
-    beta_week3_AE_exp <- -10.058028
-    beta_week4_AE_exp <- -11.484430 
-    beta_week5_AE_exp <- -12.509911
-    beta_week6_AE_exp <- 0#-12.660152
+    beta_week1_AE_exp <- -6.5
+    beta_week2_AE_exp <- -11
+    beta_week3_AE_exp <- -10
+    beta_week4_AE_exp <- -11.5 
+    beta_week5_AE_exp <- -10
+    beta_week6_AE_exp <- -7#-12.660152
     
     
     
@@ -439,8 +439,8 @@ for (s in 1:length(scaling_factor)) {
     
     
     p<- ggplot(data = d_AE_exp, aes(x = visit, y = MADRS10, group = id)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-20, 75))
+    plot_AE_exp <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE exp pattern")
     
     
     
@@ -539,12 +539,13 @@ for (s in 1:length(scaling_factor)) {
     
     # Scenario A -> pattern of LoE in both experimental and control arms
     beta.baseline_AE_control <- 29.951049
-    beta_week1_AE_control <- 3.056887
-    beta_week2_AE_control <- 5.611661
-    beta_week3_AE_control <- 2.769695
-    beta_week4_AE_control <- 2.991209 
-    beta_week5_AE_control <- 3.552138
-    beta_week6_AE_control <- 0#0.385184
+    
+    beta_week1_AE_control <- 1.5 #3.056887
+    beta_week2_AE_control <- 1 #5.611661
+    beta_week3_AE_control <- 1 #2.769695
+    beta_week4_AE_control <- 0.5#2.991209 
+    beta_week5_AE_control <- 1#
+    beta_week6_AE_control <- 1#0.385184
     
     
     
@@ -605,8 +606,8 @@ for (s in 1:length(scaling_factor)) {
     
     
     p<- ggplot(data = d_AE_control, aes(x = visit, y = MADRS10, group = id)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 70))
+    plot_AE_control <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE control pattern")
     
     #View(d_AE_control)
     
@@ -702,19 +703,19 @@ for (s in 1:length(scaling_factor)) {
     
     # Scenario A -> pattern of No IE in both experimental and control arms
     beta.baseline_No_IE <- 29.951049
-    beta_week1_No_IE <- -2.061548
-    beta_week2_No_IE <- -3.864898
-    beta_week3_No_IE <- -4.360199
-    beta_week4_No_IE <- -5.975185
-    beta_week5_No_IE <- -7.406465
-    beta_week6_No_IE <- -8.161270
+    beta_week1_No_IE <- -2#-2.061548
+    beta_week2_No_IE <- -3.5#-3.864898
+    beta_week3_No_IE <- -4.4#-4.360199
+    beta_week4_No_IE <- -5.75# -5.975185
+    beta_week5_No_IE <- -7.4#-7.406465
+    beta_week6_No_IE <- -7#-8.161270
     
-    beta_v1_treatment_No_IE <- -0.469287
-    beta_v2_treatment_No_IE <- -0.268673
-    beta_v3_treatment_No_IE <- -0.724476
-    beta_v4_treatment_No_IE <- -1.037980
-    beta_v5_treatment_No_IE <- -1.420660
-    beta_v6_treatment_No_IE <- -6.25#-4.195854 # -1.904595
+    beta_v1_treatment_No_IE <- -1.5# -0.469287
+    beta_v2_treatment_No_IE <- -2#-0.268673
+    beta_v3_treatment_No_IE <- -2.5#-0.724476
+    beta_v4_treatment_No_IE <- -3#-1.037980
+    beta_v5_treatment_No_IE <- -3.5#-1.420660
+    beta_v6_treatment_No_IE <- -4.25#-4.195854 # -1.904595
     
     
     
@@ -785,8 +786,8 @@ for (s in 1:length(scaling_factor)) {
     
     
     p<- ggplot(data = d_No_IE, aes(x = visit, y = MADRS10, group = id)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-20, 70))
+    plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-No IE pattern")
     
     #View(d_No_IE)
     
@@ -879,27 +880,32 @@ for (s in 1:length(scaling_factor)) {
     
     # LoE_all/any
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=LoE_Yes)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))
     
     
     # AE_exp
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_exp)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))
     
     
     # AE_control
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_control)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))
     
     
     # AE_any
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_Yes)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))
     
     
     # No_IE
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=No_IE)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60))
     
     
     
@@ -909,7 +915,14 @@ for (s in 1:length(scaling_factor)) {
     # All behaviors
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=Pattern)) 
     #p + geom_line() + facet_grid(~ Treat) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+    plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM - All patterns")
+
+    
+    
+    
+    (plot_all / plot_LoE) | ((plot_AE_control+plot_AE_exp) / plot_NoIE)
+    
     
     
     fit_pmmm<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
