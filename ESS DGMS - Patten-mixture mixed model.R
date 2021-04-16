@@ -83,7 +83,7 @@ Scenario <- c("A")
 
 set.seed(2147483629)
 #set.seed(2147483399)
-m.iterations <- 20# number of generated datasets # number of trials per scaling factor
+m.iterations <- 30# number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) #c(0.20, 0.40, 0.60, 0.80, 1) # to cover a range of IE % from ~5%-45% in total
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
@@ -115,13 +115,14 @@ pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3)
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 
-s <-1
+#s <-1
 
 start_time <- Sys.time()
 
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
-    
+
+        
     
     # percentages of intercurrent events To be filled in from the SM tables
     sampled_prop_LoE <- sample(prop_LoE, 1)
@@ -205,7 +206,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_LoE_all <- -1.6#-0.712452
     beta_v4_treatment_LoE_all <- -2.15#-0.816656
     beta_v5_treatment_LoE_all <- -2.75#-0.737112
-    beta_v6_treatment_LoE_all <- -2#-1.909406  #-1.318160
+    beta_v6_treatment_LoE_all <- 0#-2#-1.909406  #-1.318160
     
     #0.38*5
     
@@ -383,7 +384,7 @@ for (s in 1:length(scaling_factor)) {
     beta_week3_AE_exp <- -10
     beta_week4_AE_exp <- -11.5 
     beta_week5_AE_exp <- -10
-    beta_week6_AE_exp <- -7#-12.660152
+    beta_week6_AE_exp <- 0#-7#-12.660152
     
     
     
@@ -545,7 +546,7 @@ for (s in 1:length(scaling_factor)) {
     beta_week3_AE_control <- 1 #2.769695
     beta_week4_AE_control <- 0.5#2.991209 
     beta_week5_AE_control <- 1#
-    beta_week6_AE_control <- 1#0.385184
+    beta_week6_AE_control <- 0#1#0.385184
     
     
     
@@ -715,7 +716,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_No_IE <- -2.5#-0.724476
     beta_v4_treatment_No_IE <- -3#-1.037980
     beta_v5_treatment_No_IE <- -3.5#-1.420660
-    beta_v6_treatment_No_IE <- -4.25#-4.195854 # -1.904595
+    beta_v6_treatment_No_IE <- -6.25#-4.25#-4.195854 # -1.904595
     
     
     
@@ -932,8 +933,6 @@ for (s in 1:length(scaling_factor)) {
                   weights = varIdent(form = ~ 1 | visit), 
                   method="REML")
     
-    # make an analysis model that is the same as the DGM.
-    # write down the model
     
     
     summary(fit_pmmm)
@@ -1127,6 +1126,35 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
       rbind(all_confint_fit_1, all_confint_fit_2, all_confint_fit_3, all_confint_fit_4, all_confint_fit_5),
       rbind(all_N_Exp_1, all_N_Exp_2, all_N_Exp_3, all_N_Exp_4, all_N_Exp_5),
       rbind(all_N_Control_1, all_N_Control_2, all_N_Control_3, all_N_Control_4, all_N_Control_5))
+
+
+
+
+
+
+
+
+# apply the PMMM with only 1 model for AE in both arms.
+# see if the weighting works as per parameters formula
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
