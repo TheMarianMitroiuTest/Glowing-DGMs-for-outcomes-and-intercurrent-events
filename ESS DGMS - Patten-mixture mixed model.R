@@ -83,7 +83,7 @@ Scenario <- c("A")
 
 set.seed(2147483629)
 #set.seed(2147483399)
-m.iterations <- 10# number of generated datasets # number of trials per scaling factor
+m.iterations <- 1500# number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) #c(0.20, 0.40, 0.60, 0.80, 1) # to cover a range of IE % from ~5%-45% in total
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
@@ -1158,44 +1158,19 @@ for (s in 1:length(scaling_factor)) {
     
     re_covm_LoE_all
     
-    #treatmenteffect_pmmm <- sampled_prop_LoE * beta_v6_treatment_LoE_all +
+    treatmenteffect_pmmm <- sampled_prop_LoE * beta_v6_treatment_LoE_all +
       
+    (sampled_prop_AE_exp*(beta_v6_treatment_AE_all + beta_week6_AE_all) - (sampled_prop_AE_control * beta_week6_AE_all)) +
+    
      # sampled_prop_AE_exp *  beta_week6_AE_exp +
       
       #sampled_prop_AE_control *  beta_week6_AE_control +
       
-      #(1-(sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control)) *  beta_v6_treatment_No_IE
+      (1-(sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control)) *  beta_v6_treatment_No_IE ; treatmenteffect_pmmm
     
     
-    sum(fit_pmmm$coefficients[c(13)]); #treatmenteffect_pmmm
-    
-    
-    
-    #treatmenteffect_pmmm <- sampled_prop_LoE * -1.909406 +
-      
-     # sampled_prop_AE_exp * -12.660152 +
-      
-      #sampled_prop_AE_control *  0.385184 +
-      
-      #(1-(sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control)) *  -4.195854; treatmenteffect_pmmm
-    
-    
-    
-    
-    
-    # treatment effect in PMMMM based on models fitted on the SM with 5000 patients 
-    #-1.318160*0.383+
-    #-12.660152*0.0298+
-    #0.385184*0.0158+
-    #-1.904595*0.5714
-    
-    
-    
-    
-    
-    
-    #
-    
+    sum(fit_pmmm$coefficients[c(13)]); treatmenteffect_pmmm
+  
     
     betas[m, ] <- fit_pmmm$coefficients[c(13)]
     
@@ -1250,10 +1225,11 @@ for (s in 1:length(scaling_factor)) {
 end_time <- Sys.time()
 
 
+end_time-start_time
 
+all_betas_1; 
+colMeans(all_delta_1); treatmenteffect_pmmm
 
-all_betas_1
-colMeans(all_delta_1)
 
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==1])
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==0])
@@ -1271,13 +1247,13 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 
 # AE_exp
-p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id, color=AE_exp)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+#p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id, color=AE_exp)) 
+#p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
 
 
 # AE_control
-p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id, color=AE_control)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
+#p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id, color=AE_control)) 
+#p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
 
 
 # AE_any
@@ -1323,7 +1299,7 @@ summary(fit_190)
 # create simple function to sample few and visualise them
 
 
-end_time-start_time
+
 
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
