@@ -1233,10 +1233,12 @@ colMeans(all_delta_1); treatmenteffect_pmmm
 tolerance_margin <- 0.1
 difference_check <- treatmenteffect_pmmm - colMeans(all_delta_1)
 
-ifelse(isTRUE(paste(difference_check) < tolerance_margin), print("Check successful"), print("Check NOT successful"))
+# check if the result satisfies the inequality
+ifelse(isTRUE(paste(difference_check) < tolerance_margin), print("Check successful"), print("Check NOT successful")) 
 
 
 #hist(treatmenteffect_pmmm - all_betas_1)
+
 
 
 hist(all_betas_1)

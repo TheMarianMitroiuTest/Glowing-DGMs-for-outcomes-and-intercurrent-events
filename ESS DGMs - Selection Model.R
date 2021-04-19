@@ -87,7 +87,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
+m.iterations <- 100 # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
@@ -191,7 +191,7 @@ colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 
-s<-5
+#s<-5
 
 start_time <- Sys.time()
 
@@ -356,7 +356,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    fit<-gls(MADRS10 ~ visit * Treat + Baseline, 
+    fit <- gls(MADRS10 ~ visit * Treat + Baseline, 
              data=d,
              correlation = corSymm(form=~1 | id),
              #weights = varIdent(form = ~ 1 | visit),
@@ -401,9 +401,9 @@ for (s in 1:length(scaling_factor)) {
     
     #model_parameters(fit_lme)
     
-    #betas[m, ] <- fit$coefficients[c(7,13)]
+    betas[m, ] <- fit$coefficients[c(8,15)]
     
-    #delta[m, ] <- sum(fit$coefficients[c(7,13)])
+    delta[m, ] <- sum(fit$coefficients[c(8,15)])
     
     #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
     
@@ -738,6 +738,7 @@ for (s in 1:length(scaling_factor)) {
 
 
 
+colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
 
 (plot1 / plot_all) /
@@ -758,7 +759,7 @@ end_time-start_time
 
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
-colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
+
 
 
 cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
@@ -1079,7 +1080,10 @@ summary(fit_AE_control_spm)
 
 
 
-
+#############################################################################################################
+#############################################################################################################
+#############################################################################################################
+#############################################################################################################
 
 
 # Selection model via marginal model for outcomes-generating model and FULLY STOCHASTIC models for generation of intercurrent events

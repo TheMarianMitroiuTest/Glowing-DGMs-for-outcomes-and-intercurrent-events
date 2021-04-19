@@ -9,7 +9,7 @@
 
 
 ### DGM
-rm(list=ls())
+#rm(list=ls())
 library(MASS)
 library(nlme)
 library(survival)
@@ -262,6 +262,11 @@ describe(d)
                    data=d)
     
     summary(fit_lme)
+  
+    -0.788534/0.1696878
+    
+    
+    0.1696878*6
     
     getVarCov(fit_lme, type= "marginal")
     
