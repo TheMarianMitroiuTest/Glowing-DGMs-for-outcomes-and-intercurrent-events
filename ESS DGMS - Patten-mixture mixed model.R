@@ -83,7 +83,7 @@ Scenario <- c("A")
 
 set.seed(2147483629)
 #set.seed(2147483399)
-m.iterations <- 1500# number of generated datasets # number of trials per scaling factor
+m.iterations <- 500# number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) #c(0.20, 0.40, 0.60, 0.80, 1) # to cover a range of IE % from ~5%-45% in total
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
@@ -1230,6 +1230,26 @@ end_time-start_time
 all_betas_1; 
 colMeans(all_delta_1); treatmenteffect_pmmm
 
+tolerance_margin <- 0.1
+difference_check <- treatmenteffect_pmmm - colMeans(all_delta_1)
+
+ifelse(isTRUE(paste(difference_check) < tolerance_margin), print("Check successful"), print("Check NOT successful"))
+
+
+#hist(treatmenteffect_pmmm - all_betas_1)
+
+
+hist(all_betas_1)
+
+colMeans(all_betas_1) + 1.96*sd(all_betas_1)/sqrt(n)
+colMeans(all_betas_1) - 1.96*sd(all_betas_1)/sqrt(n)
+
+min(all_betas_1)
+max(all_betas_1)
+
+all_betas_1< -3.5-1
+all_betas_1< -3.5-+1
+
 
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==1])
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==0])
@@ -1239,7 +1259,6 @@ describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==0])
 
 # Plot trajectories
 # All patients with TRUE trajectory 
-
 
 # LoE_all/any
 p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id, color=LoE_Yes)) 
