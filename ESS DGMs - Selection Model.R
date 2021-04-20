@@ -1,3 +1,7 @@
+## License CC-BY-4.0 
+## Creative Commons Attribution 4.0 International
+
+
 ## outcomes generates as responses, and analysed with baseline as fixed-effect (as covariate), not as response
 # function for DGM, IEGM and analyses methods
 #####
@@ -45,7 +49,7 @@ library(gt)
 library(equatiomatic)
 library(gmailr)
 library(parallel)
-#install.packages("clubSandwich",repos="http://cran.r-project.org")
+#install.packages("rsimsum",repos="http://cran.r-project.org")
 library(gridExtra)
 library(metafolio)
 library(scales)
@@ -55,6 +59,7 @@ library(parameters)
 library(sandwich)
 library(lmtest)
 library(optimx)
+library(rsimsum)
 #library(clubSandwich)
 
 
@@ -739,6 +744,10 @@ for (s in 1:length(scaling_factor)) {
 
 
 colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
+hist(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
+
+
+
 
 
 (plot1 / plot_all) /

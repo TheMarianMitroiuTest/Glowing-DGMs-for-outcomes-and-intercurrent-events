@@ -1,3 +1,10 @@
+## License CC-BY-4.0 
+## Creative Commons Attribution 4.0 International
+
+
+
+
+
 ## outcomes generates as responses, and analysed with baseline as fixed-effect (as covariate), not as response
 # function for DGM, IEGM and analyses methods
 #####
