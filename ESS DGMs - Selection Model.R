@@ -23,8 +23,6 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 
-
-
 rm(list=ls())
 library(MASS)
 library(nlme)
@@ -71,9 +69,6 @@ library(rsimsum)
 sessionInfo()
 installed.packages()
 
-    #View(SimTrial_1_1)
-
-
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
 
 # setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
@@ -87,10 +82,9 @@ google_app <- httr::oauth_app(
 gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
                   secret = "Orgt-B5-eAEplGIbfWmr4Uhy")
 
-
-
 options(mc.cores = parallel::detectCores()) # M1 with parallel, 2017 macbook pro without parallel setting on
 # considerably reduces the time needed to complete the simulations vs parallel setting off
+# for other machines it is recommended to test few runs with different iterations and settings to optimise the computation of the simulation
 
 
 Scenario <- c("A")
