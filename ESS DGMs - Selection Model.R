@@ -763,13 +763,14 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
 
 
 
-# Use simulated trial with highest percentage of IE
+# Use simulated trial with highest percentage of IE. Any other trial or parameters can be used. We chose it for operational reasons and model-fitting optimisation
+# e.g., to have more patients in each pattern such that models fit
 
 #View(SimTrial_sm_2000_1_5)
 describe(SimTrial_sm_2000_1_5)
 
 # prepare the dataset for reparameterisation to not have any treatment coefficient at baseline
-
+# as per the formulated model
 SimTrial_sm_2000_1_5$V0 <- 0
 SimTrial_sm_2000_1_5$V0[SimTrial_sm_2000_1_5$Visit == "Baseline"] <- 1
 
@@ -791,8 +792,6 @@ SimTrial_sm_2000_1_5$V35[SimTrial_sm_2000_1_5$Visit == "Week5"] <- 1
 SimTrial_sm_2000_1_5$V42 <- 0
 SimTrial_sm_2000_1_5$V42[SimTrial_sm_2000_1_5$Visit == "Week6"] <- 1
 SimTrial_sm_2000_1_5
-
-
 
 
 head(SimTrial_sm_2000_1_5)
@@ -1031,20 +1030,7 @@ summary(fit_AE_control_spm)
 
 
 
-
-
-
-
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-
-
 
 
 
@@ -1055,6 +1041,7 @@ summary(fit_AE_control_spm)
 
 
 # Selection model via marginal model for outcomes-generating model and FULLY STOCHASTIC models for generation of intercurrent events
+# for notation and description, please see above in the deterministic approach. The difference hereonwards is that we used logistic models to model the probability of intercurrent events, vs the deterministic rules as applied in the above approach
 
 
 google_app <- httr::oauth_app(
@@ -1408,12 +1395,8 @@ for (s in 1:length(scaling_factor)) {
     # one model for LoE for all patients
     # one model for AE in experimental arm
     # one model for AE in control arm
-    
-    
-    # see paper and use that wording
-    
-    # if Difference < 5, then missing outcome from visit 3 onwards for LoE
-    
+
+ 
     ## take over the original/raw dataset to use for IEGM/MDGM
     d_mis <-d_orig
     
@@ -1427,23 +1410,14 @@ for (s in 1:length(scaling_factor)) {
     d_mis_w$CfW2 <- d_mis_w[,3] - d_mis_w[,5]; d_mis_w # create the CfW2 variable
     
     
-    
-    
-    
-    
-    
-    
-    
     d_mis_L <- d_mis_w %>% gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
     
     
+    d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
     
-    
-    d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L)
-    
-    #describe(predict(logit_LoE, type="response", newdata=d_mis_L))
+    #describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
     
     d_mis_L$LoE_yes <- ifelse(d_mis_L$predicted_LoE < up_boundary_prob_LoE & d_mis_L$predicted_LoE > low_boundary_prob_LoE, 1, 0)
     d_mis_L$CfB
@@ -1452,9 +1426,8 @@ for (s in 1:length(scaling_factor)) {
     
     trial_AE_X <- d_mis_L[d_mis_L$Treat==1,]
     
+    trial_AE_X$predicted_AE <- predict(logit_AE_exp, type="response", newdata = trial_AE_X) #  predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the experimental arm
 
-  
-    trial_AE_X$predicted_AE <- predict(logit_AE_exp, type="response", newdata = trial_AE_X)
     
     #describe(predict(logit_LoE, type="response", newdata=d_mis_L))
     
@@ -1462,25 +1435,18 @@ for (s in 1:length(scaling_factor)) {
     
     trial_AE_X$CfW2
     
-      
-    
-    
     
     trial_AE_C <- d_mis_L[d_mis_L$Treat==0,]
     
     
-    
-    trial_AE_C$predicted_AE <- predict(logit_AE_control, type="response", newdata = trial_AE_C)
-    
-    
+    trial_AE_C$predicted_AE <- predict(logit_AE_control, type="response", newdata = trial_AE_C) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the control arm
+
+    ### need to change here to not use a cutoff anymore, but directly rbinom with means equal to the estimated probabilities from the logit models
     trial_AE_C$AE_yes <- ifelse(trial_AE_C$predicted_AE  < up_boundary_prob_AE_control & trial_AE_C$predicted_AE  > low_boundary_prob_AE_control, 1, 0)
     
     trial_AE_C$CfW2
     
     
-
-
-  
     # AE and LoE in experimental arm
     trial_AE_X$AE_YES <- ifelse(trial_AE_X[,10]==1, 1, 0)
     trial_AE_X$LoE_YES <- ifelse(trial_AE_X[,10]==0 & trial_AE_X[,8]==1 , 1, 0)
@@ -1490,25 +1456,14 @@ for (s in 1:length(scaling_factor)) {
     trial_AE_C$LoE_YES <- ifelse(trial_AE_C[,8]==1, 1, 0)
     trial_AE_C$AE_YES <- ifelse(trial_AE_C[,8]==0 & trial_AE_C[,10]==1, 1, 0)
 
-    
-    
-    
-    
-    
+  
     d_mis_LL <- rbind(trial_AE_X, trial_AE_C)
     
     #View(d_mis_LL)
     
     d_mis_LL
     
-    
-    
-    
-
-    
-    
-
-    
+  
     d_mis_LL <- d_mis_LL[order(d_mis_LL$id),]; #d # order by subject id and Visit
     #colnames(d_mis_L)[10] <- c("MADRS10_mis"); d_mis_L # name the column
     
@@ -1536,7 +1491,6 @@ for (s in 1:length(scaling_factor)) {
     range(d_mis_LL$MADRS10[d_mis_LL$Treat==0], na.rm = T)
     
     
-    
     describe(d_mis_LL$AE_YES[d_mis_LL$Treat==0])
     describe(d_mis_LL$AE_YES[d_mis_LL$Treat==1])
     describe(d_mis_LL$AE_YES)
@@ -1552,9 +1506,6 @@ for (s in 1:length(scaling_factor)) {
     
     
     View(d_mis_LL)
-    
-    
-    
     
 
     
@@ -1610,7 +1561,6 @@ for (s in 1:length(scaling_factor)) {
     #n_AE_Control[m, ] <- tb_AE_Control
     
     
-    
     #LoE
     LoE_total_Perc[m,] <- round(LoE_Y_total/n*100, digits=2)
     
@@ -1641,11 +1591,9 @@ for (s in 1:length(scaling_factor)) {
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
     
     
-    
     # AE
     p<- ggplot(data = d_mis_LL, aes(x = Visit, y = MADRS10, group = id, color=AE_YES)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
-    
     
     
     # All behaviors
@@ -1655,8 +1603,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     
     d_mis_L_LoE <- d_mis_L[d_mis_L$LoE_YES==1,] # subset only patients that experienced LoE
@@ -1664,7 +1611,6 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L_NoIE <- d_mis_L[d_mis_L$LoE_YES==0 & d_mis_L$AE_Yes==0,] # subset only patients that did not experience any IE
     
   #  View(d_mis_L)
-    
     
     # All patients with true trajectory with different colours by LoE (Y/N)
     p<- ggplot(data = d_mis_LL, aes(x = Visit, y = MADRS10, group = id, color=LoE_YES))
@@ -1694,16 +1640,10 @@ for (s in 1:length(scaling_factor)) {
     setTxtProgressBar(pb1, m)
   }
   
-  
-  
-  
-  
-  
+
   # parameters extracted for MMRM fitted models on full outcome data
   colMeans(betas)
   colMeans(delta) ; treatmenteffect
-  
-  
   
   
   # assign   
@@ -1719,12 +1659,8 @@ for (s in 1:length(scaling_factor)) {
   
   assign(paste('all_N_Control', s, sep="_"), N_Control)
   
-  ### plot bias
-  
-  
   setTxtProgressBar(pb3, s)
 }
-
 
 end_time <- Sys.time()
 
@@ -1733,10 +1669,3 @@ end_time-start_time
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
 colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
-
-
-# resume here
-# find an efficient way to store each generated dataset, outcomes and intercurrent events
-# find an efficient way to store all descriptive statistics, betas, deltas, percentages for each intercurrent event
-
-
