@@ -235,7 +235,6 @@ for (s in 1:length(scaling_factor)) {
     
     #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
-    
     # covariance matrix with 0 off-diagonal and small variances. This is useful for initial/later checks to see if the simulated data corresponds to target data to be simulated
     #re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
      #                   0, 0.00001, 0, 0, 0, 0, 0,
@@ -425,8 +424,6 @@ for (s in 1:length(scaling_factor)) {
     N_Exp[m,] <- Randomised_Exp
     N_Control[m,] <- Randomised_Control
 
-
-    
     
     ####################################################################################################  
     ####################################################################################################
@@ -524,7 +521,6 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L$Behavior <- ifelse(d_mis_L[,10]==1, "AE",
                                ifelse(d_mis_L[,11]==1, "LoE", "No IE"))
     
-    
     d_mis_L$Behavior <-factor(d_mis_L$Behavior, levels = c("AE", "LoE", "No IE"))
     
     class(d_mis_L$Visit)
@@ -580,6 +576,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     ## AE ##
+    
     tb_AE_total <- AE_Y_total
     tb_AE_Exp <- AE_Y_Exp
     tb_AE_Control <- AE_Y_Control
@@ -589,20 +586,22 @@ for (s in 1:length(scaling_factor)) {
     n_AE_Exp[m, ] <- tb_AE_Exp
     n_AE_Control[m, ] <- tb_AE_Control
     
-    
-    
+  
     ## LoE ##
+    
     LoE_total_Perc[m,] <- round(LoE_Y_total/n*100, digits=2)
     LoE_Exp_Perc[m,] <- round(LoE_Y_Exp/Randomised_Exp*100, digits=2)
     LoE_Control_Perc[m,] <- round(LoE_Y_Control/Randomised_Control*100, digits=2)
     
     #AE
+    
     AE_total_Perc[m,] <-  round(AE_Y_total/n*100, digits=2)
     AE_Exp_Perc[m,] <- round(AE_Y_Exp/Randomised_Exp*100, digits=2)
     AE_Control_Perc[m,] <- round(AE_Y_Control/Randomised_Control*100, digits=2)
     
     
     # Total AE + LoE and percentage relative to the entire study population
+    
     n_AE_and_LoE_T[m, ] <- LoE_Y_total + AE_Y_total
     AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
     
