@@ -1,5 +1,6 @@
 ## License CC-BY-4.0 
 ## Creative Commons Attribution 4.0 International
+## Mitroiu M. et al SMMR
 
 
 ## outcomes generates as responses, and analysed with baseline as fixed-effect (as covariate), not as response

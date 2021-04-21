@@ -1,6 +1,6 @@
 ## License CC-BY-4.0 
 ## Creative Commons Attribution 4.0 International
-
+## Mitroiu M. et al SMMR
 
 ## Outcomes generated as responses, and analysed with baseline as fixed-effect (as covariate), not as response
 # function for DGM, IEGM and analyses methods
@@ -906,7 +906,7 @@ predicted_LoE <- predict(logit_LoE, type="response", newdata=SimTrial_sm_2000_1_
 
 SimTrial_sm_2000_1_5$predicted_LoE <- predicted_LoE
 
-View(SimTrial_sm_2000_1_5[,c(5, 20)])
+#View(SimTrial_sm_2000_1_5[,c(5, 20)])
 
 probz_predicted_LoE_Yes <- SimTrial_sm_2000_1_5$predicted_LoE[SimTrial_sm_2000_1_5$LoE_Yes==1]
 up_boundary_prob_LoE <- max(probz_predicted_LoE_Yes)  ; up_boundary_prob_LoE
@@ -922,7 +922,7 @@ logit_AE_exp <- glm(AE_Exp_Yes ~ -1 + CfW2,
 
 
 
-summary(logit_AE_exp)
+#summary(logit_AE_exp)
 
 predicted_AE_exp <- predict(logit_AE_exp, type="response", newdata = trial_AE_exp)
 
