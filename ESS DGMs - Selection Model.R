@@ -119,19 +119,19 @@ p_AE_Exp_sample <- c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample)
 p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
 
 visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline (day 0) + follow-up measurements at day 7, 14, ..., 42
-delta <- matrix(ncol=1,nrow=m.iterations) # treatment effect estimate at 6 weeks based on MMRM models fitted on each generated dataset
+delta <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
 colnames(delta) <-c("TreatmentEffect")
-betas <- matrix(ncol=2,nrow=m.iterations)
+betas <- matrix(ncol=2,nrow=m.iterations) # object to store parameters for the treatment effect at week 6 based on the MMRM model fitted on each generated dataset
 colnames(betas) <-c("Treat", "visit42:Treat")
 
-pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3)
+pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
 
-confint_fit <- matrix(ncol=2,nrow=m.iterations) 
+confint_fit <- matrix(ncol=2,nrow=m.iterations) # object to store the 95% confidence interval bounds for the estimated treatment effect
 colnames(confint_fit) <-c("Lower boundary 95% CI", "Upper boundary 95% CI")
-delta_errorz <- matrix(ncol=1,nrow=m.iterations)
+delta_errorz <- matrix(ncol=1,nrow=m.iterations) # standard error of the estimated treatment effect
 colnames(delta_errorz) <- c("SE")
 
-bias_f <- matrix(ncol=1,nrow=m.iterations)
+bias_f <- matrix(ncol=1,nrow=m.iterations) # object to store the bias (estimated treatment effect - true treatment effect)
 colnames(bias_f) <- c("bias_f")
 
 ## randomisation objects, allocation
@@ -142,37 +142,38 @@ N_Control  <- matrix(ncol=1,nrow=m.iterations)
 colnames(N_Control) <-c("N randomised Control")
 
 
-# IE objects
-# LoE
-n_LoE_total <- matrix(ncol=1,nrow=m.iterations) # 
+# Intercurrent events objects
+# lack of efficacy (LoE)
+n_LoE_total <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to lack of efficacy at trial level
 colnames(n_LoE_total) <- c("N LoE Total")
 
-n_LoE_Exp <- matrix(ncol=1,nrow=m.iterations) # 
+n_LoE_Exp <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to lack of efficacy in the experimental arm
 colnames(n_LoE_Exp) <- c("N LoE Exp")
 
-n_LoE_Control <- matrix(ncol=1,nrow=m.iterations) # 
+n_LoE_Control <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to lack of efficacy in the control arm
 colnames(n_LoE_Control) <- c("N LoE Control")
 
 
-# AE
+# Adverse events (AE)
 
-n_AE_total <- matrix(ncol=1,nrow=m.iterations) # 
+n_AE_total <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to adverse events at trial level
 colnames(n_AE_total) <- c("N AE Total")
 
-n_AE_Exp <- matrix(ncol=1,nrow=m.iterations) # 
+n_AE_Exp <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to adverse events in the experimental arm
 colnames(n_AE_Exp) <- c("N AE Exp")
 
-n_AE_Control <- matrix(ncol=1,nrow=m.iterations) # 
+n_AE_Control <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to adverse events in the control arm
 colnames(n_AE_Control) <- c("N AE Control")
 
 # AE + LoE Total
 
-n_AE_and_LoE_T <- matrix(ncol=1,nrow=m.iterations) # 
+n_AE_and_LoE_T <- matrix(ncol=1,nrow=m.iterations) # object to store the total number of patients experiencing e.g., treatment discontinuation due to lack of efficacy or adverse events at trial level
 colnames(n_AE_and_LoE_T) <- c("N AE and LoE Total")
 
 
-# for percentages
+# For percentages
 # LoE
+# below are objects to store percentages data following the above structure
 LoE_total_Perc <- matrix(ncol=1,nrow=m.iterations) # 
 colnames(LoE_total_Perc) <- c("% LoE Total")
 
@@ -195,25 +196,26 @@ colnames(AE_Control_Perc) <- c("% AE Control")
 
 
 # AE + LoE percentage
-
 AE_and_LoE_Perc <- matrix(ncol=1,nrow=m.iterations) # 
 colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
 
-
-pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
+pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3) # # progress bar in percentages relative to the total number of scaling factors
 
 
 #s<-5
 
-start_time <- Sys.time()
+start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
+# it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
 
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
     
     
-    ### Generate random effects
-    re_means <- c(0, 0, 0, 0, 0, 0, 0)
-    re_covm <- matrix(c(20.2190, 17.149, 14.721, 13.087,  8.4329,  10.854,   4.6417,
+    ### Generate correlated residuals
+    re_means <- c(0, 0, 0, 0, 0, 0, 0) # means of residuals at each timepoint
+    
+    # covariance matrix extracted from trial 003-002 (see reference to the data analysis paper in PST)
+    re_covm <- matrix(c(20.2190, 17.149, 14.721, 13.087,  8.4329,  10.854,   4.6417, 
                         17.1490, 48.536, 41.161, 32.151, 24.8400,  30.528,  26.0170,
                         14.7210, 41.161, 72.569, 57.866, 60.2200,  61.974,  54.5400,
                         13.0870, 32.151, 57.866, 74.080, 66.2960,  63.540,  52.1070,
@@ -223,24 +225,28 @@ for (s in 1:length(scaling_factor)) {
     
     #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
-    re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
-                        0, 0.00001, 0, 0, 0, 0, 0,
-                        0, 0, 0.00001, 0, 0, 0, 0,
-                        0, 0, 0, 0.00001, 0, 0, 0,
-                        0, 0, 0, 0, 0.00001, 0, 0,
-                        0, 0, 0, 0, 0, 0.00001, 0,
-                        0, 0, 0, 0, 0, 0, 0.00001), nrow = 7)
+    
+    # covariance matrix with 0 off-diagonal and small variances. This is useful for initial/later checks to see if the simulated data corresponds to target data to be simulated
+    #re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
+     #                   0, 0.00001, 0, 0, 0, 0, 0,
+      #                  0, 0, 0.00001, 0, 0, 0, 0,
+       #                 0, 0, 0, 0.00001, 0, 0, 0,
+        #                0, 0, 0, 0, 0.00001, 0, 0,
+         #               0, 0, 0, 0, 0, 0.00001, 0,
+          #              0, 0, 0, 0, 0, 0, 0.00001), nrow = 7)
     
     
     
-    re_covm3 <-re_covm/2
+    re_covm3 <-re_covm/2 # we scaled the covariance matrix as we observed the trajectories were not similar with the targeted trajectories. This is up to user's decision
     
-    re <- mvrnorm(n, re_means, re_covm3)	; re
+    re <- mvrnorm(n, re_means, re_covm3)	; re # generate correlated residuals and check them
     #View(re)
     
     re <- as.matrix(re)
     colnames(re) <-c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6") ; re
     
+    
+    # put together the dataframe with the id of patients, visit, randomised treatment and MADRS10 values at each visit
     d <- data.frame(
       id = rep(1:n, each = length(visits)),
       visit = visits,
@@ -248,6 +254,7 @@ for (s in 1:length(scaling_factor)) {
       MADRS10 = rep(NA, n)); d # mean(Treat)
     
     
+    # data wrangling to add the correlated residuals in the above dataframe such that correlated residuals are for their corresponding patient and visit 
     d <- d[order(d$visit, d$id),]; #d
     #re
     
@@ -265,7 +272,12 @@ for (s in 1:length(scaling_factor)) {
     
     d<-as.matrix(d)
 
+    
+    # MMRM parameters to generate the longitudinal outcomes
+    # We used as inspiration the trial 003-002 (ref data analysis paper). Here we used a simplified scenario with linear group trajectories.
+    
     # Scenario A
+    # for the interpretation of these parameters, please see the table under the selection model method in the body of the paper
     beta.baseline <- 29.79
     beta_week1 <- -1
     beta_week2 <- -1.5
@@ -279,14 +291,16 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment <- -2
     beta_v4_treatment <- -2.5
     beta_v5_treatment <- -3
-    beta_v6_treatment <- -3.5 # this is roughly 1/2 of variance. If 1:1 then 16 to 16, and if 0.5 to 1, then 64 to 64.
+    beta_v6_treatment <- -3.5 
     
     treatmenteffect <-  beta_v6_treatment ; treatmenteffect
     
+    # The model used to generate the correlated repeated outcomes
     # Y_ij = (Beta_0 + bi0) + (BetaWeek1 + bi1) + (BetaWeek2 + bi2) + (BetaWeek3 + bi3) + (BetaWeek4 + bi4) + (BetaWeek5 + bi5) + (BetaWeek6 + bi6) + 
     #                          Beta_W1_Treat * T + Beta_W2_Treat * T + Beta_W3_Treat * T + Beta_W4_Treat * T + Beta_W5_Treat * T + Beta_W6_Treat * T 
     
     
+    # for loop to generate the correlated repeated outcomes that follows the above model
     for (i in 1:(n*length(visits))) {
       d[i,4] <- ifelse(d[i, 2]==0, beta.baseline + d[i,5],
                        ifelse(d[i, 2]==7, d[i-1,4] + beta_week1 + d[i,5] +  beta_v1_treatment * d[i, 3],
@@ -298,14 +312,13 @@ for (s in 1:length(scaling_factor)) {
     }
     
     
-    #sqrt(var(d$MADRS10[d$visit==42]))
-    
+
+    # check to see how many values were negative or > 60  
     ## flooring and ceiling
     #d[, 4] <- ifelse(d[, 4] < 0, 0,
     #                ifelse(d[, 4]>60, 60, d[, 4]))
     
     
-    #View(d)
     d <-as.data.frame(d)
     d$visit <-as.factor(d$visit)
     #d$Treat <- factor(d$Treat)
@@ -313,7 +326,7 @@ for (s in 1:length(scaling_factor)) {
     
     ####################################################################################################  
     # MMRM on full outcome data
-    ############################
+    ####################################################################################################  
     
     
     # this is the raw dataset used to check the model fit
