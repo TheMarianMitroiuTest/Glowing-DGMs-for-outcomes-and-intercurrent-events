@@ -2,7 +2,7 @@
 ## Creative Commons Attribution 4.0 International
 
 
-## outcomes generates as responses, and analysed with baseline as fixed-effect (as covariate), not as response
+## Outcomes generated as responses, and analysed with baseline as fixed-effect (as covariate), not as response
 # function for DGM, IEGM and analyses methods
 #####
 
@@ -15,13 +15,6 @@
 
 
 
-
-prop.test(c(4, 14), c(55, 52))
-
-
-
-
-### DGM
 rm(list=ls())
 library(MASS)
 library(nlme)
@@ -63,11 +56,12 @@ library(rsimsum)
 #library(clubSandwich)
 
 
+### 
 
 sessionInfo()
 installed.packages()
 
-#View(SimTrial_1_1)
+    #View(SimTrial_1_1)
 
 
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
@@ -84,34 +78,47 @@ gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.goog
 
 
 
-options(mc.cores = parallel::detectCores()) # M1 with parallel, Old1 without parallel
+options(mc.cores = parallel::detectCores()) # M1 with parallel, 2017 macbook pro without parallel setting on
+# considerably reduces the time needed to complete the simulations vs parallel setting off
+
 
 Scenario <- c("A")
+# This is scenario A, meaning the target longitudinal trajectories simulated are linear; we took example the Siddiqui paper referenced in the paper.
 
-# simulation parameters
+
+#########################
+# simulation parameters #
+#########################
+
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 m.iterations <- 100 # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
-# try with c(0.4, 1.1, 1.8, 2.3, 3)
-#c(0.25, 0.5, 1, 2, 2.5) steps for scaling factor
-# to multiply for LoE, AE_control and AE_exp ### value 0.5 should yield around 13.5% IEs, 1 ~ %, 2 ~ %, 2.5 ~
+# other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
+# and check out the verification step
+
+# to multiply for LoE, AE_control and AE_exp ### value 0.5 should yield around 13.5% IEs at trial level
+
+n <- 190# number of patients to be simulated (sample size)
+# this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 
+# checks performed to see how many values are above/below the natural bonds of the outcome
+# e.g., MADRS10 has values between 0 and 60 and we wanted to check how many values were negative or >60 
 
-n <- 190# number of patients
-
-CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
-colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
+#CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
+#colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
 
 
-p_LoE_sample <-c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample)
-p_AE_Exp_sample <- c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample)
-p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample)
+# ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
+# this is done to increase variability in intercurrent events percentages between trials
+p_LoE_sample <-c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy at trial level
+p_AE_Exp_sample <- c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the experimental arm
+p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
 
-visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline + follow-up measurements
+visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline (day 0) + follow-up measurements at day 7, 14, ..., 42
 delta <- matrix(ncol=1,nrow=m.iterations) # treatment effect estimate at 6 weeks based on MMRM models fitted on each generated dataset
 colnames(delta) <-c("TreatmentEffect")
 betas <- matrix(ncol=2,nrow=m.iterations)
