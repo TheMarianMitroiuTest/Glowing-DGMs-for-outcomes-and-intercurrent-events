@@ -24,15 +24,22 @@
 
 
 rm(list=ls())
+# needed for the selection model method
+library(gmailr)
 library(MASS)
+library(tidyverse)
 library(nlme)
+
+
+
+
+
+# not needed here
 library(survival)
 library(foreign)
-library(tidyverse)
 library(tidyr)
 library(haven)
 library(Hmisc)
-library(nlme)
 library(lme4)
 library(car)
 library(ggplot2)
@@ -48,7 +55,6 @@ library(dplyr)
 library(primes)
 library(gt)
 library(equatiomatic)
-library(gmailr)
 library(parallel)
 #install.packages("rsimsum",repos="http://cran.r-project.org")
 library(gridExtra)
@@ -206,7 +212,7 @@ colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
 
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3) # # progress bar in percentages relative to the total number of scaling factors
 
-#s<-5
+#s<-1
 
 start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
 # it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
@@ -253,7 +259,7 @@ for (s in 1:length(scaling_factor)) {
       MADRS10 = rep(NA, n)); d # mean(Treat)
     
     # data wrangling to add the correlated residuals in the above dataframe such that correlated residuals are for their corresponding patient and visit 
-    d <- d[order(d$visit, d$id),]; #d
+    d <- d[order(d$visit, d$id),]; d
     #re
     
     j<-c(re[, 1], re[, 2], re[, 3], re[, 4], re[, 5], re[, 6], re[, 7])
@@ -412,8 +418,8 @@ for (s in 1:length(scaling_factor)) {
     #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
     
     # store the number of patients in the objects defined a priori
-    Randomised_Exp <- sum(d[,3])/6 #number of patients in the experimental arm
-    Randomised_Control <- n-sum(d[,3])/6 #number of patients in the control arm
+    Randomised_Exp <- sum(d[,3])/7 #number of patients in the experimental arm # make sure it is divided by the number of visits (6/7), without or with the baseline included as response
+    Randomised_Control <- n-sum(d[,3])/7 #number of patients in the control arm
     
     N_Exp[m,] <- Randomised_Exp
     N_Control[m,] <- Randomised_Control
@@ -437,7 +443,7 @@ for (s in 1:length(scaling_factor)) {
     d_mis_w$CfB <- d_mis_w[,3] - d_mis_w[,9]; d_mis_w # create the CfB (change from baseline) variable. Could also be d_mis_w[,9] - d_mis_w[,3]
     
     d_mis_w$CfW2 <- d_mis_w[,3] - d_mis_w[,5]; d_mis_w # create the CfW2 (change from week 2) variable
-    
+    #s<-1
     #View(d_mis_w)
     p_LoE <-sample(p_LoE_sample, 1) * scaling_factor[s] # proportion of e.g., treatment discontinuation due to lack of efficacy multiplied by the scaling factor. 
     # this allows to obtain different smaller/larger percentages of LoE at trial level and cover a broad range of scenarios as would be in reality, and to ensure variability,
@@ -525,7 +531,7 @@ for (s in 1:length(scaling_factor)) {
     #range(d_mis_L$MADRS10[d_mis_L$Treat==1])
     #range(d_mis_L$MADRS10[d_mis_L$Treat==0])
     
-  
+    #m<-1
     # assign and save the generated dataset
     assign(paste0("SimTrial_sm", "_", n,"_", m, "_", s), d_mis_L)
     #View(SimTrial_sm_1_5)
@@ -680,7 +686,6 @@ for (s in 1:length(scaling_factor)) {
 
   setTxtProgressBar(pb3, s)
 }
-
 end_time <- Sys.time() # timestamp for end of simulation
 end_time-start_time # total time to complete the simulation
 
@@ -692,11 +697,9 @@ hist(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 # plot relevant graphs #
 ########################
 
-(plot1 / plot_all) / (plot_LoE / plot_AE / plot_NoIE)
+#(plot1 / plot_all) / (plot_LoE / plot_AE / plot_NoIE)
 
 (plot_all / plot_LoE) | (plot_AE / plot_NoIE)
-
-(plot_all / plot_all) | (plot_all/plot_all)
 
 
 # check
