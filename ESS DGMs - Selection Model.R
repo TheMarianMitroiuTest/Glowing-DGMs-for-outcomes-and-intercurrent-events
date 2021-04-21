@@ -704,6 +704,7 @@ hist(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
 # check
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
+colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
 # compile to report
 cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
@@ -728,6 +729,8 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
 # Pattern for AE in experimental arm
 # Pattern for AE in control arm
 # Pattern for No intercurrent event at trial level
+
+# resume here 22 Apr 2021
 
 
 # 50% and then use scaling factors to get to 5% the entire range of IE percentages
