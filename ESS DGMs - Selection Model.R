@@ -145,7 +145,7 @@ colnames(delta_errorz) <- c("SE")
 bias_f <- matrix(ncol=1,nrow=m.iterations) # object to store the bias (estimated treatment effect - true treatment effect)
 colnames(bias_f) <- c("bias_f")
 
-## randomisation objects, allocation
+## randomisation objects
 N_Exp  <- matrix(ncol=1,nrow=m.iterations)
 colnames(N_Exp) <-c("N randomised Exp")
 
