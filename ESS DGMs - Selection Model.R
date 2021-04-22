@@ -16,9 +16,9 @@
 
 # admin: load libraries and define objects to store the data
 # generate longitudinal outcomes
-  #~ fit model and get parameters
+  # ~ fit model and get parameters
 # generate intercurrent events
-  #~ get descriptives
+  # ~ get descriptives
 # assign and save generated datasets
 # visualisation of longitudinal outcomes and intercurrent events
 
