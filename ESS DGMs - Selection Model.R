@@ -1301,17 +1301,13 @@ for (s in 1:length(scaling_factor)) {
 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))
-    
-    
-    
+  
     
     fit<-gls(MADRS10 ~ visit * Treat + Baseline, 
              data=d,
              correlation = corSymm(form=~1 | id),
              weights = varIdent(form = ~ 1 | visit), 
              method="REML")
-    
-    
     
     
     summary(fit)
