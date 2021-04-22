@@ -260,19 +260,19 @@ for (s in 1:length(scaling_factor)) {
     
     # data wrangling to add the correlated residuals in the above dataframe such that correlated residuals are for their corresponding patient and visit 
     d <- d[order(d$visit, d$id),]; d
-    #re
+        #re
     
     j<-c(re[, 1], re[, 2], re[, 3], re[, 4], re[, 5], re[, 6], re[, 7])
     d$re <-j; #d
     
-    #class(d)
-    #View(d)
+        #class(d)
+        #View(d)
     
-    #head(re)
+        #head(re)
     
     d <- d[order(d$id, d$visit),]; #d
     
-    #re
+        #re
     
     d<-as.matrix(d)
 
@@ -315,9 +315,9 @@ for (s in 1:length(scaling_factor)) {
     }
     
     # check to see how many values were negative or > 60  
-    ## flooring and ceiling
-    #d[, 4] <- ifelse(d[, 4] < 0, 0,
-    #                ifelse(d[, 4]>60, 60, d[, 4]))
+          ## flooring and ceiling
+          #d[, 4] <- ifelse(d[, 4] < 0, 0,
+          #                ifelse(d[, 4]>60, 60, d[, 4]))
     
     d <-as.data.frame(d)
     d$visit <-as.factor(d$visit)
@@ -341,28 +341,29 @@ for (s in 1:length(scaling_factor)) {
     length(BaselineMADRS10)
     d$Baseline <- BaselineMADRS10
     d
+    
     #d<-d[d$visit!=0,]
     
-    #check ranges of the generated outcomes
-    #range(d$MADRS10[d$Treat==1 & d$visit!=0])
-    #range(d$MADRS10[d$Treat==0 & d$visit!=0])
+        #check ranges of the generated outcomes
+        #range(d$MADRS10[d$Treat==1 & d$visit!=0])
+        #range(d$MADRS10[d$Treat==0 & d$visit!=0])
     
-    #range(d$MADRS10[d$Treat==1 & d$visit==42])
-    #range(d$MADRS10[d$Treat==0 & d$visit==42])
+        #range(d$MADRS10[d$Treat==1 & d$visit==42])
+        #range(d$MADRS10[d$Treat==0 & d$visit==42])
     
-    #mean(d$MADRS10[d$Treat==1 & d$visit==0])
-    #mean(d$MADRS10[d$Treat==0 & d$visit==0])
+        #mean(d$MADRS10[d$Treat==1 & d$visit==0])
+        #mean(d$MADRS10[d$Treat==0 & d$visit==0])
     
-    #mean(d$MADRS10[d$Treat==1 & d$visit==42])
-    #mean(d$MADRS10[d$Treat==0 & d$visit==42])
+        #mean(d$MADRS10[d$Treat==1 & d$visit==42])
+        #mean(d$MADRS10[d$Treat==0 & d$visit==42])
     
-    #ceiling_floor <- sum(ifelse(d$MADRS10<0 | d$MADRS10>60, 1, 0))
-    #ceiling_floor_perc <- (ceiling_floor/(n*length(visits)))*100
+        #ceiling_floor <- sum(ifelse(d$MADRS10<0 | d$MADRS10>60, 1, 0))
+        #ceiling_floor_perc <- (ceiling_floor/(n*length(visits)))*100
     
-    #CFE[s*m,1] <- ceiling_floor
-    #CFE[s*m,2] <- ceiling_floor_perc
-    #CFE[s*m,3] <- s
-    #CFE[s*m,4] <- m
+        #CFE[s*m,1] <- ceiling_floor
+        #CFE[s*m,2] <- ceiling_floor_perc
+        #CFE[s*m,3] <- s
+        #CFE[s*m,4] <- m
     
     # plot the outcomes to see in big lines how they trajectories look like  
     p<- ggplot(data = d, aes(x = visit, y = MADRS10, group = id)) 
@@ -380,42 +381,42 @@ for (s in 1:length(scaling_factor)) {
     summary(fit)
     
     
-    #sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"])
+        #sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"])
     
-    #sqrt(vcov(fit)["Treat", "Treat"])
+        #sqrt(vcov(fit)["Treat", "Treat"])
   
-    #re_covm2
-    #fit$coefficients[c(7,13)]
+        #re_covm2
+        #fit$coefficients[c(7,13)]
     
-    #sum(fit$coefficients[c(7,13)]); treatmenteffect
+        #sum(fit$coefficients[c(7,13)]); treatmenteffect
     
-    #d$visit <- as.numeric(d$visit)-1
+        #d$visit <- as.numeric(d$visit)-1
     
-    # check the same with another package and models
-    #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
-     #          random=~1 + visit | id,
-      #        method="REML", 
-       #      correlation = corSymm(form=~1|id),
+        # check the same with another package and models
+        #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
+        #          random=~1 + visit | id,
+        #        method="REML", 
+        #      correlation = corSymm(form=~1|id),
         #    data=d)
     
-    #fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
+        #fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
     
-    #summary(fit_lmer)
-    #summary(fit_lme)
-    #model_parameters(fit_lme)
+        #summary(fit_lmer)
+        #summary(fit_lme)
+        #model_parameters(fit_lme)
     
     betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
     
     delta[m, ] <- sum(fit$coefficients[c(8,15)]) # store the treatment effect at the end of the trial, at week 6
     
-    #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
+        #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
     
-    #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
+        #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
     
-    #delta_errorz[m, ] <- delta_error 
+        #delta_errorz[m, ] <- delta_error 
     
-    #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
-    #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
+        #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
+        #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
     
     # store the number of patients in the objects defined a priori
     Randomised_Exp <- sum(d[,3])/7 #number of patients in the experimental arm # make sure it is divided by the number of visits (6/7), without or with the baseline included as response
@@ -436,15 +437,15 @@ for (s in 1:length(scaling_factor)) {
     d_mis <-d_orig
     
     d_mis_w <- d_mis %>% spread(visit, MADRS10) # reshape to wide in order to create the CfB variable
-    #View(d_mis_w)
+        #View(d_mis_w)
     
     colnames(d_mis_w)[3:9] <- c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6"); head(d_mis_w) # name the columns for the wide format dataframe
     
     d_mis_w$CfB <- d_mis_w[,3] - d_mis_w[,9]; d_mis_w # create the CfB (change from baseline) variable. Could also be d_mis_w[,9] - d_mis_w[,3]
     
     d_mis_w$CfW2 <- d_mis_w[,3] - d_mis_w[,5]; d_mis_w # create the CfW2 (change from week 2) variable
-    #s<-1
-    #View(d_mis_w)
+        #s<-1
+        #View(d_mis_w)
     p_LoE <-sample(p_LoE_sample, 1) * scaling_factor[s] # proportion of e.g., treatment discontinuation due to lack of efficacy multiplied by the scaling factor. 
     # this allows to obtain different smaller/larger percentages of LoE at trial level and cover a broad range of scenarios as would be in reality, and to ensure variability,
     # not all patients that it in the rule will automatically experience the intercurrent event
@@ -452,7 +453,7 @@ for (s in 1:length(scaling_factor)) {
     d_mis_w$LoE_Yes <-ifelse(d_mis_w$CfB<5, 1, 0)*rbinom(n, 1, p_LoE);  d_mis_w # all patients that fit in the deterministic rule are then adjusted with probability abovementioned
     # to adjust the probabilty of LoE# create the LoE variable
     sum(d_mis_w$LoE_Yes) # check how many patients experienced the intercurrent event
-    #View(d_mis_w)
+        #View(d_mis_w)
     
     # same method is applied for e.g., treatment discontinuations due to adverse events at arm level
     # too much efficacy >8 points on MADRS10 at week 2
@@ -474,39 +475,39 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
   
-    # not needed for the purpose of this paper. this is needed for the next paper with application of this DGMs paper. This can be skipped as well as the step below involving missing data
-    # create the NAs by LoE variable
-    #d_mis_L[,10] <-ifelse(d_mis_L[,5]==1 & d_mis_L[,8]=="Week4", "NA", 
-     #                     ifelse(d_mis_L[,5]==1 & d_mis_L[,8]=="Week5", "NA",
-      #                           ifelse(d_mis_L[,5]==1 & d_mis_L[,8]=="Week6", "NA", d_mis_L[,9])))
+        # not needed for the purpose of this paper. this is needed for the next paper with application of this DGMs paper. This can be skipped as well as the step below involving missing data
+        # create the NAs by LoE variable
+        #d_mis_L[,10] <-ifelse(d_mis_L[,5]==1 & d_mis_L[,8]=="Week4", "NA", 
+        #                     ifelse(d_mis_L[,5]==1 & d_mis_L[,8]=="Week5", "NA",
+        #                           ifelse(d_mis_L[,5]==1 & d_mis_L[,8]=="Week6", "NA", d_mis_L[,9])))
     
-    #View(d_mis_L)
+        #View(d_mis_L)
     
-    #colnames(d_mis_L)
-    # [1] "id"             "Treat"          "CfB"           
-    # [4] "CfW2"           "LoE_Yes"        "AE_Exp_Yes"    
-    # [7] "AE_Control_Yes" "Visit"          "MADRS10"       
-    #[10] "V10"  
+        #colnames(d_mis_L)
+        # [1] "id"             "Treat"          "CfB"           
+        # [4] "CfW2"           "LoE_Yes"        "AE_Exp_Yes"    
+        # [7] "AE_Control_Yes" "Visit"          "MADRS10"       
+        #[10] "V10"  
     
     
     d_mis_L$AE_Yes <- ifelse(d_mis_L[,6]==1, 1, 
                              ifelse(d_mis_L[,7]==1, 1, 0))
     
-    # create the NAs by AE variable
-    #d_mis_L[,10] <-ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week3", "NA",
-     #                     ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week4", "NA", 
-      #                           ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week5", "NA",
-       #                                 ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week6", "NA", d_mis_L[,10]))))
+        # create the NAs by AE variable
+        #d_mis_L[,10] <-ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week3", "NA",
+        #                     ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week4", "NA", 
+        #                           ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week5", "NA",
+        #                                 ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week6", "NA", d_mis_L[,10]))))
     
-    #View(d_mis_L)
+        #View(d_mis_L)
     
     d_mis_L$LoE_YES <- ifelse(d_mis_L[,5]==1 & d_mis_L[,10]==0, 1, 0)
     describe(d_mis_L$LoE_YES)
     
-    #View(d_mis_L)
+        #View(d_mis_L)
     
     d_mis_L <- d_mis_L[order(d_mis_L$id),]; #d # order by subject id and Visit
-    #colnames(d_mis_L)[10] <- c("MADRS10_mis"); d_mis_L # name the column. See above comment about missing data. This is not needed here, but in the companion paper
+        #colnames(d_mis_L)[10] <- c("MADRS10_mis"); d_mis_L # name the column. See above comment about missing data. This is not needed here, but in the companion paper
     
     # check classes of variable and reclassify as needed
     class(d_mis_L$id)
@@ -527,11 +528,10 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L$Visit <- as.factor(d_mis_L$Visit)
     rownames(d_mis_L) <-NULL 
     
-    # check range of values
-    #range(d_mis_L$MADRS10[d_mis_L$Treat==1])
-    #range(d_mis_L$MADRS10[d_mis_L$Treat==0])
+        # check range of values
+        #range(d_mis_L$MADRS10[d_mis_L$Treat==1])
+        #range(d_mis_L$MADRS10[d_mis_L$Treat==0])
     
-    #m<-1
     # assign and save the generated dataset
     assign(paste0("SimTrial_sm", "_", n,"_", m, "_", s), d_mis_L)
     #View(SimTrial_sm_1_5)
@@ -540,7 +540,7 @@ for (s in 1:length(scaling_factor)) {
     save(dataset_name, file = dataset_name.Rdata)
   
     #####################################################################
-    # intercurrent events descriptives needed for the verification step #
+    # Intercurrent events descriptives needed for the verification step #
     #####################################################################
     
     LoE_Y <- d_mis_L[,c(2, 11)]
@@ -560,9 +560,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     n_LoE_total[m, ] <-  tb_LoE_total
-    
     n_LoE_Exp[m, ] <- tb_LoE_Exp
-    
     n_LoE_Control[m, ] <- tb_LoE_Control
     
 
@@ -622,7 +620,7 @@ for (s in 1:length(scaling_factor)) {
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
     
-    describe(d_mis_L$Behavior)
+        #describe(d_mis_L$Behavior)
   
     
     # All behaviors #
@@ -640,7 +638,7 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L_NoIE <- d_mis_L[d_mis_L$LoE_YES==0 & d_mis_L$AE_Yes==0,] # subset only patients that did not experience any IE
     
     
-    # just LoE patients with their trajectory #
+    # just (subset) LoE patients with their trajectory #
     p<- ggplot(data = d_mis_L_LoE, aes(x = Visit, y = MADRS10, group = id))
     plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("SM-LoE pattern"); plot_LoE
@@ -678,11 +676,6 @@ for (s in 1:length(scaling_factor)) {
   
   assign(paste('all_N_Control', s, sep="_"), N_Control)
   
-## continue to add here the other statistics
-  
-  #LoE_Control_Perc
-  
-  #all_delta_errorz_1
 
   setTxtProgressBar(pb3, s)
 }
@@ -694,7 +687,7 @@ colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 hist(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
 ########################
-# plot relevant graphs #
+# Plot relevant graphs #
 ########################
 
 #(plot1 / plot_all) / (plot_LoE / plot_AE / plot_NoIE)
