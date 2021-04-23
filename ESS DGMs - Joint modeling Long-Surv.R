@@ -206,8 +206,8 @@ d$t.AE <- d$AE_yes <- 0
 
 # just LoE
 p<- ggplot(data = d[d$LoE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
+plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE pattern"); plot_LoE
 
 
 
