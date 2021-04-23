@@ -533,6 +533,8 @@ for (s in 1:length(scaling_factor)) {
         #range(d_mis_L$MADRS10[d_mis_L$Treat==0])
     
     # assign and save the generated dataset
+    # naming sequence is "SimTrial"_"Method"_"trial sample size"_"iteration number"_"scaling factor"
+
     assign(paste0("SimTrial_sm", "_", n,"_", m, "_", s), d_mis_L)
     #View(SimTrial_sm_1_5)
     dataset_name.Rdata <- paste0("SimTrial_sm", "_", n,"_", m, "_", s, ".Rdata")
@@ -715,29 +717,28 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
 ############################################################################################################################################################
 ############################################################################################################################################################
 
-#### code to extract the models for each pattern in preparation for PMMMM approach
+#### The code used to extract the MMRM (longitudinal) models for each pattern in preparation for PMMMM method ##
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# from a trial with 1000 patients per arm
-# Pattern for LoE at trial level
-# Pattern for AE in experimental arm
-# Pattern for AE in control arm
-# Pattern for No intercurrent event at trial level
+# Source trial with 1000 patients per arm
+# Pattern for LoE at trial level (as per rule above)
+# Pattern for AE in experimental arm (as per rule above)
+# Pattern for AE in control arm (as per rule above)
+# Pattern for No intercurrent event at trial level (remaining patients)
 
-# resume here 22 Apr 2021
 
 
 # 50% and then use scaling factors to get to 5% the entire range of IE percentages
 
 
-
 # Use simulated trial with highest percentage of IE. Any other trial or parameters can be used. We chose it for operational reasons and model-fitting optimisation
 # e.g., to have more patients in each pattern such that models fit
 
-#View(SimTrial_sm_2000_1_5)
+    #View(SimTrial_sm_2000_1_5)
 describe(SimTrial_sm_2000_1_5)
 
 # prepare the dataset for reparameterisation to not have any treatment coefficient at baseline
-# as per the formulated model
+# as per the formulated model (see above)
 SimTrial_sm_2000_1_5$V0 <- 0
 SimTrial_sm_2000_1_5$V0[SimTrial_sm_2000_1_5$Visit == "Baseline"] <- 1
 
@@ -761,24 +762,22 @@ SimTrial_sm_2000_1_5$V42[SimTrial_sm_2000_1_5$Visit == "Week6"] <- 1
 SimTrial_sm_2000_1_5
 
 
-head(SimTrial_sm_2000_1_5)
-
-class(SimTrial_sm_2000_1_5$Treat)
+    #head(SimTrial_sm_2000_1_5)
+    #class(SimTrial_sm_2000_1_5$Treat)
 
 
 fit<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
            Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
          data= SimTrial_sm_2000_1_5,
          correlation = corSymm(form=~1 | id),
-         #weights = varIdent(form = ~ 1 | Visit),
+         #weights = varIdent(form = ~ 1 | Visit), 
          method="REML")
 
-#View(SimTrial_sm_2000_1_5)
+    #View(SimTrial_sm_2000_1_5)
 
 summary(fit)
-getVarCov(fit, individual = 1)
-
-describe(SimTrial_sm_2000_1_5)
+    #getVarCov(fit, individual = 1)
+    #describe(SimTrial_sm_2000_1_5)
 
 
 # Pattern for LoE at trial level
@@ -790,14 +789,15 @@ fit_LoE_trial<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
           method="REML")
 
 
-#View(SimTrial_sm_2000_1_5)
+    #View(SimTrial_sm_2000_1_5)
 
 
 summary(fit_LoE_trial)
 getVarCov(fit_LoE_trial, individual = 8)
 
 
-# Pattern for AE in experimental arm
+# Pattern for AE in experimental arm ##
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
                     data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes==1,] ,
                     correlation = corSymm(form=~1 | id),
@@ -809,13 +809,13 @@ fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42,
 summary(fit_AE_exp)
 getVarCov(fit_AE_exp, individual = '2')
 
-#View(SimTrial_1_5[SimTrial_1_5$AE_Exp_Yes==1,])
-
-#corMatrix(fit_AE_exp$modelStruct$corStruct)[[1]]  
-
+    #View(SimTrial_1_5[SimTrial_1_5$AE_Exp_Yes==1,])
+    #corMatrix(fit_AE_exp$modelStruct$corStruct)[[1]]  
 
 
-# Pattern for AE in control arm
+
+# Pattern for AE in control arm # 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 fit_AE_control<-gls(MADRS10 ~ MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                       Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
                     data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,] ,
@@ -826,12 +826,12 @@ fit_AE_control<-gls(MADRS10 ~ MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
 summary(fit_AE_control)
 getVarCov(fit_AE_control, individual = '28')
 
-describe(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
+    #describe(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
+    #View(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
 
-#View(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
 
-
-# Pattern for no intercurrent events at trial level
+# Pattern for no intercurrent events at trial level #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 fit_no_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
                data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Behavior== "No IE", ] ,
@@ -841,15 +841,16 @@ fit_no_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
 
 
 summary(fit_no_IE)
-getVarCov(fit_no_IE, individual = 3)
+#getVarCov(fit_no_IE, individual = 3)
 
 #######################################################################################################################
 #######################################################################################################################
 #######################################################################################################################
 
 
-# code to extract the logit models for LoE at trial level, AE in experimental arm and AE in control arm
-### obtain the logistic regression models for LoE at trial level, AE in experimental arm and AE in control arm
+#  The code used to extract the logit models for LoE at trial level, AE in experimental arm and AE in control arm ##
+## obtain the logistic regression models for LoE at trial level, AE in experimental arm and AE in control arm ##
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 class(SimTrial_sm_2000_1_5$AE_Control_Yes)
 SimTrial_sm_2000_1_5$AE_Control_Yes <- factor(SimTrial_sm_2000_1_5$AE_Control_Yes)
 
@@ -862,7 +863,7 @@ trial_AE_control <- SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Treat==0,]
 
 
 
-# LoE at trial level logit(Pr(LoE))= fi_LoE * (Y_i0 - Y_i6)
+# LoE at trial level logit(Pr(LoE))= fi_LoE * (Y_i0 - Y_i6) #
 logit_LoE <- glm(LoE_Yes ~ -1 + CfB,
                  data = SimTrial_sm_2000_1_5,
                  family = "binomial")
@@ -873,7 +874,8 @@ predicted_LoE <- predict(logit_LoE, type="response", newdata=SimTrial_sm_2000_1_
 
 SimTrial_sm_2000_1_5$predicted_LoE <- predicted_LoE
 
-#View(SimTrial_sm_2000_1_5[,c(5, 20)])
+    #View(SimTrial_sm_2000_1_5[,c(5, 20)])
+
 
 probz_predicted_LoE_Yes <- SimTrial_sm_2000_1_5$predicted_LoE[SimTrial_sm_2000_1_5$LoE_Yes==1]
 up_boundary_prob_LoE <- max(probz_predicted_LoE_Yes)  ; up_boundary_prob_LoE
@@ -889,14 +891,14 @@ logit_AE_exp <- glm(AE_Exp_Yes ~ -1 + CfW2,
 
 
 
-#summary(logit_AE_exp)
+    #summary(logit_AE_exp)
 
 predicted_AE_exp <- predict(logit_AE_exp, type="response", newdata = trial_AE_exp)
 
 trial_AE_exp$predicted_AE_exp <- predicted_AE_exp
 
-#View(trial_AE_exp[,c(6, 20)])
-#View(trial_AE_exp)
+    #View(trial_AE_exp[,c(6, 20)])
+    #View(trial_AE_exp)
 
 probz_predicted_AE_exp_Yes <- trial_AE_exp$predicted_AE_exp[trial_AE_exp$AE_Exp_Yes==1]
 up_boundary_prob_AE_exp <- max(probz_predicted_AE_exp_Yes)  ; up_boundary_prob_AE_exp
@@ -907,12 +909,9 @@ low_boundary_prob_AE_exp <- min(probz_predicted_AE_exp_Yes)  ;  low_boundary_pro
 
 
 # AE logit(Pr(AE_control))= fi_AE_control * (Y_i0 - Y_i2)
-
-
 logit_AE_control <- glm(AE_Control_Yes ~ -1 + CfW2,
                     data = trial_AE_control,
                     family = "binomial")
-
 
 summary(logit_AE_control)
 
@@ -920,7 +919,7 @@ predicted_AE_control <- predict(logit_AE_control, type="response", newdata = tri
 
 trial_AE_control$predicted_AE_control <- predicted_AE_control
 
-#View(trial_AE_control[,c(7, 20)])
+    #View(trial_AE_control[,c(7, 20)])
 
 probz_predicted_AE_control_Yes <- trial_AE_control$predicted_AE_control[trial_AE_control$AE_Control_Yes==1]
 up_boundary_prob_AE_control <- max(probz_predicted_AE_control_Yes)  ; up_boundary_prob_AE_control
@@ -933,12 +932,12 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 #######################################################################################################################
 
 
-# code for SPM 
-# fit SPM model on the simulated trial
+# The code for SPM method. On the same trial generated with the selection model (above), we fitted a mixed-effects model with random intercept and random slope # 
+# fit LMM model on the simulated trial
 # fit the glm to get the intercurrent events models with random effects in the linear predictor
 
 
-#View(SimTrial_sm_190_1_5)
+    #View(SimTrial_sm_190_1_5)
 
 class(SimTrial_sm_2000_1_5$Visit)
 SimTrial_sm_2000_1_5$Visit <- as.numeric(SimTrial_sm_2000_1_5$Visit)-1
@@ -960,14 +959,12 @@ VarCorr(fit_lme)
 random.effects(fit_lme)[,1]
 var(random.effects(fit_lme))
 
-# logit(Pr(IE_ij)) = (beta_0 + b0_ij) [aka baseline MADRS] + beta_1 * Treat
-# baseline MADRS10 is made of the general intercept + each individual random intercept
-
-
+    # logit(Pr(IE_ij)) = (beta_0 + b0_ij) [aka baseline MADRS] + beta_1 * Treat
+    # baseline MADRS10 is made of the general intercept + each individual random intercept
 
 d_re <- d_mis_w
 
-View(d_re)
+    #View(d_re)
 
 fit_LoE_spm <- glm(LoE_Yes ~ -1 + Baseline + Treat,
                    data = d_re, 
@@ -991,14 +988,13 @@ fit_AE_control_spm <- glm(AE_Control_Yes ~ -1 + Baseline,
 summary(fit_AE_control_spm)
 
 
-############################################################################################################################################################
-############################################################################################################################################################
-############################################################################################################################################################
+# These coefficients were used in the shared-parameter model (SPM) method
 
-
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 
 #############################################################################################################
@@ -1010,7 +1006,8 @@ summary(fit_AE_control_spm)
 # Selection model via marginal model for outcomes-generating model and FULLY STOCHASTIC models for generation of intercurrent events
 # for notation and description, please see above in the deterministic approach. The difference hereonwards is that we used logistic models to model the probability of intercurrent events, vs the deterministic rules as applied in the above approach
 
-
+ # most of the code below is very similar with the code above, in terms of scope and operational reasons, as well as meaning and interpretation
+ # code for longitudinal outcomes generation is as above
 google_app <- httr::oauth_app(
   "appwhatever",
   key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
@@ -1020,15 +1017,12 @@ google_app <- httr::oauth_app(
 gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
                   secret = "4ytmmz0zaj0709XBajk5Xyfb")
 
-
-
 options(mc.cores = parallel::detectCores()) # M1 with parallel, Old1 without parallel
 
 Scenario <- c("A")
 
+
 # simulation
-
-
 set.seed(2147483629)
 #set.seed(2147483399)
 m.iterations <- 1# number of generated datasets # number of trials per scaling factor
@@ -1040,7 +1034,7 @@ scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5)
 
 
 
-n <- 190# number of patients
+n <- 190# number of patients at trial level to be randomised 1:1, experimental and control arm
 
 CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
 colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
@@ -1074,7 +1068,7 @@ N_Control  <- matrix(ncol=1,nrow=m.iterations)
 colnames(N_Control) <-c("N randomised Control")
 
 
-# IE objects
+# Intercurrent events objects
 # LoE
 n_LoE_total <- matrix(ncol=1,nrow=m.iterations) # 
 colnames(n_LoE_total) <- c("N LoE Total")
@@ -1134,13 +1128,10 @@ colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
 
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
-
-
 start_time <- Sys.time()
 
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
-    
     
     ### Generate random effects
     re_means <- c(0, 0, 0, 0, 0, 0, 0)
@@ -1152,7 +1143,7 @@ for (s in 1:length(scaling_factor)) {
                         10.8540, 30.528, 61.974, 63.540, 90.6120, 116.410, 102.8300,
                         4.6417, 26.017, 54.540, 52.107, 80.1370, 102.830, 109.5900), nrow = 7)
     
-    #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
+       #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
     re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
                         0, 0.00001, 0, 0, 0, 0, 0,
@@ -1167,7 +1158,7 @@ for (s in 1:length(scaling_factor)) {
     re_covm3 <-re_covm/2
     
     re <- mvrnorm(n, re_means, re_covm3)	; re
-    #View(re)
+      #View(re)
     
     re <- as.matrix(re)
     colnames(re) <-c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6") ; re
@@ -1180,19 +1171,18 @@ for (s in 1:length(scaling_factor)) {
     
     
     d <- d[order(d$visit, d$id),]; #d
-    #re
+       #re
     
     j<-c(re[, 1], re[, 2], re[, 3], re[, 4], re[, 5], re[, 6], re[, 7])
     d$re <-j; #d
     
-    #class(d)
-    #View(d)
-    
-    #head(re)
+        #class(d)
+        #View(d)
+        #head(re)
     
     d <- d[order(d$id, d$visit),]; #d
     
-    re
+        #re
     
     d<-as.matrix(d)
     
@@ -1211,7 +1201,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v4_treatment <- -2.5
     beta_v5_treatment <- -3
     
-    beta_v6_treatment <- -3.5 # this is roughly 1/2 of variance. If 1:1 then 16 to 16, and if 0.5 to 1, then 64 to 64.
+    beta_v6_treatment <- -3.5 # 
     
     treatmenteffect <-  beta_v6_treatment ; treatmenteffect
     
@@ -1230,12 +1220,12 @@ for (s in 1:length(scaling_factor)) {
     }
     
     
-    ## flooring and ceiling
-    #d[, 4] <- ifelse(d[, 4] < 0, 0,
-    #                ifelse(d[, 4]>60, 60, d[, 4]))
+       ## flooring and ceiling
+       #d[, 4] <- ifelse(d[, 4] < 0, 0,
+       #                ifelse(d[, 4]>60, 60, d[, 4]))
     
     
-    #View(d)
+      #View(d)
     d <-as.data.frame(d)
     d$visit <-as.factor(d$visit)
     #d$Treat <- factor(d$Treat)
@@ -1278,20 +1268,17 @@ for (s in 1:length(scaling_factor)) {
     mean(d$MADRS10[d$Treat==0 & d$visit==42])
     
     
-    
-    #ceiling_floor <- sum(ifelse(d$MADRS10<0 | d$MADRS10>60, 1, 0))
-    
-    #ceiling_floor_perc <- (ceiling_floor/(n*length(visits)))*100
+        #ceiling_floor <- sum(ifelse(d$MADRS10<0 | d$MADRS10>60, 1, 0))
+        #ceiling_floor_perc <- (ceiling_floor/(n*length(visits)))*100
     
     
-    #CFE[s*m,1] <- ceiling_floor
-    #CFE[s*m,2] <- ceiling_floor_perc
-    #CFE[s*m,3] <- s
-    #CFE[s*m,4] <- m
+        #CFE[s*m,1] <- ceiling_floor
+        #CFE[s*m,2] <- ceiling_floor_perc
+        #CFE[s*m,3] <- s
+        #CFE[s*m,4] <- m
     
 
     p<- ggplot(data = d, aes(x = visit, y = MADRS10, group = id)) 
-
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))
   
@@ -1302,25 +1289,24 @@ for (s in 1:length(scaling_factor)) {
              weights = varIdent(form = ~ 1 | visit), 
              method="REML")
     
-    
     summary(fit)
     
     
     fit$coefficients[c(7,13)]
-    
+
     sum(fit$coefficients[c(7,13)]); treatmenteffect
     
     
     
-    #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
-    #           random=~1 | id,
-    #          method="REML", 
-    #         correlation = corSymm(form=~1|id),
-    #        na.action=na.omit,
-    #       data=d)
+        #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
+        #           random=~1 | id,
+        #          method="REML", 
+        #         correlation = corSymm(form=~1|id),
+        #        na.action=na.omit,
+        #       data=d)
     
-    #summary(fit_lme)
-    #model_parameters(fit_lme)
+        #summary(fit_lme)
+        #model_parameters(fit_lme)
     
     betas[m, ] <- fit$coefficients[c(7,13)]
     
@@ -1345,19 +1331,19 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    
-    
+  
     
     ####################################################################################################  
     ####################################################################################################
     
-    # IEGM
+    # IEGM (intercurrent events generating model)##
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     # Generate Intercurrent events
     
-    # use propensity models derived from original trial or from the dataset above 
-    # one model for LoE for all patients
-    # one model for AE in experimental arm
-    # one model for AE in control arm
+    # Use propensity models derived from original trial or from the dataset above 
+    # One model for LoE for all patients (as derived above)
+    # One model for AE in experimental arm (as derived above)
+    # One model for AE in control arm (as derived above)
 
  
     ## take over the original/raw dataset to use for IEGM/MDGM
@@ -1377,14 +1363,12 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
     
-    
     d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
     
-    #describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
+        #describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
     
     d_mis_L$LoE_yes <- ifelse(d_mis_L$predicted_LoE < up_boundary_prob_LoE & d_mis_L$predicted_LoE > low_boundary_prob_LoE, 1, 0)
     d_mis_L$CfB
-    
     
     
     trial_AE_X <- d_mis_L[d_mis_L$Treat==1,]
@@ -1392,7 +1376,7 @@ for (s in 1:length(scaling_factor)) {
     trial_AE_X$predicted_AE <- predict(logit_AE_exp, type="response", newdata = trial_AE_X) #  predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the experimental arm
 
     
-    #describe(predict(logit_LoE, type="response", newdata=d_mis_L))
+        #describe(predict(logit_LoE, type="response", newdata=d_mis_L))
     
     trial_AE_X$AE_yes <- ifelse(trial_AE_X$predicted_AE  < 0.28 & trial_AE_X$predicted_AE  > low_boundary_prob_AE_exp, 1, 0)
     
@@ -1410,25 +1394,27 @@ for (s in 1:length(scaling_factor)) {
     trial_AE_C$CfW2
     
     
-    # AE and LoE in experimental arm
+    # AE and LoE in experimental arm #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     trial_AE_X$AE_YES <- ifelse(trial_AE_X[,10]==1, 1, 0)
     trial_AE_X$LoE_YES <- ifelse(trial_AE_X[,10]==0 & trial_AE_X[,8]==1 , 1, 0)
     
     
-    # AE and LoE in control arm
+    # AE and LoE in control arm #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~#
     trial_AE_C$LoE_YES <- ifelse(trial_AE_C[,8]==1, 1, 0)
     trial_AE_C$AE_YES <- ifelse(trial_AE_C[,8]==0 & trial_AE_C[,10]==1, 1, 0)
 
   
     d_mis_LL <- rbind(trial_AE_X, trial_AE_C)
     
-    #View(d_mis_LL)
+        #View(d_mis_LL)
     
     d_mis_LL
     
   
     d_mis_LL <- d_mis_LL[order(d_mis_LL$id),]; #d # order by subject id and Visit
-    #colnames(d_mis_L)[10] <- c("MADRS10_mis"); d_mis_L # name the column
+       #colnames(d_mis_L)[10] <- c("MADRS10_mis"); d_mis_L # name the column
     
     
     # check classes of variable and transform in order 
@@ -1449,9 +1435,9 @@ for (s in 1:length(scaling_factor)) {
     d_mis_LL$Visit <- as.factor(d_mis_LL$Visit)
     rownames(d_mis_LL) <-NULL 
     
-    # check range of values
-    range(d_mis_LL$MADRS10[d_mis_LL$Treat==1], na.rm = T)
-    range(d_mis_LL$MADRS10[d_mis_LL$Treat==0], na.rm = T)
+        # check range of values
+        #range(d_mis_LL$MADRS10[d_mis_LL$Treat==1], na.rm = T)
+        #range(d_mis_LL$MADRS10[d_mis_LL$Treat==0], na.rm = T)
     
     
     describe(d_mis_LL$AE_YES[d_mis_LL$Treat==0])
@@ -1468,7 +1454,7 @@ for (s in 1:length(scaling_factor)) {
     describe(d_mis_LL$LoE_YES)
     
     
-    View(d_mis_LL)
+        #View(d_mis_LL)
     
 
     
@@ -1481,57 +1467,54 @@ for (s in 1:length(scaling_factor)) {
     LoE_Y_Control <- sum(LoE_Y$LoE_YES[LoE_Y$Treat==0])/length(visits)
     
     
-    ## LoE
-    #tb_LoE_total <- LoE_Y_total
-    #tb_LoE_Exp <- LoE_Y_Exp
-    #tb_LoE_Control <- LoE_Y_Control
+        ## LoE
+        #tb_LoE_total <- LoE_Y_total
+        #tb_LoE_Exp <- LoE_Y_Exp
+        #tb_LoE_Control <- LoE_Y_Control
     
     
-    #n_LoE_total[m, ] <-  tb_LoE_total
+        #n_LoE_total[m, ] <-  tb_LoE_total
     
-    #n_LoE_Exp[m, ] <- tb_LoE_Exp
+        #n_LoE_Exp[m, ] <- tb_LoE_Exp
     
-    #n_LoE_Control[m, ] <- tb_LoE_Control
+        #n_LoE_Control[m, ] <- tb_LoE_Control
     
     ###
     
     
-    #do with colsums instead of table to avoid Error subscript out of bounds when there is no AE generated
+        #AE_Y <- d_mis_L[,c(2, 10)]
+        #AE_Y$AE_Yes <- as.numeric(AE_Y$AE_Yes)-1
     
     
-    #AE_Y <- d_mis_L[,c(2, 10)]
-    #AE_Y$AE_Yes <- as.numeric(AE_Y$AE_Yes)-1
-    
-    
-    #AE_Y_total <- sum(AE_Y$AE_Yes)/length(visits)
-    #AE_Y_Exp <- sum(AE_Y$AE_Yes[AE_Y$Treat==1])/length(visits)
-    #AE_Y_Control <- sum(AE_Y$AE_Yes[AE_Y$Treat==0])/length(visits)
+        #AE_Y_total <- sum(AE_Y$AE_Yes)/length(visits)
+        #AE_Y_Exp <- sum(AE_Y$AE_Yes[AE_Y$Treat==1])/length(visits)
+        #AE_Y_Control <- sum(AE_Y$AE_Yes[AE_Y$Treat==0])/length(visits)
     
     
     
-    ## AE
-    #tb_AE_total <- AE_Y_total
-    #tb_AE_Exp <- AE_Y_Exp
-    #tb_AE_Control <- AE_Y_Control
+        ## AE
+        #tb_AE_total <- AE_Y_total
+        #tb_AE_Exp <- AE_Y_Exp
+        #tb_AE_Control <- AE_Y_Control
     
     
-    #n_AE_total[m, ] <-  tb_AE_total
+        #n_AE_total[m, ] <-  tb_AE_total
     
     
-    #n_AE_Exp[m, ] <- tb_AE_Exp
+        #n_AE_Exp[m, ] <- tb_AE_Exp
     
     
-    #n_AE_Control[m, ] <- tb_AE_Control
+        #n_AE_Control[m, ] <- tb_AE_Control
     
     
-    #LoE
+        #LoE
     LoE_total_Perc[m,] <- round(LoE_Y_total/n*100, digits=2)
     
     LoE_Exp_Perc[m,] <- round(LoE_Y_Exp/Randomised_Exp*100, digits=2)
     
     LoE_Control_Perc[m,] <- round(LoE_Y_Control/Randomised_Control*100, digits=2)
     
-    #AE
+        #AE
     AE_total_Perc[m,] <-  round(AE_Y_total/n*100, digits=2)
     
     AE_Exp_Perc[m,] <- round(AE_Y_Exp/Randomised_Exp*100, digits=2)
@@ -1547,7 +1530,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     # Plot trajectories
-    # All patients with TRUE trajectory 
+    # All patients with their trajectory 
     # LoE
     p<- ggplot(data = d_mis_LL, aes(x = Visit, y = MADRS10, group = id, color=LoE_YES)) 
     #p + geom_line() + facet_grid(~ Treat) 
@@ -1573,14 +1556,14 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L_AE <- d_mis_L[d_mis_L$AE_Yes==1,] # subset only patients that experienced AE
     d_mis_L_NoIE <- d_mis_L[d_mis_L$LoE_YES==0 & d_mis_L$AE_Yes==0,] # subset only patients that did not experience any IE
     
-  #  View(d_mis_L)
+        # View(d_mis_L)
     
-    # All patients with true trajectory with different colours by LoE (Y/N)
+    # All patients with their trajectory with different colours by LoE (Y/N)
     p<- ggplot(data = d_mis_LL, aes(x = Visit, y = MADRS10, group = id, color=LoE_YES))
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark red") + facet_wrap(~ Treat)
     
-    # just LoE patients with true trajectory
+    # just LoE patients with their trajectory
     p<- ggplot(data = d_mis_L_LoE, aes(x = Visit, y = MADRS10, group = id))
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
@@ -1588,18 +1571,17 @@ for (s in 1:length(scaling_factor)) {
     #View(d_mis_L)
     
     
-    # All patients with true trajectory with different colours by AE (Y/N)
+    # All patients with their trajectory with different colours by AE (Y/N)
     p<- ggplot(data = d_mis_L, aes(x = Visit, y = MADRS10, group = id, color=AE_Yes))
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark red") + facet_wrap(~ Treat)
     
-    # just AE patients with true trajectory
+    # just AE patients with their trajectory
     p<- ggplot(data = d_mis_L_AE, aes(x = Visit, y = MADRS10, group = id))
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
     
 
- 
     setTxtProgressBar(pb1, m)
   }
   
@@ -1632,4 +1614,5 @@ end_time-start_time
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
 colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
+
 # end of code
