@@ -152,7 +152,8 @@ lambda_LoE 	<- 3.5			# scale parameter
 nu_LoE 		<- 	1.4		# shape parameter
 
 
-LP1 <- (d$bi_0 + d$bi_1)/100 +  c1 * (as.numeric(d$Treat)-1)
+LP1 <- (d$bi_0 + d$bi_1)/100 +  c1 * (as.numeric(d$Treat)-1) # this can be used to generate time to intercurrent events with differing durations up to intercurrent event between arms.
+# e.g., in the control arm the LoE will appear (slightly) earlier than in the experimental/treatment arm 
 describe(LP1)
 
 #hist(d$bi_1)
@@ -189,19 +190,15 @@ d$t.LoE[d$t.LoE==0] <- c("No LoE")
 
 describe(d$t.LoE)
 
-
 cbind(d$Treat,d$bi_0, d$bi_1, t.event_LoE, d$t.LoE)
 
     #View(d[,c(1, 3, 4, 5, 8, 9)])
     #View(d)
 
-
 describe(t.event_LoE[d$Treat==1])
 describe(t.event_LoE[d$Treat==0])
 
 head(d)
-
-
 
 d$t.AE <- d$AE_yes <- 0
 
