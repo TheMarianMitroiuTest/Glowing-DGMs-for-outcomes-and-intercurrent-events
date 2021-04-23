@@ -118,12 +118,10 @@ d$MADRS10_collected <- d$MADRS10.true + rnorm(nrow(d), 0, eps.sd)
 
 
 
-# if I make the Weibull distribution
 
-
-#
 #####################################################
-# Cox model and survival for LoE at trial level
+# Cox model and survival for LoE at trial level #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 describe(d$bi_0)
 describe(d$bi_1)
@@ -140,20 +138,18 @@ hist(d$bi_0[d$Treat==1])
 
 hist(d$bi_1[d$Treat==0])
 hist(d$bi_1[d$Treat==1])
-
-#subset on positive slopes
-#hist(d$bi_1[d$Treat==1 & d$bi_1>0])
-
-#d_LoE <- d[d$bi_1>0,]
-#d_no_LoE <- d[d$bi_1<=0,]
-
-
+    
+    # this is only needed if a specific conditioning is made for the intercurrent events on specific values of the intercepts and/or slopes to define the pattern.  
+    #subset on positive slopes
+    #hist(d$bi_1[d$Treat==1 & d$bi_1>0])
+    #d_LoE <- d[d$bi_1>0,]
+    #d_no_LoE <- d[d$bi_1<=0,]
 #d_no_LoE$t.LoE <- d_no_LoE$LoE_yes <- 0
 
 c1 <- -0.5
 
 lambda_LoE 	<- 3.5			# scale parameter
-nu_LoE 		<- 	0.9		# shape parameter
+nu_LoE 		<- 	1.4		# shape parameter
 
 
 LP1 <- (d$bi_0 + d$bi_1)/100 +  c1 * (as.numeric(d$Treat)-1)
@@ -162,10 +158,7 @@ describe(LP1)
 #hist(d$bi_1)
 
 t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lambda_LoE * exp(LP1))) ^ (1/nu_LoE) ; t.event_LoE
-# how do I steer the rule here? I need to subset somehow on the positive slopes to "indicate" LoE, And the same for AE in experimental arm and in control arm.
 
-#1. add here the probability to rbinom(independent) 
-#2. both the occurrence and the timing of IE
 
 hist(t.event_LoE)
 
@@ -173,14 +166,21 @@ hist(t.event_LoE)
 
 d$t.event_LoE <- t.event_LoE
 
-t.event_LoE <- round(t.event_LoE*(4.16) + 1 , digits=0) 
+t.event_LoE <- round(t.event_LoE*(6/max(t.event_LoE)) + 1 , digits=0) # standardize the time to event
+# the standardisation could be to fit tte to the entire trial duration, or to fit it to be at specific visits. We standardise it to fit the entire trial duration (6 weeks) and to have most of the intercurrent events up to and including week 4
+# Other Weibull distributions (parameters) can be used to better describe the wanted time to events
+# Depending on the desired percentages of intercurrent events and how they can be achieved. The standardisation can be used such that only a certain percentage of patients experience
+# the intercurrent event during the trial (e.g., standardise it to fit to longer than end of trial (week 6), or it can be standardised to week 6 and then use a Binomial distribution to
+# achieve a certain percentage, as we illustrate and use below).
+
 
 describe(t.event_LoE)
 d$t.LoE <- t.event_LoE
 
 d$t.LoE <- d$t.LoE * rep(rbinom(n, 1, 0.5), each = length(visits))
+# this particular step could be also used piecewise with different Binomial probabilities for time intervals, while keeping the intercurrent event percentage similar at  trial level.
 
-#cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
+    #cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
 
 d$LoE_yes <-factor(ifelse(d$t.LoE !=0, 1, 0))
 describe(d$LoE_yes)
@@ -192,11 +192,8 @@ describe(d$t.LoE)
 
 cbind(d$Treat,d$bi_0, d$bi_1, t.event_LoE, d$t.LoE)
 
-
-
-
-#View(d[,c(1, 3, 4, 5, 8, 9)])
-#View(d)
+    #View(d[,c(1, 3, 4, 5, 8, 9)])
+    #View(d)
 
 
 describe(t.event_LoE[d$Treat==1])
