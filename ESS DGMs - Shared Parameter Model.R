@@ -92,7 +92,7 @@ n <- 190# number of patients
     # resume here, integrate this code in this structure
 
     set.seed(2147483629)
-    b0 <- 29.5
+    b0 <- 29.79
     b1 <- -0.55
     b2 <- -0.583
     bi_means <- c(0, 0)
@@ -120,7 +120,6 @@ n <- 190# number of patients
     #####################################################
     # Logit model and Probabilities for LoE at trial level
     logit_Pr_LoE <- (b0 + d$bi_1)/1000 +  c1 * d$Treat
-
     Pr_LoE <- 1/(1+exp(-logit_Pr_LoE))
     
     describe(Pr_LoE[d$Treat==1])

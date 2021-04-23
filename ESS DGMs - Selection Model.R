@@ -104,7 +104,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 100 # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -112,7 +112,7 @@ scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the 
 
 # to multiply for LoE, AE_control and AE_exp ### value 0.5 should yield around 13.5% IEs at trial level
 
-n <- 190# number of patients to be simulated (sample size)
+n <- 2000# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 

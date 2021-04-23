@@ -90,7 +90,7 @@ n <- 190# number of patients to be simulated (sample size)
 set.seed(2147483629) # set seed for reproducibility
 
 # linear mixed effects model parameters to generate the longitudinal outcomes
-b0 <- 29.5
+b0 <- 29.79
 b1 <- -0.55
 b2 <- -0.583
 bi_means <- c(0, 0)
