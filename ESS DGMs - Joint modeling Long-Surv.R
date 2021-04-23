@@ -62,7 +62,7 @@ installed.packages()
 
 
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
-
+# Setup to receive e-mails with results of simulations, very useful when running multiple simulations in parallel.
 
 google_app <- httr::oauth_app(
   "renamedapp",
@@ -82,13 +82,14 @@ Scenario <- c("A")
 # simulation
 
 
-n <- 190 # number of patients
+n <- 190# number of patients to be simulated (sample size)
+# this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 
 
+set.seed(2147483629) # set seed for reproducibility
 
-
-set.seed(2147483629)
+# linear mixed effects model parameters to generate the longitudinal outcomes
 b0 <- 29.5
 b1 <- -0.55
 b2 <- -0.583
@@ -100,7 +101,7 @@ eps.sd <-3.247
 
 
 
-visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	
+visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# protocolled visits
 
 d <- data.frame(
   id = rep(1:n, each = length(visits)),
@@ -110,9 +111,10 @@ d <- data.frame(
   bi_1 = rep(bi[,2], each = length(visits))
 )
 
+# generate the true values of the outcome
+d$MADRS10.true <- (b0 + d$bi_0) + (b1 + d$bi_1) * d$visit +  b2 * d$visit * d$Treat 
 
-d$MADRS10.true <- (b0 + d$bi_0) + (b1 + d$bi_1) * d$visit +  b2 * d$visit * d$Treat
-
+# generate the what would be observed values of the outcome = true values + some error 
 d$MADRS10_collected <- d$MADRS10.true + rnorm(nrow(d), 0, eps.sd)
 
 
@@ -123,57 +125,58 @@ d$MADRS10_collected <- d$MADRS10.true + rnorm(nrow(d), 0, eps.sd)
 # Cox model and survival for LoE at trial level #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-describe(d$bi_0)
-describe(d$bi_1)
+    #describe(d$bi_0)
+    #describe(d$bi_1)
 
-hist(d$bi_0)
-hist(d$bi_1)
+    #hist(d$bi_0)
+    #hist(d$bi_1)
 
+    #par(mfrow=c(1,1))
 
-#par(mfrow=c(1,1))
+    #hist(d$bi_0[d$Treat==0])
+    #hist(d$bi_0[d$Treat==1])
 
-
-hist(d$bi_0[d$Treat==0])
-hist(d$bi_0[d$Treat==1])
-
-hist(d$bi_1[d$Treat==0])
-hist(d$bi_1[d$Treat==1])
+    #hist(d$bi_1[d$Treat==0])
+    #hist(d$bi_1[d$Treat==1])
     
-    # this is only needed if a specific conditioning is made for the intercurrent events on specific values of the intercepts and/or slopes to define the pattern.  
+
+    # This chunk of code is only needed if a specific conditioning is made for the intercurrent events on specific values of the intercepts and/or slopes to define the pattern.  
+    # e.g., if for instance, the LoE will be experienced by patients with positive slopes, or the AE will be experienced by patients with slopes smaller than a certain (negative) value to reflect the patterns.
+    # this would be an implementation with more assumptions, not necessarily bad/wrong, but just with more assumptions about the propensity of a certain IE based on random effects and certain values.
     #subset on positive slopes
     #hist(d$bi_1[d$Treat==1 & d$bi_1>0])
     #d_LoE <- d[d$bi_1>0,]
     #d_no_LoE <- d[d$bi_1<=0,]
-#d_no_LoE$t.LoE <- d_no_LoE$LoE_yes <- 0
+    #d_no_LoE$t.LoE <- d_no_LoE$LoE_yes <- 0
 
-c1 <- -0.5
+c1 <- -0.5 # coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
+
+# parameters of the Weibull distributions
+# To fit with the assumptions, a trial-and-error/finetuning process can be employed, to find/generate the distribution that fits with the targeted survival data to be generated.
 
 lambda_LoE 	<- 3.5			# scale parameter
 nu_LoE 		<- 	1.4		# shape parameter
+# other distributions could be used (e.g., exponential) to describe the time to intercurrent event distribution.
 
-
-LP1 <- (d$bi_0 + d$bi_1)/100 +  c1 * (as.numeric(d$Treat)-1) # this can be used to generate time to intercurrent events with differing durations up to intercurrent event between arms.
+# linear predictor
+LP1 <- (d$bi_0 + d$bi_1)/100 +  c1 * d$Treat # this can be used to generate time to intercurrent events with differing durations up to intercurrent event between arms.
 # e.g., in the control arm the LoE will appear (slightly) earlier than in the experimental/treatment arm 
-describe(LP1)
+    #describe(LP1)
 
-#hist(d$bi_1)
+    #hist(d$bi_1)
 
 t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lambda_LoE * exp(LP1))) ^ (1/nu_LoE) ; t.event_LoE
-
-
-hist(t.event_LoE)
-
-
+    #hist(t.event_LoE)
+    #describe(t.event_LoE)
 
 d$t.event_LoE <- t.event_LoE
 
-t.event_LoE <- round(t.event_LoE*(6/max(t.event_LoE)) + 1 , digits=0) # standardize the time to event
+t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
 # the standardisation could be to fit tte to the entire trial duration, or to fit it to be at specific visits. We standardise it to fit the entire trial duration (6 weeks) and to have most of the intercurrent events up to and including week 4
 # Other Weibull distributions (parameters) can be used to better describe the wanted time to events
 # Depending on the desired percentages of intercurrent events and how they can be achieved. The standardisation can be used such that only a certain percentage of patients experience
 # the intercurrent event during the trial (e.g., standardise it to fit to longer than end of trial (week 6), or it can be standardised to week 6 and then use a Binomial distribution to
 # achieve a certain percentage, as we illustrate and use below).
-
 
 describe(t.event_LoE)
 d$t.LoE <- t.event_LoE
@@ -202,8 +205,6 @@ head(d)
 
 d$t.AE <- d$AE_yes <- 0
 
-
-
 # just LoE
 p<- ggplot(data = d[d$LoE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
 plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
@@ -214,27 +215,24 @@ plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun =
 # LoE
 p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
-
-
-
-
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE all")
 
 
 
 
 #####################################################
 #####################################################
-# Cox model and survival for AE in experimental arm
+# Cox model and survival for AE in experimental arm #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-
-
+# subset arms
 d_c_exp <- d[d$Treat==1,]
 d_c_control <- d[d$Treat==0,]
 
-c2 <- -1
+c2 <- -1 # parameter in the linear predictor
 
-
+# Weibull distribution used to generate survival data - > time to adverse events in the experimental arm
+# As mentioned above for the distribution used to generate time to lack of efficacy, different distributions can be used and finding the right shape needs finetuning.
 lambda_AE_exp 	<- 3			# scale parameter
 nu_AE_exp 		<- 	1.2		# shape parameter
 
@@ -251,35 +249,30 @@ hist(t.event_AE_exp)
 describe(d_c_exp)
 
 
-
+max(t.event_AE_exp)
 
 d_c_exp$t.event_AE_exp <- t.event_AE_exp
 
-t.event_AE_exp <- round(t.event_AE_exp*(0.83) + 2 , digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
-# stricter like the above or more loosely distributed with high fidelity to the Weibull distribution
+t.event_AE_exp <- round(t.event_AE_exp*(5/max(t.event_AE_exp)) + 1 , digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+# the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
 
-
-describe(t.event_AE_exp)
+    #describe(t.event_AE_exp)
 d_c_exp$t.AE_exp <- t.event_AE_exp
 
 d_c_exp$t.AE_exp <- d_c_exp$t.AE_exp * rep(rbinom(length(unique(d_c_exp$id)), 1, 0.5), each = length(visits))
 
-#cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
+    #cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
 
 d_c_exp$AE_yes <-factor(ifelse(d_c_exp$t.AE_exp !=0, 1, 0))
 describe(d_c_exp$AE_yes)
 
-d_c_exp$t.AE_exp[d_c_exp$t.AE_exp==0] <- c("No LoE")
+d_c_exp$t.AE_exp[d_c_exp$t.AE_exp==0] <- c("No AE")
 
-describe(d_c_exp$t.AE_exp)
-
-
-
-#d_c_exp_AE <- d_c_exp[d_c_exp$bi_1<-1,]
-#d_c_exp_no_AE <- d_c_exp[d_c_exp$bi_1>=-1,]
-#d_c_exp_no_AE$AE_yes <- d_c_exp_no_AE$t.AE <- 0
-
-
+#describe(d_c_exp$t.AE_exp)
+  
+    #d_c_exp_AE <- d_c_exp[d_c_exp$bi_1<-1,]
+    #d_c_exp_no_AE <- d_c_exp[d_c_exp$bi_1>=-1,]
+    #d_c_exp_no_AE$AE_yes <- d_c_exp_no_AE$t.AE <- 0
 
 #t.event_AE <- (-log(rep(runif(length(unique(d_exp$id))), each=length(visits)))/(lambda * exp((d_exp$bi_0 + d_exp$bi_1)/1000))) ^ (1/nu) ; t.event_AE
 
@@ -289,7 +282,7 @@ describe(d_c_exp$t.AE_exp)
 
 #describe(d_c_exp_AE$bi_1)
 
-
+#View(d_c_exp)
 
 #head(d_c_exp_no_AE)
 
@@ -304,24 +297,14 @@ describe(d_c_exp$t.AE_exp)
 # just AE in experimental arm
 p<- ggplot(data = d_c_exp[d_c_exp$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - AE exp pattern")
 
 
 
 # AE in experimental arm and the others
 p<- ggplot(data = d_c_exp, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
-
-
-# change parameters to get more at week 2
-
-
-
-# tweak the distributions for each IE, how to make sure that people with the profiles I think they should have an IE. The conclusion could be that this is a way to get IEs
-# but not easy to get the right profiles there.
-
-
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - AE all")
 
 
 
@@ -412,7 +395,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   d_c_control$AE_yes <-factor(ifelse(d_c_control$t.AE_control !=0, 1, 0))
   describe(d_c_control$AE_yes)
   
-  d_c_control$t.AE_control[d_c_control$t.AE_control==0] <- c("No LoE")
+  d_c_control$t.AE_control[d_c_control$t.AE_control==0] <- c("No AE")
   
   describe(d_c_control$t.AE_control)
   
@@ -526,32 +509,27 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 # just LoE
 p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern")
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern"); plot_LoE
 
 
 #just AE
 # AE
 p<- ggplot(data = d_united[d_united$AE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - AE pattern")
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - AE pattern"); plot_AE
 
 #just No IE
 # AE
 p<- ggplot(data = d_united[d_united$Behavior=="No IE",], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - No IE pattern")
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - No IE pattern"); plot_NoIE
 
 
-
-
-
-
-# All patients with TRUE trajectory 
+# All patients with their trajectory 
 # LoE
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))
-
 
 
 # AE
@@ -562,29 +540,11 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 # All behaviors
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - All patterns")
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - All patterns"); plot_all
 
 (plot_all / plot_LoE) | (plot_AE / plot_NoIE)
 
 
 
 describe(d_united)
-
- 
-
-
-
-# to annotate the code
-
-lp <- seq(-2, 2, 0.1)
-plot(lp)
-lambda <-10
-nu <- 0.5
-plot(exp(lp))
-
-
-time_ie<- - ( log(runif(length(lp)))/(lambda * exp(lp)) )^1/nu
-plot(time_ie)
-
-
-
+View(d_united)
