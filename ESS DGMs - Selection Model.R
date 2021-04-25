@@ -205,7 +205,7 @@ start_time <- Sys.time() # timestamp for the start time of the nested for loop b
 # it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
 
 
-## begin for loop----
+## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
     
@@ -856,7 +856,8 @@ trial_AE_control <- SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Treat==0,]
 
 
 
-## LoE at trial level logit(Pr(LoE))= fi_LoE * (Y_i0 - Y_i6)----
+## LoE at trial level----
+#logit(Pr(LoE))= fi_LoE * (Y_i0 - Y_i6)
 logit_LoE <- glm(LoE_Yes ~ -1 + CfB,
                  data = SimTrial_sm_2000_1_5,
                  family = "binomial")
@@ -877,7 +878,8 @@ low_boundary_prob_LoE <- min(probz_predicted_LoE_Yes) ; low_boundary_prob_LoE
 
 
 
-## AE experimental arm logit(Pr(AE_exp))= fi_AE_exp * (Y_i0 - Y_i2)----
+## AE experimental arm----
+#logit(Pr(AE_exp))= fi_AE_exp * (Y_i0 - Y_i2)
 logit_AE_exp <- glm(AE_Exp_Yes ~ -1 + CfW2,
                  data = trial_AE_exp,
                  family = "binomial")
@@ -901,7 +903,8 @@ low_boundary_prob_AE_exp <- min(probz_predicted_AE_exp_Yes)  ;  low_boundary_pro
 
 
 
-## AE logit(Pr(AE_control))= fi_AE_control * (Y_i0 - Y_i2)----
+## AE  control arm----
+#logit(Pr(AE_control))= fi_AE_control * (Y_i0 - Y_i2)
 logit_AE_control <- glm(AE_Control_Yes ~ -1 + CfW2,
                     data = trial_AE_control,
                     family = "binomial")
@@ -1116,9 +1119,12 @@ pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 start_time <- Sys.time()
 
+## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
     
+    
+    ### Generate longitudinal outcomes----
     ### Generate random effects
     re_means <- c(0, 0, 0, 0, 0, 0, 0)
     re_covm <- matrix(c(20.2190, 17.149, 14.721, 13.087,  8.4329,  10.854,   4.6417,
@@ -1217,10 +1223,9 @@ for (s in 1:length(scaling_factor)) {
     #d$Treat <- factor(d$Treat)
     
     
-    ####################################################################################################  
+
     # MMRM on full outcome data
-    ############################
-    
+
     
     # this is the raw dataset used to check the model fit
     d <-d[,-5] # remove re (residuals) column from the dataset, they have been added to betas
@@ -1263,7 +1268,7 @@ for (s in 1:length(scaling_factor)) {
         #CFE[s*m,3] <- s
         #CFE[s*m,4] <- m
     
-
+    ### Plot trajectories
     p<- ggplot(data = d, aes(x = visit, y = MADRS10, group = id)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))
@@ -1294,6 +1299,7 @@ for (s in 1:length(scaling_factor)) {
         #summary(fit_lme)
         #model_parameters(fit_lme)
     
+    ### Store estimated parameters
     betas[m, ] <- fit$coefficients[c(7,13)]
     
     delta[m, ] <- sum(fit$coefficients[c(7,13)])
@@ -1319,12 +1325,10 @@ for (s in 1:length(scaling_factor)) {
     
   
     
-    ####################################################################################################  
-    ####################################################################################################
     
-    # IEGM (intercurrent events generating model)##
+    ## IEGM (intercurrent events generating model)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-    # Generate Intercurrent events
+    ## Generate Intercurrent events----
     
     # Use propensity models derived from original trial or from the dataset above 
     # One model for LoE for all patients (as derived above)
@@ -1380,7 +1384,7 @@ for (s in 1:length(scaling_factor)) {
     trial_AE_C$CfW2
     
     
-    # AE and LoE in experimental arm #
+    # AE and LoE in experimental arm
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     trial_AE_X$AE_YES <- ifelse(trial_AE_X[,10]==1, 1, 0)
     trial_AE_X$LoE_YES <- ifelse(trial_AE_X[,10]==0 & trial_AE_X[,8]==1 , 1, 0)
@@ -1515,7 +1519,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    # Plot trajectories
+    ## Plot trajectories for all and each intercurrent event----
     # All patients with their trajectory 
     # LoE
     p<- ggplot(data = d_mis_LL, aes(x = Visit, y = MADRS10, group = id, color=LoE_YES)) 
@@ -1577,7 +1581,7 @@ for (s in 1:length(scaling_factor)) {
   colMeans(delta) ; treatmenteffect
   
   
-  # assign   
+  ### assign and save parameters---- 
   assign(paste('all_betas', s, sep="_"), betas)
   
   assign(paste('all_delta', s, sep="_"), delta)
@@ -1592,7 +1596,7 @@ for (s in 1:length(scaling_factor)) {
   
   setTxtProgressBar(pb3, s)
 }
-
+## End for loop----
 end_time <- Sys.time()
 
 end_time-start_time
