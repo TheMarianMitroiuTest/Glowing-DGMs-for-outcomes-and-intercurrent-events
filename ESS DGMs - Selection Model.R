@@ -1,18 +1,16 @@
-## License CC-BY-4.0 
+# License CC-BY-4.0 ----
 ## Creative Commons Attribution 4.0 International
 ## Mitroiu M. et al SMMR
 
+
+
+
+# Simulation study ----
+## Scenario A "early separation and treatment effect maintained"----
 ## Outcomes generated as responses, and analysed with baseline as fixed-effect (as covariate), not as response
-# function for DGM, IEGM and analyses methods
-#####
+## function for DGM, IEGM and analyses methods
 
-
-#### Simulation study 
-#### Scenario A "early separation and treatment effect maintained"
-
-################
-# code outline #
-################
+## code outline ##----
 
 # admin: load libraries and define objects to store the data
 # generate longitudinal outcomes
@@ -23,6 +21,7 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 
+## load libraries ----
 rm(list=ls())
 # needed for the selection model method
 library(gmailr)
@@ -70,13 +69,12 @@ library(rsimsum)
 #library(clubSandwich)
 
 
-### 
-
+## Session info---- 
 sessionInfo()
 installed.packages()
 
+## gmail setup----
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
-
 # setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
 # various tutorials can be found to set this up
 google_app <- httr::oauth_app(
@@ -97,9 +95,7 @@ Scenario <- c("A")
 # This is scenario A, meaning the target longitudinal trajectories simulated are linear; we took example the Siddiqui paper referenced in the paper.
 
 
-#########################
-# simulation parameters #
-#########################
+## simulation parameters #----
 
 
 set.seed(2147483629) # set seed
@@ -110,17 +106,8 @@ scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the 
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
 # and check out the verification step
 
-# to multiply for LoE, AE_control and AE_exp ### value 0.5 should yield around 13.5% IEs at trial level
-
 n <- 2000# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
-
-
-# checks performed to see how many values are above/below the natural bonds of the outcome
-# e.g., MADRS10 has values between 0 and 60 and we wanted to check how many values were negative or >60 
-
-#CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
-#colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
 
 
 # ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
@@ -217,11 +204,13 @@ pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3) # # progres
 start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
 # it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
 
+
+## begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
     
-    
-    ### Generate correlated residuals
+    ### Generate longitudinal outcomes----
+    #### Generate correlated residuals----
     re_means <- c(0, 0, 0, 0, 0, 0, 0) # means of residuals at each timepoint
     
     # covariance matrix extracted from trial 003-002 (see reference to the data analysis paper in PST)
@@ -279,7 +268,7 @@ for (s in 1:length(scaling_factor)) {
     # MMRM parameters to generate the longitudinal outcomes
     # We used as inspiration the trial 003-002 (ref data analysis paper). Here we used a simplified scenario with linear group trajectories.
     
-    # Scenario A
+    #### model parameters----
     # for the interpretation of these parameters, please see the table under the selection model method in the body of the paper
     beta.baseline <- 29.79
     beta_week1 <- -1
@@ -323,11 +312,10 @@ for (s in 1:length(scaling_factor)) {
     d$visit <-as.factor(d$visit)
     #d$Treat <- factor(d$Treat)
     
-    
-    ####################################################################################################  
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # MMRM on full outcome data
-    ####################################################################################################  
-  
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
     # this is the raw dataset used to check the model fit
     d <-d[,-5] # remove re (residuals) column from the dataset, they have been added to betas
     
@@ -340,9 +328,9 @@ for (s in 1:length(scaling_factor)) {
     BaselineMADRS10 <-  rep(d$MADRS10[d$visit == 0], tmp)
     length(BaselineMADRS10)
     d$Baseline <- BaselineMADRS10
-    d
+        #d
     
-    #d<-d[d$visit!=0,]
+        #d<-d[d$visit!=0,]
     
         #check ranges of the generated outcomes
         #range(d$MADRS10[d$Treat==1 & d$visit!=0])
@@ -365,6 +353,8 @@ for (s in 1:length(scaling_factor)) {
         #CFE[s*m,3] <- s
         #CFE[s*m,4] <- m
     
+    
+    #### plot of longitudinal outcomes ----
     # plot the outcomes to see in big lines how they trajectories look like  
     p<- ggplot(data = d, aes(x = visit, y = MADRS10, group = id)) 
     plot1 <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
@@ -405,6 +395,7 @@ for (s in 1:length(scaling_factor)) {
         #summary(fit_lme)
         #model_parameters(fit_lme)
     
+    #### store estimated parameters----
     betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
     
     delta[m, ] <- sum(fit$coefficients[c(8,15)]) # store the treatment effect at the end of the trial, at week 6
@@ -426,10 +417,12 @@ for (s in 1:length(scaling_factor)) {
     N_Control[m,] <- Randomised_Control
 
     
-    ####################################################################################################  
-    ####################################################################################################
-    
-    # Intercurrent events generating model (IEGM)
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        
+    #### Intercurrent events generating model (IEGM)----
     # create variable with difference week 6 - baseline
     # if Difference < 5, then missing outcome from visit 3 onwards for LoE
     
@@ -532,7 +525,7 @@ for (s in 1:length(scaling_factor)) {
         #range(d_mis_L$MADRS10[d_mis_L$Treat==1])
         #range(d_mis_L$MADRS10[d_mis_L$Treat==0])
     
-    # assign and save the generated dataset
+    #### assign and save the generated datasets----
     # naming sequence is "SimTrial"_"Method"_"trial sample size"_"iteration number"_"scaling factor"
 
     assign(paste0("SimTrial_sm", "_", n,"_", m, "_", s), d_mis_L)
@@ -541,9 +534,9 @@ for (s in 1:length(scaling_factor)) {
     dataset_name <- paste0("SimTrial_sm", "_", n,"_", m, "_", s)
     save(dataset_name, file = dataset_name.Rdata)
   
-    #####################################################################
-    # Intercurrent events descriptives needed for the verification step #
-    #####################################################################
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #### Intercurrent events descriptives needed for the verification step ----
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     LoE_Y <- d_mis_L[,c(2, 11)]
     LoE_Y$LoE_YES <- as.numeric(LoE_Y$LoE_YES)-1
@@ -605,12 +598,11 @@ for (s in 1:length(scaling_factor)) {
     n_AE_and_LoE_T[m, ] <- LoE_Y_total + AE_Y_total
     AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
     
-    
-    #####################
-    # Plot trajectories #
-    #####################
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #### Plot trajectories for all and all intercurrent events----
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # All patients with their trajectory 
+  
     # LoE #
     p<- ggplot(data = d_mis_L, aes(x = Visit, y = MADRS10, group = id, color=LoE_YES)) 
     #p + geom_line() + facet_grid(~ Treat) 
@@ -633,7 +625,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Plots by subsets/patterns of patients that experienced a certain intercurrent event #
+    ##### Plots by subsets/patterns of patients that experienced a certain intercurrent event----
     
     d_mis_L_LoE <- d_mis_L[d_mis_L$LoE_YES==1,] # subset only patients that experienced LoE
     d_mis_L_AE <- d_mis_L[d_mis_L$AE_Yes==1,] # subset only patients that experienced AE
@@ -659,13 +651,15 @@ for (s in 1:length(scaling_factor)) {
     
     setTxtProgressBar(pb1, m)
   }
+
   
   # parameters extracted for MMRM fitted models on full outcome data
   colMeans(betas) # average of treatment effect parameters estimated from the model
   colMeans(delta) ; treatmenteffect # average treatment effect estimated from the model
   
 
-  # assign and save all parameters pertaining to the treatment effect, the estimated treatment effect, the standard errors, 95% CI and intercurrent event descriptives
+  # assign and save all parameters----
+  # pertaining to the treatment effect, the estimated treatment effect, the standard errors, 95% CI and intercurrent event descriptives
   assign(paste('all_betas', s, sep="_"), betas)
   
   assign(paste('all_delta', s, sep="_"), delta)
@@ -681,6 +675,8 @@ for (s in 1:length(scaling_factor)) {
 
   setTxtProgressBar(pb3, s)
 }
+
+# end for loop----
 end_time <- Sys.time() # timestamp for end of simulation
 end_time-start_time # total time to complete the simulation
 
@@ -688,11 +684,10 @@ end_time-start_time # total time to complete the simulation
 colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 hist(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
-########################
-# Plot relevant graphs #
-########################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Plot relevant graphs for the paper----
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#(plot1 / plot_all) / (plot_LoE / plot_AE / plot_NoIE)
 
 (plot_all / plot_LoE) | (plot_AE / plot_NoIE)
 
@@ -713,11 +708,12 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
 
 
 
-############################################################################################################################################################
-############################################################################################################################################################
-############################################################################################################################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#### The code used to extract the MMRM (longitudinal) models for each pattern in preparation for PMMMM method ##
+
+# The code used to extract the MMRM (longitudinal) models for each pattern in preparation for PMMMM method----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Source trial with 1000 patients per arm
@@ -780,7 +776,7 @@ summary(fit)
     #describe(SimTrial_sm_2000_1_5)
 
 
-# Pattern for LoE at trial level
+## Pattern for LoE at trial level----
 fit_LoE_trial<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                      Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
           data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$LoE_YES==1,] ,
@@ -796,7 +792,7 @@ summary(fit_LoE_trial)
 getVarCov(fit_LoE_trial, individual = 8)
 
 
-# Pattern for AE in experimental arm ##
+## Pattern for AE in experimental arm----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
                     data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes==1,] ,
@@ -814,7 +810,7 @@ getVarCov(fit_AE_exp, individual = '2')
 
 
 
-# Pattern for AE in control arm # 
+## Pattern for AE in control arm----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 fit_AE_control<-gls(MADRS10 ~ MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                       Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
@@ -830,7 +826,7 @@ getVarCov(fit_AE_control, individual = '28')
     #View(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
 
 
-# Pattern for no intercurrent events at trial level #
+## Pattern for no intercurrent events at trial level----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 fit_no_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
@@ -843,12 +839,9 @@ fit_no_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
 summary(fit_no_IE)
 #getVarCov(fit_no_IE, individual = 3)
 
-#######################################################################################################################
-#######################################################################################################################
-#######################################################################################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-#  The code used to extract the logit models for LoE at trial level, AE in experimental arm and AE in control arm ##
+#  The code used to extract the logit models for LoE at trial level, AE in experimental arm and AE in control arm----
 ## obtain the logistic regression models for LoE at trial level, AE in experimental arm and AE in control arm ##
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 class(SimTrial_sm_2000_1_5$AE_Control_Yes)
@@ -863,7 +856,7 @@ trial_AE_control <- SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Treat==0,]
 
 
 
-# LoE at trial level logit(Pr(LoE))= fi_LoE * (Y_i0 - Y_i6) #
+## LoE at trial level logit(Pr(LoE))= fi_LoE * (Y_i0 - Y_i6)----
 logit_LoE <- glm(LoE_Yes ~ -1 + CfB,
                  data = SimTrial_sm_2000_1_5,
                  family = "binomial")
@@ -884,7 +877,7 @@ low_boundary_prob_LoE <- min(probz_predicted_LoE_Yes) ; low_boundary_prob_LoE
 
 
 
-# AE experimental arm logit(Pr(AE_exp))= fi_AE_exp * (Y_i0 - Y_i2)
+## AE experimental arm logit(Pr(AE_exp))= fi_AE_exp * (Y_i0 - Y_i2)----
 logit_AE_exp <- glm(AE_Exp_Yes ~ -1 + CfW2,
                  data = trial_AE_exp,
                  family = "binomial")
@@ -908,7 +901,7 @@ low_boundary_prob_AE_exp <- min(probz_predicted_AE_exp_Yes)  ;  low_boundary_pro
 
 
 
-# AE logit(Pr(AE_control))= fi_AE_control * (Y_i0 - Y_i2)
+## AE logit(Pr(AE_control))= fi_AE_control * (Y_i0 - Y_i2)----
 logit_AE_control <- glm(AE_Control_Yes ~ -1 + CfW2,
                     data = trial_AE_control,
                     family = "binomial")
@@ -927,9 +920,9 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 
 
 
-#######################################################################################################################
-#######################################################################################################################
-#######################################################################################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 # The code for SPM method. On the same trial generated with the selection model (above), we fitted a mixed-effects model with random intercept and random slope # 
@@ -990,20 +983,13 @@ summary(fit_AE_control_spm)
 
 # These coefficients were used in the shared-parameter model (SPM) method
 
-############################################################################################################################################################
-############################################################################################################################################################
-############################################################################################################################################################
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#############################################################################################################
-#############################################################################################################
-#############################################################################################################
-#############################################################################################################
-
-
-# Selection model via marginal model for outcomes-generating model and FULLY STOCHASTIC models for generation of intercurrent events
+# Selection model via marginal model----
+# for outcomes-generating model and FULLY STOCHASTIC models for generation of intercurrent events
 # for notation and description, please see above in the deterministic approach. The difference hereonwards is that we used logistic models to model the probability of intercurrent events, vs the deterministic rules as applied in the above approach
 
  # most of the code below is very similar with the code above, in terms of scope and operational reasons, as well as meaning and interpretation
