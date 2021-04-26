@@ -13,6 +13,9 @@
 
 
 
+# add the ceiling to make sure the time to event are at the next visit.
+# change 0 to Inf for those that do not experience the intercurrent event.
+
 ### DGM
 rm(list=ls())
 library(MASS)
