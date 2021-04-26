@@ -1236,11 +1236,10 @@ all_betas_1;
 colMeans(all_delta_1); treatmenteffect_pmmm
 
 tolerance_margin <- 0.1
-difference_check <- treatmenteffect_pmmm - colMeans(all_delta_1)
+difference_Verification <- abs(treatmenteffect_pmmm - colMeans(all_delta_1))
 
 # check if the result satisfies the inequality
-ifelse(isTRUE(paste(difference_check) < tolerance_margin), print("Check successful"), print("Check NOT successful")) 
-
+ifelse(isTRUE(paste(difference_check) < tolerance_margin), "Verification successful", "Verification NOT successful") 
 
 #hist(treatmenteffect_pmmm - all_betas_1)
 
