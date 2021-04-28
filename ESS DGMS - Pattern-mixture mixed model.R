@@ -13,7 +13,7 @@
 #### Scenario A "early separation and treatment effect maintained"
 
 
-#(4*1.12^2)/(0.1^2)
+
 
 
 ### DGM

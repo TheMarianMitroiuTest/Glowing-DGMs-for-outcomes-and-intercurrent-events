@@ -419,7 +419,7 @@ for (s in 1:length(scaling_factor)) {
     d_mis_w$LoE_Yes <-ifelse(d_mis_w$CfB<5, 1, 0)*rbinom(n, 1, p_LoE);  d_mis_w # all patients that fit in the deterministic rule are then adjusted with probability abovementioned
     # to adjust the probabilty of LoE# create the LoE variable
     sum(d_mis_w$LoE_Yes) # check how many patients experienced the intercurrent event
-        #View(d_mis_w)
+        #View(d_mis_w)  
     
     # same method is applied for e.g., treatment discontinuations due to adverse events at arm level
     # too much efficacy >8 points on MADRS10 at week 2
