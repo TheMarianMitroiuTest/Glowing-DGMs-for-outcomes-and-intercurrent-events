@@ -19,7 +19,7 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 ## load libraries ----
-rm(list=ls())
+rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
