@@ -16,8 +16,6 @@
 # make a comment here to inform the reader/user about the checks.
 # rename for each d_orig
 
-
-
 ### DGM
 rm(list=ls())
 library(MASS)
