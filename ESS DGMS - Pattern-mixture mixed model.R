@@ -13,6 +13,8 @@
 #### Scenario A "early separation and treatment effect maintained"
 
 
+# make a comment here to inform the reader/user about the checks.
+# rename for each d_orig
 
 
 
@@ -449,6 +451,10 @@ for (s in 1:length(scaling_factor)) {
     
     # this is the raw dataset used to check the model fit
     d_AE_all <-d_AE_all[,-5] # remove re (residuals) column from the dataset, they have been added to betas
+    
+    
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # change the numbers of the columns with the names of the variables
     
     # assign this to another object to make sure each time for each analysis the dataset used is the same
     d_orig<-d_AE_all # full outcome data
