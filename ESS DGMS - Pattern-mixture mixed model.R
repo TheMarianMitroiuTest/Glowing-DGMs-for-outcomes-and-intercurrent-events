@@ -858,7 +858,6 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id, color=No_IE)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
 
-
 #describe(d_pmmm)
 #view(d_pmmm)
 
