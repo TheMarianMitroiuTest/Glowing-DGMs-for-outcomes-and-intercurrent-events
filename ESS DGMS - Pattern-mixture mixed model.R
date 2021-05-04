@@ -200,9 +200,7 @@ for (s in 1:length(scaling_factor)) {
     j_LoE_all<-c(re_LoE_all[, 1], re_LoE_all[, 2], re_LoE_all[, 3], re_LoE_all[, 4], re_LoE_all[, 5], re_LoE_all[, 6], re_LoE_all[, 7])
     d_LoE_all$re_LoE_all <- j_LoE_all ; #d_LoE_all
     
-    
     d_LoE_all <- d_LoE_all[order(d_LoE_all$id, d_LoE_all$visit),]; #d_LoE_all
-    
     
     d_LoE_all<-as.matrix(d_LoE_all)
     
@@ -232,7 +230,6 @@ for (s in 1:length(scaling_factor)) {
     # Y_ij = (Beta_0 + bi0) + (BetaWeek1 + bi1) + (BetaWeek2 + bi2) + (BetaWeek3 + bi3) + (BetaWeek4 + bi4) + (BetaWeek5 + bi5) + (BetaWeek6 + bi6) + 
     #                          Beta_W1_Treat * T + Beta_W2_Treat * T + Beta_W3_Treat * T + Beta_W4_Treat * T + Beta_W5_Treat * T + Beta_W6_Treat * T 
     
-    
     for (i in 1:(n_LoE_all*length(visits))) {
       d_LoE_all[i,4] <- ifelse(d_LoE_all[i, 2]==0, beta.baseline_LoE_all + d_LoE_all[i,5],
                                ifelse(d_LoE_all[i, 2]==7, d_LoE_all[i-1,4] + beta_week1_LoE_all + d_LoE_all[i,5] +  beta_v1_treatment_LoE_all * d_LoE_all[i, 3],
@@ -248,7 +245,6 @@ for (s in 1:length(scaling_factor)) {
     d_LoE_all$visit <-as.factor(d_LoE_all$visit)
     d_LoE_all$Treat <- factor(d_LoE_all$Treat)
     
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # MMRM on full outcome data LoE
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -258,7 +254,6 @@ for (s in 1:length(scaling_factor)) {
     # assign this to another object to make sure each time for each analysis the dataset used is the same
     d_orig<-d_LoE_all # full outcome data
     
-    
     length(d_LoE_all$id)
     tmp <- sapply(unique(d_LoE_all$id), FUN = function(i) nrow(d_LoE_all[d_LoE_all$id == i,]))
     BaselineMADRS10 <-  rep(d_LoE_all$MADRS10[d_LoE_all$visit == 0], tmp)
@@ -266,22 +261,17 @@ for (s in 1:length(scaling_factor)) {
     d_LoE_all$Baseline <- BaselineMADRS10
     #d_LoE_all<-d_LoE_all[d_LoE_all$visit!=0,]
     
-    
     range(d_LoE_all$MADRS10[d_LoE_all$Treat==1 & d_LoE_all$visit!=0])
     range(d_LoE_all$MADRS10[d_LoE_all$Treat==0 & d_LoE_all$visit!=0])
-    
     
     range(d_LoE_all$MADRS10[d_LoE_all$Treat==1 & d_LoE_all$visit==42])
     range(d_LoE_all$MADRS10[d_LoE_all$Treat==0 & d_LoE_all$visit==42])
     
-    
     #mean(d_LoE_all$MADRS10[d_LoE_all$Treat==1 & d_LoE_all$visit==0])
     #mean(d_LoE_all$MADRS10[d_LoE_all$Treat==0 & d_LoE_all$visit==0])
     
-    
     mean(d_LoE_all$MADRS10[d_LoE_all$Treat==1 & d_LoE_all$visit==42])
     mean(d_LoE_all$MADRS10[d_LoE_all$Treat==0 & d_LoE_all$visit==42])
-    
     
     #### plot of longitudinal outcomes LoE----
     # plot the outcomes to see in big lines how the trajectories look like 
@@ -336,8 +326,6 @@ for (s in 1:length(scaling_factor)) {
     #d_LoE_all$AE_control <- 0
     d_LoE_all$No_IE <- 0
     d_LoE_all$AE_Yes <- 0
-  
-    
     
     ### PATTERN OF LoE IN BOTH EXPERIMENTAL AND CONTROL ARMS----
     #### Generate pattern for LoE, both experimental and control arm
@@ -413,7 +401,6 @@ for (s in 1:length(scaling_factor)) {
     # Y_ij = (Beta_0 + bi0) + (BetaWeek1 + bi1) + (BetaWeek2 + bi2) + (BetaWeek3 + bi3) + (BetaWeek4 + bi4) + (BetaWeek5 + bi5) + (BetaWeek6 + bi6) + 
     #                          Beta_W1_Treat * T + Beta_W2_Treat * T + Beta_W3_Treat * T + Beta_W4_Treat * T + Beta_W5_Treat * T + Beta_W6_Treat * T 
     
-    
     for (i in 1:(n_AE_all*length(visits))) {
       d_AE_all[i,4] <- ifelse(d_AE_all[i, 2]==0, beta.baseline_AE_all + d_AE_all[i,5],
                                ifelse(d_AE_all[i, 2]==7, d_AE_all[i-1,4] + beta_week1_AE_all + d_AE_all[i,5] +  beta_v1_treatment_AE_all * d_AE_all[i, 3],
@@ -423,30 +410,25 @@ for (s in 1:length(scaling_factor)) {
                                                            ifelse(d_AE_all[i, 2]==35, d_AE_all[i-5,4] + beta_week5_AE_all + d_AE_all[i,5] +  beta_v5_treatment_AE_all * d_AE_all[i, 3],
                                                                   d_AE_all[i-6,4] + beta_week6_AE_all + d_AE_all[i,5] +  beta_v6_treatment_AE_all * d_AE_all[i, 3]))))))
     }
-    
-    
+  
     #View(d)
     d_AE_all <-as.data.frame(d_AE_all)
     d_AE_all$visit <-as.factor(d_AE_all$visit)
     d_AE_all$Treat <- factor(d_AE_all$Treat)
     
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # MMRM on full outcome data AE
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    
     # this is the raw dataset used to check the model fit
     d_AE_all <-d_AE_all[,-5] # remove re (residuals) column from the dataset, they have been added to betas
-    
     
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # change the numbers of the columns with the names of the variables
     
     # assign this to another object to make sure each time for each analysis the dataset used is the same
     d_orig<-d_AE_all # full outcome data
-    
-    
+  
     length(d_AE_all$id)
     tmp <- sapply(unique(d_AE_all$id), FUN = function(i) nrow(d_AE_all[d_AE_all$id == i,]))
     BaselineMADRS10 <-  rep(d_AE_all$MADRS10[d_AE_all$visit == 0], tmp)
@@ -454,22 +436,17 @@ for (s in 1:length(scaling_factor)) {
     d_AE_all$Baseline <- BaselineMADRS10
     #d_AE_all<-d_AE_all[d_AE_all$visit!=0,]
     
-    
     range(d_AE_all$MADRS10[d_AE_all$Treat==1 & d_AE_all$visit!=0])
     range(d_AE_all$MADRS10[d_AE_all$Treat==0 & d_AE_all$visit!=0])
-    
     
     range(d_AE_all$MADRS10[d_AE_all$Treat==1 & d_AE_all$visit==42])
     range(d_AE_all$MADRS10[d_AE_all$Treat==0 & d_AE_all$visit==42])
     
-    
     #mean(d_AE_all$MADRS10[d_AE_all$Treat==1 & d_AE_all$visit==0])
     #mean(d_AE_all$MADRS10[d_AE_all$Treat==0 & d_AE_all$visit==0])
     
-    
     mean(d_AE_all$MADRS10[d_AE_all$Treat==1 & d_AE_all$visit==42])
     mean(d_AE_all$MADRS10[d_AE_all$Treat==0 & d_AE_all$visit==42])
-    
     
     #### plot of longitudinal outcomes AE----
     p<- ggplot(data = d_AE_all, aes(x = visit, y = MADRS10, group = id)) 
@@ -502,7 +479,6 @@ for (s in 1:length(scaling_factor)) {
     d_AE_all$V42[d_AE_all$visit == 42] <- 1
     #d_AE_all
     
-    
     # fit a model to check if the estimated parameters are similar/close to the true parameters
     #fit_AE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
     #                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
@@ -511,11 +487,7 @@ for (s in 1:length(scaling_factor)) {
     #             weights = varIdent(form = ~ 1 | visit), 
     #            method="REML")
     
-    
-    
-    
     #summary(fit_AE_all)
-    
     
     #fit_AE_all$coefficients[c(13)]
     
@@ -530,9 +502,6 @@ for (s in 1:length(scaling_factor)) {
     #d_AE_all$AE_control <- 0
     d_AE_all$No_IE <- 0
     d_AE_all$LoE_Yes <- 0
-    
-    
-
 
     ### PATTERN OF No IE IN BOTH EXPERIMENTAL AND CONTROL ARMS----
     #### Generate pattern for No IE, both experimental and control arm
@@ -561,7 +530,6 @@ for (s in 1:length(scaling_factor)) {
       Treat = rep(rbinom(n_No_IE, 1, 0.5), each = length(visits)),
       MADRS10 = rep(NA, n_No_IE)); d_No_IE # mean(Treat)
     
-    
     tail(d_AE_all)
     head(d_No_IE)
     
@@ -571,9 +539,7 @@ for (s in 1:length(scaling_factor)) {
     j_No_IE<-c(re_No_IE[, 1], re_No_IE[, 2], re_No_IE[, 3], re_No_IE[, 4], re_No_IE[, 5], re_No_IE[, 6], re_No_IE[, 7])
     d_No_IE$re_No_IE <- j_No_IE ; #d_No_IE
     
-    
     d_No_IE <- d_No_IE[order(d_No_IE$id, d_No_IE$visit),]; #d_No_IE
-    
     
     d_No_IE<-as.matrix(d_No_IE)
     
@@ -592,8 +558,6 @@ for (s in 1:length(scaling_factor)) {
     beta_v4_treatment_No_IE <- -3#-1.037980
     beta_v5_treatment_No_IE <- -3.5#-1.420660
     beta_v6_treatment_No_IE <- -4.25#-4.25#-4.195854 # -1.904595
-  
-    
   
     treatmenteffect_No_IE <-  beta_v6_treatment_No_IE ; treatmenteffect_No_IE
     
@@ -634,18 +598,14 @@ for (s in 1:length(scaling_factor)) {
     #d_No_IE
     #d_No_IE<-d_No_IE[d_No_IE$visit!=0,]
     
-    
     range(d_No_IE$MADRS10[d_No_IE$Treat==1 & d_No_IE$visit!=0])
     range(d_No_IE$MADRS10[d_No_IE$Treat==0 & d_No_IE$visit!=0])
-    
     
     range(d_No_IE$MADRS10[d_No_IE$Treat==1 & d_No_IE$visit==42])
     range(d_No_IE$MADRS10[d_No_IE$Treat==0 & d_No_IE$visit==42])
     
-    
     mean(d_No_IE$MADRS10[d_No_IE$Treat==1 & d_No_IE$visit==0])
     mean(d_No_IE$MADRS10[d_No_IE$Treat==0 & d_No_IE$visit==0])
-    
     
     mean(d_No_IE$MADRS10[d_No_IE$Treat==1 & d_No_IE$visit==42])
     mean(d_No_IE$MADRS10[d_No_IE$Treat==0 & d_No_IE$visit==42])
@@ -717,7 +677,6 @@ for (s in 1:length(scaling_factor)) {
                     #d_AE_control,
                     d_No_IE)
     
-    
     head(d_LoE_all)
     head(d_AE_all)
     #head(d_AE_exp)
@@ -729,7 +688,6 @@ for (s in 1:length(scaling_factor)) {
     head(d_pmmm)
     d_pmmm$Pattern <- as.factor(d_pmmm$Pattern)
     
-    
     d_pmmm$LoE_Yes <- as.factor(d_pmmm$LoE_Yes)
     d_pmmm$AE_Yes <- as.factor(d_pmmm$AE_Yes)
     #d_pmmm$AE_exp <- as.factor(d_pmmm$AE_exp)
@@ -737,42 +695,33 @@ for (s in 1:length(scaling_factor)) {
     d_pmmm$No_IE <- as.factor(d_pmmm$No_IE)
     levels(d_pmmm$visit)
     
-    
-    
     #### Plot trajectories for all the created patterns----
     # All patients with TRUE trajectory 
-    
     
     ##### LoE_all/any----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=LoE_Yes)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
       scale_y_continuous(limits = c(-10, 60))
     
-    
     ##### AE_exp----
     #p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_exp)) 
     #p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
      # scale_y_continuous(limits = c(-10, 60))
-    
     
     ##### AE_control----
     #p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_control)) 
     #p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
      # scale_y_continuous(limits = c(-10, 60))
     
-    
     ##### AE_any----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_Yes)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
       scale_y_continuous(limits = c(-10, 60))
     
-    
     ###### No_IE----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=No_IE)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
       scale_y_continuous(limits = c(-10, 60))
-    
-    
     
     #describe(d_pmmm)
     #view(d_pmmm)
@@ -783,11 +732,8 @@ for (s in 1:length(scaling_factor)) {
     plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
       scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM - All patterns"); plot_all
 
-    
-    
     ##### plots for the paper----
     (plot_all / plot_LoE) | (plot_AE / plot_NoIE)
-    
     
     ##### MMRM model on the combined-patterns trial dataset
     fit_pmmm<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
@@ -800,8 +746,7 @@ for (s in 1:length(scaling_factor)) {
     summary(fit_pmmm)
     
     describe(d_pmmm)
-
-
+    
     #describe(d_pmmm)
     getVarCov(fit_pmmm, individual = 1)
     
@@ -815,8 +760,7 @@ for (s in 1:length(scaling_factor)) {
       
       #sampled_prop_AE_control *  beta_week6_AE_control +
       
-      (1-(sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control)) *  beta_v6_treatment_No_IE ; treatmenteffect_pmmm
-    
+    (1-(sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control)) *  beta_v6_treatment_No_IE ; treatmenteffect_pmmm
     
     sum(fit_pmmm$coefficients[c(13)]); treatmenteffect_pmmm
     # store parameters from model fit on each dataset
@@ -830,7 +774,6 @@ for (s in 1:length(scaling_factor)) {
     
     #delta_errorz[m, ] <- delta_error 
     
-    
     #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
     #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
     
@@ -840,15 +783,10 @@ for (s in 1:length(scaling_factor)) {
     assign(paste0("SimTrial_pmmm", "_", n, "_", m, "_", s), d_pmmm)
     #View(SimTrial_pmmm_1_1)
     
-    
     dataset_name.Rdata <- paste0("SimTrial_pmmm", "_", n,"_", m, "_", s, ".Rdata")
     dataset_name <- paste0("SimTrial_pmmm", "_", n, "_", m, "_", s)
     
     save(dataset_name, file = dataset_name.Rdata)
-    
-    
-    
-    
     
     setTxtProgressBar(pb1, m)
   }
@@ -857,21 +795,15 @@ for (s in 1:length(scaling_factor)) {
   # parameters extracted for MMRM fitted models on full outcome data
   colMeans(betas)
   colMeans(delta) ; treatmenteffect_pmmm
-  
-  
-  
-  
+
   # assign   
   assign(paste('all_betas', s, sep="_"), betas)
   
   assign(paste('all_delta', s, sep="_"), delta)
   
-  
-  
   setTxtProgressBar(pb3, s)
 }
 end_time <- Sys.time()
-
 
 end_time-start_time
 
@@ -886,8 +818,6 @@ ifelse(isTRUE(paste(difference_check) < tolerance_margin), "Verification success
 
 #hist(treatmenteffect_pmmm - all_betas_1)
 
-
-
 hist(all_betas_1)
 
 colMeans(all_betas_1) + 1.96*sd(all_betas_1)/sqrt(n)
@@ -898,7 +828,6 @@ max(all_betas_1)
 
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==1])
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==0])
-
 
 #### Visualisation of trajectories and patterns
 
@@ -930,7 +859,6 @@ p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id,
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
 
 
-
 #describe(d_pmmm)
 #view(d_pmmm)
 
@@ -938,8 +866,6 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id, color=Pattern)) 
 #p + geom_line() + facet_grid(~ Treat) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
-
-
 
 fit_190<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
@@ -953,7 +879,6 @@ summary(fit_190)
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
 colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
-
 
 cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
       rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5),
