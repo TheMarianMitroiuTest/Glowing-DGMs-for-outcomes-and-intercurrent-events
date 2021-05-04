@@ -16,7 +16,11 @@
 # generate intercurrent events
 # ~ get descriptives
 # assign and save generated datasets
-# visualisation of longitudinal outcomes and intercurrent events
+# visualisation of longitudinal outcomes and intercurrent events\
+
+# with differing number of patients per pattern, the overall treatment effect will change obviously.
+# Need to finetune the betas for each pattern for all the wanted treatment effects and factoring in the scaling factor.
+# create simple function to sample few and visualise them
 
 
 
@@ -892,10 +896,6 @@ colMeans(all_betas_1) - 1.96*sd(all_betas_1)/sqrt(n)
 min(all_betas_1)
 max(all_betas_1)
 
-all_betas_1< -3.5-1
-all_betas_1< -3.5-+1
-
-
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==1])
 describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==0])
 
@@ -950,21 +950,6 @@ fit_190<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
 
 summary(fit_190)
 
-
-
-
-# with differing number of patients per pattern, the overall treatment effect will change obviously.
-# Need to finetune the betas for each pattern for all the wanted treatment effects and factoring in the scaling factor.
-
-
-
-### resume here
-## need to save the generated datasets
-# create simple function to sample few and visualise them
-
-
-
-
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
 colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
@@ -976,36 +961,3 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
       rbind(all_confint_fit_1, all_confint_fit_2, all_confint_fit_3, all_confint_fit_4, all_confint_fit_5),
       rbind(all_N_Exp_1, all_N_Exp_2, all_N_Exp_3, all_N_Exp_4, all_N_Exp_5),
       rbind(all_N_Control_1, all_N_Control_2, all_N_Control_3, all_N_Control_4, all_N_Control_5))
-
-
-
-
-
-
-
-
-# apply the PMMM with only 1 model for AE in both arms.
-# see if the weighting works as per parameters formula
-# check the formula with parameters at week 6 set to 0 to MAKE SURE it was the same as for the simulated scenario with 0s.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
