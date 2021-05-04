@@ -3,20 +3,32 @@
 ## Mitroiu M. et al SMMR
 
 
-## outcomes generates as responses, and analysed with baseline as fixed-effect (as covariate), not as response
-# function for DGM, IEGM and analyses methods
-#####
-# models for patterns derived from the SM model on 5000 patients, with small covariance matrix
+# Simulation study ----
+## Scenario A "early separation and treatment effect maintained"----
+## Outcomes generated as responses, and analysed with baseline as fixed-effect (as covariate), not as response
+## function for DGM, IEGM and analyses methods
+
+## code outline ##----
+
+# admin: load libraries and define objects to store the data
+# generate longitudinal outcomes
+# ~ fit model and get parameters
+# generate intercurrent events
+# ~ get descriptives
+# assign and save generated datasets
+# visualisation of longitudinal outcomes and intercurrent events
 
 
-#### Simulation study 
-#### Scenario A "early separation and treatment effect maintained"
 
 
+# to do
 # make a comment here to inform the reader/user about the checks.
 # rename for each d_orig
+# add randomisation objects
+# percentages of intercurrent events to be filled in from the SM tables
 
-### DGM
+
+## load libraries ----
 rm(list=ls())
 library(MASS)
 library(nlme)
@@ -57,17 +69,17 @@ library(lmtest)
 #library(clubSandwich)
 
 
-
+## Session info---- 
 sessionInfo()
 installed.packages()
 
 
-#View(SimTrial_1_1)
+?# Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
 
-
+## gmail setup----
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
-
-
+# setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
+# various tutorials can be found to set this up
 google_app <- httr::oauth_app(
   "renamedapp",
   key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
@@ -77,30 +89,27 @@ google_app <- httr::oauth_app(
 gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
                   secret = "Orgt-B5-eAEplGIbfWmr4Uhy")
 
-
-
-options(mc.cores = parallel::detectCores()) # M1 with parallel, Old1 without parallel
+options(mc.cores = parallel::detectCores()) # M1 with parallel, 2017 macbook pro without parallel setting on
+# considerably reduces the time needed to complete the simulations vs parallel setting off
+# for other machines it is recommended to test few runs with different iterations and settings to optimise the computation of the simulation
 
 Scenario <- c("A")
+# This is scenario A, meaning the target longitudinal trajectories simulated are linear; we took example the Siddiqui paper referenced in the paper.
 
-# simulation
+## simulation parameters #----
 
-
-set.seed(2147483629)
+set.seed(2147483629) # set seed
 #set.seed(2147483399)
 m.iterations <- 50# number of generated datasets # number of trials per scaling factor
-scaling_factor <-  c(1) #c(0.20, 0.40, 0.60, 0.80, 1) # to cover a range of IE % from ~5%-45% in total
-# total number of simulated trials = m.iterations * length(scaling_factor)
-# try with c(0.4, 1.1, 1.8, 2.3, 3)
-#c(0.25, 0.5, 1, 2, 2.5) steps for scaling factor
-# to multiply for LoE, AE_control and AE_exp ### value 0.5 should yield around 13.5% IEs, 1 ~ %, 2 ~ %, 2.5 ~
+scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
+# In this simulation the scaling factor does not play any role.
+# Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
 
+n <- 190# # number of patients to be simulated (sample size)
+# this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided
 
-
-n <- 190# number of patients
-
-
-# percentages/proportions of Intercurrent Events
+# ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
+# this is done to increase variability in intercurrent events percentages between trials
 prop_LoE <- 0.38 #c(0.36, 0.37, 0.38, 0.39, 0.40); mean(prop_LoE) # c(0.383) 
 prop_AE_exp <- 0.04#c(0.020, 0.025, 0.03, 0.035, 0.04); mean(prop_AE_exp) # c(0.0298) 
 prop_AE_control <-  0.02#c(0.010, 0.0125, 0.0150, 0.0175, 0.020) ; mean(prop_AE_control) # c(0.0158)
@@ -115,21 +124,18 @@ colnames(delta) <-c("TreatmentEffect")
 betas <- matrix(ncol=1,nrow=m.iterations)
 colnames(betas) <-c("visit42:Treat")
 
-pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3)
+pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
 
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
+start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
+# it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
 
-#s <-1
-
-start_time <- Sys.time()
-
+## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
 
-        
-    
-    # percentages of intercurrent events To be filled in from the SM tables
+    ### percentages of intercurrent events to be filled in from the SM tables ----
     sampled_prop_LoE <- sample(prop_LoE, 1)
     n_LoE_all <- round(sampled_prop_LoE*n * scaling_factor[s], digits = 0) ; n_LoE_all
     
@@ -139,19 +145,15 @@ for (s in 1:length(scaling_factor)) {
     sampled_prop_AE_control <- sample(prop_AE_control, 1)
     n_AE_control <- round(sampled_prop_AE_control*n * scaling_factor[s], digits = 0) ; n_AE_control
   
-
     n_AE_all <- n_AE_exp + n_AE_control ; n_AE_all
     
     n_No_IE <- n - (n_LoE_all + n_AE_exp + n_AE_control); n_No_IE
     prop_No_IE <- 1 - (sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control) ; prop_No_IE
+  
     
-    
-    
-    
-    
-    ##### PATTERN OF LoE IN BOTH EXPERIMENTAL AND CONTROL ARMS
-    ### Generate pattern for LoE, both experimental and control arm
-    ### Generate correlated errors
+    ### PATTERN OF LoE IN BOTH EXPERIMENTAL AND CONTROL ARMS----
+    #### Generate pattern for LoE, both experimental and control arm
+    #### Generate correlated errors----
     re_means <- c(0, 0, 0, 0, 0, 0, 0)
     
     size_diag <- 0.001
@@ -200,7 +202,11 @@ for (s in 1:length(scaling_factor)) {
     
     d_LoE_all<-as.matrix(d_LoE_all)
     
-    # Scenario A -> pattern of LoE in both experimental and control arms
+    # MMRM parameters to generate the longitudinal outcomes
+    # We used as inspiration the trial 003-002 (ref data analysis paper). Here we used a simplified scenario with linear group trajectories.
+    
+    
+    #### model parameters LoE in both arms----
     beta.baseline_LoE_all <- 29.79
     beta_week1_LoE_all <- 1#0.93#-0.117613
     beta_week2_LoE_all <- 1.2#2.3#0.556190
@@ -215,10 +221,6 @@ for (s in 1:length(scaling_factor)) {
     beta_v4_treatment_LoE_all <- -1#-2.15#-0.816656
     beta_v5_treatment_LoE_all <- -1.6#-2.75#-0.737112
     beta_v6_treatment_LoE_all <- -2.15#0#-2#-1.909406  #-1.318160
-    
-    
-    
-    
     
     treatmenteffect_LoE_all <-  beta_v6_treatment_LoE_all ; treatmenteffect_LoE_all
     
@@ -237,18 +239,15 @@ for (s in 1:length(scaling_factor)) {
                                                                   d_LoE_all[i-6,4] + beta_week6_LoE_all + d_LoE_all[i,5] +  beta_v6_treatment_LoE_all * d_LoE_all[i, 3]))))))
     }
     
-    
     #View(d)
     d_LoE_all <-as.data.frame(d_LoE_all)
     d_LoE_all$visit <-as.factor(d_LoE_all$visit)
     d_LoE_all$Treat <- factor(d_LoE_all$Treat)
     
     
-    ####################################################################################################  
-    # MMRM on full outcome data in pattern LoE in both experimental and control arm
-    ############################
-    
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # MMRM on full outcome data LoE
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # this is the raw dataset used to check the model fit
     d_LoE_all <-d_LoE_all[,-5] # remove re (residuals) column from the dataset, they have been added to betas
     
@@ -280,11 +279,11 @@ for (s in 1:length(scaling_factor)) {
     mean(d_LoE_all$MADRS10[d_LoE_all$Treat==0 & d_LoE_all$visit==42])
     
     
-    
+    #### plot of longitudinal outcomes LoE----
+    # plot the outcomes to see in big lines how the trajectories look like 
     p<- ggplot(data = d_LoE_all, aes(x = visit, y = MADRS10, group = id)) 
     plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-LoE pattern"); plot_LoE
-    
     
     #View(d_LoE_all)
     
@@ -310,8 +309,7 @@ for (s in 1:length(scaling_factor)) {
     d_LoE_all$V42[d_LoE_all$visit == 42] <- 1
     #d_LoE_all
     
-    
-    
+    # fit a model to check if the estimated parameters are similar/close to the true parameters
     #fit_LoE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
      #                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
       #               data=d_LoE_all,
@@ -319,11 +317,7 @@ for (s in 1:length(scaling_factor)) {
         #             weights = varIdent(form = ~ 1 | visit), 
          #            method="REML")
     
-    
-    
-    
     #summary(fit_LoE_all)
-    
     
     #fit_LoE_all$coefficients[c(13)]
     
@@ -338,15 +332,12 @@ for (s in 1:length(scaling_factor)) {
     #d_LoE_all$AE_control <- 0
     d_LoE_all$No_IE <- 0
     d_LoE_all$AE_Yes <- 0
+  
     
     
-    
-    
-    
-    # from here
-    ##### PATTERN OF AE IN BOTH EXPERIMENTAL AND CONTROL ARMS
-    ### Generate pattern for AE, both experimental and control arm
-    ### Generate correlated errors
+    ### PATTERN OF LoE IN BOTH EXPERIMENTAL AND CONTROL ARMS----
+    #### Generate pattern for LoE, both experimental and control arm
+    #### Generate correlated errors----
     re_means <- c(0, 0, 0, 0, 0, 0, 0)
     
     size_diag <- 0.001
@@ -367,7 +358,6 @@ for (s in 1:length(scaling_factor)) {
          5.4332, 11.550, 14.2650, 22.2510, 34.3770, 28.9640, 25.4320,
          6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
-    
     
     re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_LoE_all)	; re_AE_all
     #View(re_AE_all)
@@ -393,13 +383,11 @@ for (s in 1:length(scaling_factor)) {
     j_AE_all<-c(re_AE_all[, 1], re_AE_all[, 2], re_AE_all[, 3], re_AE_all[, 4], re_AE_all[, 5], re_AE_all[, 6], re_AE_all[, 7])
     d_AE_all$re_AE_all <- j_AE_all ; #d_AE_all
     
-    
     d_AE_all <- d_AE_all[order(d_AE_all$id, d_AE_all$visit),]; #d_AE_all
-    
     
     d_AE_all<-as.matrix(d_AE_all)
     
-    # Scenario A -> pattern of AE in both experimental and control arms
+    #### model parameters AE in both arms----
     beta.baseline_AE_all <- 29.79
     beta_week1_AE_all <- 0.1#0.93#-0.117613
     beta_week2_AE_all <- 0.1#2.3#0.556190
@@ -414,9 +402,6 @@ for (s in 1:length(scaling_factor)) {
     beta_v4_treatment_AE_all <- -12#-2.15#-0.816656
     beta_v5_treatment_AE_all <- -11#-2.75#-0.737112
     beta_v6_treatment_AE_all <- -8#0#-2#-1.909406  #-1.318160
-    
-
-    
     
     treatmenteffect_AE_all <-  beta_v6_treatment_AE_all ; treatmenteffect_AE_all
     
@@ -442,9 +427,9 @@ for (s in 1:length(scaling_factor)) {
     d_AE_all$Treat <- factor(d_AE_all$Treat)
     
     
-    ####################################################################################################  
-    # MMRM on full outcome data in pattern AE in both experimental and control arm
-    ############################
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # MMRM on full outcome data AE
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     
     # this is the raw dataset used to check the model fit
@@ -482,7 +467,7 @@ for (s in 1:length(scaling_factor)) {
     mean(d_AE_all$MADRS10[d_AE_all$Treat==0 & d_AE_all$visit==42])
     
     
-    
+    #### plot of longitudinal outcomes AE----
     p<- ggplot(data = d_AE_all, aes(x = visit, y = MADRS10, group = id)) 
     plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE pattern") ; plot_AE
@@ -514,7 +499,7 @@ for (s in 1:length(scaling_factor)) {
     #d_AE_all
     
     
-    
+    # fit a model to check if the estimated parameters are similar/close to the true parameters
     #fit_AE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
     #                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
     #               data=d_AE_all,
@@ -543,345 +528,11 @@ for (s in 1:length(scaling_factor)) {
     d_AE_all$LoE_Yes <- 0
     
     
-    
 
-    
-    
-    
-    
-    
-    ##### PATTERN OF AEs IN EXPERIMENTAL ARM
-    
-    
-    
-    ### Generate pattern for AEs in experimental arm
-    ### Generate correlated errors
-    #re_means <- c(0, 0, 0, 0, 0, 0, 0)
-    
-    #re_covm_AE_exp <- matrix(
-      #c( 6.9032, 10.336,  8.0566,  7.7261,  5.4332,  6.7676,  6.2245,
-       #  10.3360, 27.081, 16.1550, 16.0000, 11.5500, 16.2050, 15.5570,
-        # 8.0566, 16.155, 16.4560, 15.4320, 14.2650, 15.2550, 13.9950,
-         #7.7261, 16.000, 15.4320, 27.8230, 22.2510, 21.2790, 17.8320,
-         #5.4332, 11.550, 14.2650, 22.2510, 34.3770, 28.9640, 25.4320,
-         #6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
-         #6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
-    
-    
-#    re_AE_exp <- mvrnorm(n_AE_exp, re_means, re_covm_AE_exp)	; re_AE_exp
-    #View(re)
-    
- #   re_AE_exp <- as.matrix(re_AE_exp)
-  #  colnames(re_AE_exp) <-c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6") ; re_AE_exp
-    
-   # d_AE_exp <- data.frame(
-    #  id = rep((n_LoE_all+1):(n_LoE_all+n_AE_exp), each = length(visits)),
-     # visit = visits,
-      #Treat = rep(1, n_AE_exp*length(visits)),
-      #MADRS10 = rep(NA, n_AE_exp)); d_AE_exp # mean(Treat)
-    
-    
-    #d_AE_exp <- d_AE_exp[order(d_AE_exp$visit, d_AE_exp$id),]; #d_AE_exp
-    #re
-    
-    #j_AE_exp<-c(re_AE_exp[, 1], re_AE_exp[, 2], re_AE_exp[, 3], re_AE_exp[, 4], re_AE_exp[, 5], re_AE_exp[, 6], re_AE_exp[, 7])
-    #d_AE_exp$re_AE_exp <- j_AE_exp ; #d_AE_exp
-    
-    
-    #d_AE_exp <- d_AE_exp[order(d_AE_exp$id, d_AE_exp$visit),]; #d_AE_exp
-    
-    
-    #d_AE_exp<-as.matrix(d_AE_exp)
-    
-    # Scenario A -> pattern of AE in  experimental arm and control arm
-    #beta.baseline_AE_exp <- 29.951049
-    #beta_week1_AE_exp <- -6.5
-    #beta_week2_AE_exp <- -11
-    #beta_week3_AE_exp <- -10
-    #beta_week4_AE_exp <- -11.5 
-    #beta_week5_AE_exp <- -10
-    #beta_week6_AE_exp <- 0#-7#-12.660152
-    
-    
-    
-    # following this model:
-    # Y_ij = (Beta_0 + bi0) + (BetaWeek1 + bi1) + (BetaWeek2 + bi2) + (BetaWeek3 + bi3) + (BetaWeek4 + bi4) + (BetaWeek5 + bi5) + (BetaWeek6 + bi6)
-    
-    
-    
-    #for (i in 1:(n_AE_exp*length(visits))) {
-    #  d_AE_exp[i,4] <- ifelse(d_AE_exp[i, 2]==0, beta.baseline_AE_exp + d_AE_exp[i,5],
-     #                         ifelse(d_AE_exp[i, 2]==7, d_AE_exp[i-1,4] + beta_week1_AE_exp + d_AE_exp[i,5],
-      #                               ifelse(d_AE_exp[i, 2]==14, d_AE_exp[i-2,4]+ beta_week2_AE_exp + d_AE_exp[i,5],
-       #                                     ifelse(d_AE_exp[i, 2]==21, d_AE_exp[i-3,4] + beta_week3_AE_exp + d_AE_exp[i,5],
-        #                                           ifelse(d_AE_exp[i, 2]==28, d_AE_exp[i-4,4] + beta_week4_AE_exp + d_AE_exp[i,5],
-         #                                                 ifelse(d_AE_exp[i, 2]==35, d_AE_exp[i-5,4] + beta_week5_AE_exp + d_AE_exp[i,5],
-          #                                                       d_AE_exp[i-6,4] + beta_week6_AE_exp + d_AE_exp[i,5]))))))
-    #}
-    
-    
-    
-    #View(d)
-    #d_AE_exp <-as.data.frame(d_AE_exp)
-    #d_AE_exp$visit <-as.factor(d_AE_exp$visit)
-    #d_AE_exp$Treat <- factor(d_AE_exp$Treat)
-    
-    
-    ####################################################################################################  
-    # MMRM on full outcome data in pattern AE in experimental arm
-    ############################
-    
-    
-    # this is the raw dataset used to check the model fit
-    #d_AE_exp <-d_AE_exp[,-5] # remove re (residuals) column from the dataset, they have been added to betas
-    
-    # assign this to another object to make sure each time for each analysis the dataset used is the same
-    #d_orig<-d_AE_exp # full outcome data
-    
-    
-    #length(d_AE_exp$id)
-    #tmp <- sapply(unique(d_AE_exp$id), FUN = function(i) nrow(d_AE_exp[d_AE_exp$id == i,]))
-    #BaselineMADRS10 <-  rep(d_AE_exp$MADRS10[d_AE_exp$visit == 0], tmp)
-    #length(BaselineMADRS10)
-    #d_AE_exp$Baseline <- BaselineMADRS10
-    #d_AE_exp
-    #d_AE_exp<-d_AE_exp[d_AE_exp$visit!=0,]
-    
-    
-    #range(d_AE_exp$MADRS10[d_AE_exp$Treat==1 & d_AE_exp$visit!=0])
-    #range(d_AE_exp$MADRS10[d_AE_exp$Treat==1 & d_AE_exp$visit==42])
-    #mean(d_AE_exp$MADRS10[d_AE_exp$Treat==1 & d_AE_exp$visit==0])
-    #mean(d_AE_exp$MADRS10[d_AE_exp$Treat==1 & d_AE_exp$visit==42])
-    
-    
-    
-    #p<- ggplot(data = d_AE_exp, aes(x = visit, y = MADRS10, group = id)) 
-    #plot_AE_exp <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-    #  scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE exp pattern")
-    
-    
-    
-    #View(d_AE_exp)
-    
-    #d_AE_exp$V0 <- 0
-    #d_AE_exp$V0[d_AE_exp$visit == 0] <- 1
-    
-    #d_AE_exp$V7 <- 0
-    #d_AE_exp$V7[d_AE_exp$visit == 7] <- 1
-    
-  #  d_AE_exp$V14 <- 0
-   # d_AE_exp$V14[d_AE_exp$visit == 14] <- 1
-    
-  #  d_AE_exp$V21 <- 0
-   # d_AE_exp$V21[d_AE_exp$visit == 21] <- 1
-    
-  #  d_AE_exp$V28 <- 0
-   # d_AE_exp$V28[d_AE_exp$visit == 28] <- 1
-    
-  #  d_AE_exp$V35 <- 0
-   # d_AE_exp$V35[d_AE_exp$visit == 35] <- 1
-    
-  #  d_AE_exp$V42 <- 0
-   # d_AE_exp$V42[d_AE_exp$visit == 42] <- 1
-    #d_AE_exp
-    
-    
-    
-    #fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
-     #               data=d_AE_exp,
-      #              correlation = corSymm(form=~1 | id),
-       #             weights = varIdent(form = ~ 1 | visit), 
-        #            method="REML")
-    
-    
-    
-    
-    #summary(fit_AE_exp)
-    
-    # indicator variable
-    #d_AE_exp$Pattern <- c("AE_exp")
-    
-    # indicator variable
-    
-    #d_AE_exp$LoE_Yes <- 0
-    #d_AE_exp$AE_exp <- 1
-    #d_AE_exp$AE_control <- 0
-    #d_AE_exp$No_IE <- 0
-    #d_AE_exp$AE_Yes <- d_AE_exp$AE_exp + d_AE_exp$AE_control
-    ###
-    
-    
-    ##### PATTERN OF LoE IN CONTROL ARM
-    ### Generate pattern for AE in control arm
-    ### Generate correlated errors
-    #re_means <- c(0, 0, 0, 0, 0, 0, 0)
-    
-    #re_covm_AE_control <- matrix(
-     # c(13.077, 23.179, 17.310, 17.218, 15.430, 16.245, 12.939,
-      #  23.179, 53.052, 33.383, 32.247, 25.094, 30.067, 24.085,
-       # 17.310, 33.383, 30.641, 28.801, 25.875, 28.100, 22.957,
-      #  17.218, 32.247, 28.801, 41.982, 34.827, 35.100, 27.577,
-       # 15.430, 25.094, 25.875, 34.827, 47.057, 47.377, 38.056,
-        #16.245, 30.067, 28.100, 35.100, 47.377, 59.153, 46.553,
-        #12.939, 24.085, 22.957, 27.577, 38.056, 46.553, 44.032), nrow = 7)
-    
-    
-#    re_AE_control <- mvrnorm(n_AE_control, re_means, re_covm_AE_control)	; re_AE_control
-    #View(re_AE_control)
-    
- #   re_AE_control <- matrix(re_AE_control, ncol=7)
-  #  colnames(re_AE_control) <-c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6") ; re_AE_control
-    
-   # d_AE_control <- data.frame(
-    #  id = rep((n_LoE_all+n_AE_exp+1):(n_LoE_all+n_AE_exp+n_AE_control), each = length(visits)),
-     # visit = visits,
-    #  Treat = rep(0, n_AE_control*length(visits)),
-     # MADRS10 = rep(NA, n_AE_control)); d_AE_control # mean(Treat)
-    
-    
-    
-    
-    
-  #  d_AE_control <- d_AE_control[order(d_AE_control$visit, d_AE_control$id),]; #d_AE_control
-    #re
-    
-  #  j_AE_control<-c(re_AE_control[, 1], re_AE_control[, 2], re_AE_control[, 3], re_AE_control[, 4], re_AE_control[, 5], re_AE_control[, 6], re_AE_control[, 7])
-   # d_AE_control$re_AE_control <- j_AE_control ; #d_AE_control
-    
-    
-  #  d_AE_control <- d_AE_control[order(d_AE_control$id, d_AE_control$visit),]; #d_AE_control
-    
-    
-  #  d_AE_control<-as.matrix(d_AE_control)
-    
-    # Scenario A -> pattern of LoE in both experimental and control arms
-   # beta.baseline_AE_control <- 29.951049
-    
-  #  beta_week1_AE_control <- 1.5 #3.056887
-  #  beta_week2_AE_control <- 1 #5.611661
-  #  beta_week3_AE_control <- 1 #2.769695
-  #  beta_week4_AE_control <- 0.5#2.991209 
-  #  beta_week5_AE_control <- 1#
-  #  beta_week6_AE_control <- 0#1#0.385184
-    
-    
-    
-    
-    
-    # following this model:
-    # Y_ij = (Beta_0 + bi0) + (BetaWeek1 + bi1) + (BetaWeek2 + bi2) + (BetaWeek3 + bi3) + (BetaWeek4 + bi4) + (BetaWeek5 + bi5) + (BetaWeek6 + bi6) 
-    
-    
-   # for (i in 1:(n_AE_control*length(visits))) {
-    #  d_AE_control[i,4] <- ifelse(d_AE_control[i, 2]==0, beta.baseline_AE_control + d_AE_control[i,5],
-     #                             ifelse(d_AE_control[i, 2]==7, d_AE_control[i-1,4] + beta_week1_AE_control + d_AE_control[i,5],
-      #                                   ifelse(d_AE_control[i, 2]==14, d_AE_control[i-2,4]+ beta_week2_AE_control + d_AE_control[i,5],
-       #                                         ifelse(d_AE_control[i, 2]==21, d_AE_control[i-3,4] + beta_week3_AE_control + d_AE_control[i,5],
-        #                                               ifelse(d_AE_control[i, 2]==28, d_AE_control[i-4,4] + beta_week4_AE_control + d_AE_control[i,5],
-         #                                                     ifelse(d_AE_control[i, 2]==35, d_AE_control[i-5,4] + beta_week5_AE_control + d_AE_control[i,5],
-          #                                                           d_AE_control[i-6,4] + beta_week6_AE_control + d_AE_control[i,5]))))))
-    #}
-    
-    
-    
-    #View(d)
-    #d_AE_control <-as.data.frame(d_AE_control)
-    #d_AE_control$visit <-as.factor(d_AE_control$visit)
-    #d_AE_control$Treat <- factor(d_AE_control$Treat)
-    
-    
-    
-    
-    
-    # this is the raw dataset used to check the model fit
-    #d_AE_control <-d_AE_control[,-5] # remove re (residuals) column from the dataset, they have been added to betas
-    
-    # assign this to another object to make sure each time for each analysis the dataset used is the same
-    #d_orig<-d_AE_control # full outcome data
-    
-    
-    #length(d_AE_control$id)
-    #tmp <- sapply(unique(d_AE_control$id), FUN = function(i) nrow(d_AE_control[d_AE_control$id == i,]))
-    #BaselineMADRS10 <-  rep(d_AE_control$MADRS10[d_AE_control$visit == 0], tmp)
-    #length(BaselineMADRS10)
-    #d_AE_control$Baseline <- BaselineMADRS10
-    #d_AE_control
-    #d_AE_control<-d_AE_control[d_AE_control$visit!=0,]
-    
-    
-    #range(d_AE_control$MADRS10[d_AE_control$Treat==0 & d_AE_control$visit!=0])
-    
-    
-    #range(d_AE_control$MADRS10[d_AE_control$Treat==0 & d_AE_control$visit==42])
-    
-    
-    #mean(d_AE_control$MADRS10[d_AE_control$Treat==0 & d_AE_control$visit==0])
-    
-    
-    #mean(d_AE_control$MADRS10[d_AE_control$Treat==0 & d_AE_control$visit==42])
-    
-    
-    
-    #p<- ggplot(data = d_AE_control, aes(x = visit, y = MADRS10, group = id)) 
-    #plot_AE_control <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-    #  scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE control pattern")
-    
-    #View(d_AE_control)
-    
-    #d_AE_control$V0 <- 0
-    #d_AE_control$V0[d_AE_control$visit == 0] <- 1
-    
-    #d_AE_control$V7 <- 0
-    #d_AE_control$V7[d_AE_control$visit == 7] <- 1
-    
-    #d_AE_control$V14 <- 0
-    #d_AE_control$V14[d_AE_control$visit == 14] <- 1
-    
-    #d_AE_control$V21 <- 0
-    #d_AE_control$V21[d_AE_control$visit == 21] <- 1
-    
-    #d_AE_control$V28 <- 0
-    #d_AE_control$V28[d_AE_control$visit == 28] <- 1
-    
-    #d_AE_control$V35 <- 0
-    #d_AE_control$V35[d_AE_control$visit == 35] <- 1
-    
-    #d_AE_control$V42 <- 0
-    #d_AE_control$V42[d_AE_control$visit == 42] <- 1
-    #d_AE_control
-    
-    
-    
-    
-    #fit_AE_control<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
-     #                   data=d_AE_control,
-      #                  correlation = corSymm(form=~1 | id),
-       #                 weights = varIdent(form = ~ 1 | visit), 
-        #                method="REML")
-    
-    
-    
-    
-    #summary(fit_AE_control)
-    
-    # indicator variable
-  #  d_AE_control$Pattern <- c("AE_control")
-    
-    # indicator variable
-  #  d_AE_control$LoE_Yes <- 0
-  #  d_AE_control$AE_exp <- 0
-  #  d_AE_control$AE_control <- 1
-  #  d_AE_control$No_IE <- 0
-  #  d_AE_control$AE_Yes <- d_AE_control$AE_exp + d_AE_control$AE_control
-    #
-    
-    
-    
-    
-    
-    ##### PATTERN OF No IE IN BOTH EXPERIMENTAL AND CONTROL ARMS
-    ### Generate pattern for LoE, both experimental and control arm
-    ### Generate correlated errors
+
+    ### PATTERN OF No IE IN BOTH EXPERIMENTAL AND CONTROL ARMS----
+    #### Generate pattern for No IE, both experimental and control arm
+    #### Generate correlated errors----
     re_means <- c(0, 0, 0, 0, 0, 0, 0)
     
     re_covm_No_IE <- matrix(
@@ -922,7 +573,7 @@ for (s in 1:length(scaling_factor)) {
     
     d_No_IE<-as.matrix(d_No_IE)
     
-    # Scenario A -> pattern of No IE in both experimental and control arms
+    #### model parameters No IE in both arms----
     beta.baseline_No_IE <- 29.79
     beta_week1_No_IE <- -2.5#-2#-2.061548
     beta_week2_No_IE <- -3.5#-3.864898
@@ -946,7 +597,6 @@ for (s in 1:length(scaling_factor)) {
     # Y_ij = (Beta_0 + bi0) + (BetaWeek1 + bi1) + (BetaWeek2 + bi2) + (BetaWeek3 + bi3) + (BetaWeek4 + bi4) + (BetaWeek5 + bi5) + (BetaWeek6 + bi6) + 
     #                          Beta_W1_Treat * T + Beta_W2_Treat * T + Beta_W3_Treat * T + Beta_W4_Treat * T + Beta_W5_Treat * T + Beta_W6_Treat * T 
     
-    
     for (i in 1:(n_No_IE*length(visits))) {
       d_No_IE[i,4] <- ifelse(d_No_IE[i, 2]==0, beta.baseline_No_IE + d_No_IE[i,5],
                              ifelse(d_No_IE[i, 2]==7, d_No_IE[i-1,4] + beta_week1_No_IE + d_No_IE[i,5] +  beta_v1_treatment_No_IE * d_No_IE[i, 3],
@@ -957,25 +607,20 @@ for (s in 1:length(scaling_factor)) {
                                                                 d_No_IE[i-6,4] + beta_week6_No_IE + d_No_IE[i,5] +  beta_v6_treatment_No_IE * d_No_IE[i, 3]))))))
     }
     
-    
-    
     #View(d)
     d_No_IE <-as.data.frame(d_No_IE)
     d_No_IE$visit <-as.factor(d_No_IE$visit)
     d_No_IE$Treat <- factor(d_No_IE$Treat)
     
-    
-    ####################################################################################################  
-    # MMRM on full outcome data in pattern No IE in both experimental and control arm
-    ############################
-    
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # MMRM on full outcome data No IE
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
     # this is the raw dataset used to check the model fit
     d_No_IE <-d_No_IE[,-5] # remove re (residuals) column from the dataset, they have been added to betas
     
     # assign this to another object to make sure each time for each analysis the dataset used is the same
     d_orig<-d_No_IE # full outcome data
-    
     
     length(d_No_IE$id)
     tmp <- sapply(unique(d_No_IE$id), FUN = function(i) nrow(d_No_IE[d_No_IE$id == i,]))
@@ -1001,8 +646,8 @@ for (s in 1:length(scaling_factor)) {
     mean(d_No_IE$MADRS10[d_No_IE$Treat==1 & d_No_IE$visit==42])
     mean(d_No_IE$MADRS10[d_No_IE$Treat==0 & d_No_IE$visit==42])
     
-    
-    
+    #### plot of longitudinal outcomes No IE----
+    # plot the outcomes to see in big lines how the trajectories look like  
     p<- ggplot(data = d_No_IE, aes(x = visit, y = MADRS10, group = id)) 
     plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-No IE pattern"); plot_NoIE
@@ -1030,7 +675,7 @@ for (s in 1:length(scaling_factor)) {
     d_No_IE$V42 <- 0
     d_No_IE$V42[d_No_IE$visit == 42] <- 1
     
-    
+    # fit a model to check if the estimated parameters are similar/close to the true parameters
     #fit_No_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
      #                Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
       #             data=d_No_IE,
@@ -1041,11 +686,9 @@ for (s in 1:length(scaling_factor)) {
     
     #summary(fit_No_IE)
     
-    
     #getVarCov(fit_No_IE)
     #vcov(fit_No_IE)
     #re_covm_proof
-    
     
     #fit_No_IE$coefficients[c(13)]
     
@@ -1053,7 +696,6 @@ for (s in 1:length(scaling_factor)) {
     
     # indicator variable
     d_No_IE$Pattern <- c("No_IE")
-    
     
     # indicator variable
     d_No_IE$LoE_Yes <- 0
@@ -1064,8 +706,7 @@ for (s in 1:length(scaling_factor)) {
     
     #start with a model with only LoE_all and No_ie and fit the model there.
     
-    
-    
+    ### Combine all data from all patterns in one big trial dataset----
     d_pmmm <- rbind(d_LoE_all,
                     d_AE_all,
                     #d_AE_exp,
@@ -1094,35 +735,35 @@ for (s in 1:length(scaling_factor)) {
     
     
     
-    # Plot trajectories
+    #### Plot trajectories for all the created patterns----
     # All patients with TRUE trajectory 
     
     
-    # LoE_all/any
+    ##### LoE_all/any----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=LoE_Yes)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
       scale_y_continuous(limits = c(-10, 60))
     
     
-    # AE_exp
+    ##### AE_exp----
     #p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_exp)) 
     #p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
      # scale_y_continuous(limits = c(-10, 60))
     
     
-    # AE_control
+    ##### AE_control----
     #p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_control)) 
     #p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
      # scale_y_continuous(limits = c(-10, 60))
     
     
-    # AE_any
+    ##### AE_any----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=AE_Yes)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
       scale_y_continuous(limits = c(-10, 60))
     
     
-    # No_IE
+    ###### No_IE----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=No_IE)) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
       scale_y_continuous(limits = c(-10, 60))
@@ -1132,7 +773,7 @@ for (s in 1:length(scaling_factor)) {
     #describe(d_pmmm)
     #view(d_pmmm)
     
-    # All behaviors
+    ##### All behaviors----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=Pattern)) 
     #p + geom_line() + facet_grid(~ Treat) 
     plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
@@ -1140,11 +781,11 @@ for (s in 1:length(scaling_factor)) {
 
     
     
-    
+    ##### plots for the paper----
     (plot_all / plot_LoE) | (plot_AE / plot_NoIE)
     
     
-    
+    ##### MMRM model on the combined-patterns trial dataset
     fit_pmmm<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                     Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
                   data=d_pmmm,
@@ -1152,16 +793,11 @@ for (s in 1:length(scaling_factor)) {
                   weights = varIdent(form = ~ 1 | visit), 
                   method="REML")
     
-    
-    
     summary(fit_pmmm)
     
     describe(d_pmmm)
-    
-    t.test(d_pmmm$MADRS10[d_pmmm$Treat==1 & d_pmmm$visit==42], d_pmmm$MADRS10[d_pmmm$Treat==0 & d_pmmm$visit==42])
- 
-    
-    
+
+
     #describe(d_pmmm)
     getVarCov(fit_pmmm, individual = 1)
     
@@ -1179,10 +815,8 @@ for (s in 1:length(scaling_factor)) {
     
     
     sum(fit_pmmm$coefficients[c(13)]); treatmenteffect_pmmm
-  
-    
+    # store parameters from model fit on each dataset
     betas[m, ] <- fit_pmmm$coefficients[c(13)]
-    
     
     delta[m, ] <- sum(fit_pmmm$coefficients[c(13)])
     #mean(delta)
@@ -1196,7 +830,8 @@ for (s in 1:length(scaling_factor)) {
     #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
     #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
     
-    
+    #### assign and save the generated datasets----
+    # naming sequence is "SimTrial"_"Method"_"trial sample size"_"iteration number"_"scaling factor"
     
     assign(paste0("SimTrial_pmmm", "_", n, "_", m, "_", s), d_pmmm)
     #View(SimTrial_pmmm_1_1)
