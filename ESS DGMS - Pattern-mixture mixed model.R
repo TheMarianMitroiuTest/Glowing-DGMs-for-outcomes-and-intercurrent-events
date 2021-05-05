@@ -24,7 +24,6 @@
 
 
 
-
 # to do
 # make a comment here to inform the reader/user about the checks.
 # rename for each d_orig
@@ -33,7 +32,16 @@
 
 
 ## load libraries ----
-rm(list=ls())
+rm(list=ls()) #
+# needed for the selection model method
+library(gmailr)
+library(MASS)
+library(tidyverse)
+library(nlme)
+library(Hmisc)
+
+
+
 library(MASS)
 library(nlme)
 library(survival)
