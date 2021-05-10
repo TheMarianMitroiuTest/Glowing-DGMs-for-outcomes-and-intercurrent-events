@@ -172,7 +172,32 @@ t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lam
     #hist(t.event_LoE)
     #describe(t.event_LoE)
 
-d$t.event_LoE <- t.event_LoE
+#d$t.event_LoE <- t.event_LoE
+#hist(t.event_LoE)
+
+# Cumulative hazard function 
+#H_0 <- lambda_LoE * t.event_LoE^nu_LoE
+#hist(1-H_0)
+#hist(-log(H_0))
+
+
+# hazard function
+#h_0 <- lambda_LoE*nu_LoE * t.event_LoE^(nu_LoE-1)
+#hist(h_0)
+
+
+describe(t.event_LoE)
+
+min(t.event_LoE)
+median(t.event_LoE)
+max(t.event_LoE)
+
+t.event_LoE <- round(t.event_LoE*(5/median(t.event_LoE)) + 1 , digits=0)
+hist(t.event_LoE)
+describe(t.event_LoE)
+
+median(t.event_LoE)
+
 
 t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
 # the standardisation could be to fit tte to the entire trial duration, or to fit it to be at specific visits. We standardise it to fit the entire trial duration (6 weeks) and to have most of the intercurrent events up to and including week 4
