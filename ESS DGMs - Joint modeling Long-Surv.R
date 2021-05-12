@@ -15,7 +15,6 @@
 
 # add the ceiling to make sure the time to event are at the next visit.
 # change 0 to Inf for those that do not experience the intercurrent event.
-
 ### DGM
 rm(list=ls())
 library(MASS)
@@ -55,7 +54,8 @@ library(parameters)
 library(sandwich)
 library(lmtest)
 #library(clubSandwich)
-
+#remotes::install_github("r-lib/styler")
+#library(styler)
 
 
 
@@ -188,16 +188,24 @@ t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lam
 
 describe(t.event_LoE)
 
+
+
+
 min(t.event_LoE)
 median(t.event_LoE)
 max(t.event_LoE)
 
-t.event_LoE <- round(t.event_LoE*(5/median(t.event_LoE)) + 1 , digits=0)
+t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.50))[[1]]) + 1 , digits=0)
+describe(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.50))[[1]]) + 1)
 hist(t.event_LoE)
 describe(t.event_LoE)
 
 median(t.event_LoE)
+quantile(t.event_LoE, probs = c(0.50))[[1]]
 
+quantile(t.event_LoE, probs = c(seq(0,1, 0.1)))
+
+table(t.event_LoE)
 
 t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
 # the standardisation could be to fit tte to the entire trial duration, or to fit it to be at specific visits. We standardise it to fit the entire trial duration (6 weeks) and to have most of the intercurrent events up to and including week 4
