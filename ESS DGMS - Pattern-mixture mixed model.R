@@ -817,7 +817,7 @@ end_time-start_time
 all_betas_1; 
 colMeans(all_delta_1); treatmenteffect_pmmm
 
-tolerance_margin <- 0.1
+tolerance_margin <- 0.1 
 difference_Verification <- abs(treatmenteffect_pmmm - colMeans(all_delta_1))
 
 # check if the result satisfies the inequality
