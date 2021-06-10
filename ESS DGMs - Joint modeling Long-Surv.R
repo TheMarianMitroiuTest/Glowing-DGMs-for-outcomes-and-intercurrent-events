@@ -22,6 +22,8 @@ library(nlme)
 library(survival)
 library(foreign)
 library(tidyverse)
+library(janitor)
+
 #install.packages('tinytex')
 library(tidyr)
 library(haven)
@@ -243,8 +245,8 @@ d$t.AE <- d$AE_yes <- 0
 
 # just LoE
 p<- ggplot(data = d[d$LoE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
-plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE pattern"); plot_LoE
+p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE pattern")
 
 
 
@@ -525,7 +527,7 @@ d_united$AE_yes <- factor(d_united$AE_yes)
 d_united$AE_YES <- ifelse(d_united$AE_yes==1, 1, 0)
 d_united$LoE_YES <- ifelse(d_united$AE_yes==0 & d_united$LoE_yes==1, 1, 0)
 
-View(d_united)
+#View(d_united)
 
 d_united$Behavior <- ifelse(d_united$AE_YES==1, "AE",
                             ifelse(d_united$AE_YES==0 & d_united$LoE_YES==1, "LoE", "No IE"))
@@ -543,22 +545,54 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 # Plot trajectories
 
 # just LoE
-p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern"); plot_LoE
+# LoE
+p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+plot_LoE_JM <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern"); plot_LoE_JM
 
 
 #just AE
 # AE
-p<- ggplot(data = d_united[d_united$AE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - AE pattern"); plot_AE
+p<- ggplot(data = d_united[d_united$AE_YES==1,], aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+plot_AE_JM <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - AE pattern"); plot_AE_JM
 
 #just No IE
-# AE
-p<- ggplot(data = d_united[d_united$Behavior=="No IE",], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - No IE pattern"); plot_NoIE
+# No IE
+p<- ggplot(data = d_united[d_united$Behavior=="No IE",], aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+plot_NoIE_JM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - No IE pattern"); plot_NoIE_JM
+
+
+
+# All behaviors
+p<- ggplot(data = d_united, aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+plot_all_JM <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat)+
+  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - All patterns"); plot_all_JM
+
+the_plot_JM <- (plot_all_JM / plot_LoE_JM) | (plot_AE_JM / plot_NoIE_JM); the_plot_JM
+
+
+
+
+
+
+#### Plots for the paper after running all DGMs
+### LoE patterns side by side by each DGM
+(plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
+
+### AE patterns side by side by each DGM
+(plot_AE_SM + plot_AE_PMMM) / (plot_AE_SPM + plot_AE_JM)
+
+
+### No IE patterns side by side by each DGM
+(plot_NoIE_SM + plot_NoIE_PMMM) / (plot_NoIE_SPM + plot_NoIE_JM)
+
+
+### All patterns in a trial side by side by each DGM
+(plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
+
+
 
 
 # All patients with their trajectory 
@@ -573,14 +607,6 @@ p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, co
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))
 
-# All behaviors
-p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - All patterns"); plot_all
 
-(plot_all / plot_LoE) | (plot_AE / plot_NoIE)
-
-
-
-describe(d_united)
-View(d_united)
+#describe(d_united)
+#View(d_united)

@@ -39,7 +39,7 @@ library(MASS)
 library(tidyverse)
 library(nlme)
 library(Hmisc)
-
+library(janitor)
 
 library(MASS)
 library(nlme)
@@ -111,7 +111,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 50# number of generated datasets # number of trials per scaling factor
+m.iterations <- 10# number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -149,6 +149,7 @@ for (s in 1:length(scaling_factor)) {
     ### percentages of intercurrent events to be filled in from the SM tables ----
     sampled_prop_LoE <- sample(prop_LoE, 1)
     n_LoE_all <- round(sampled_prop_LoE*n * scaling_factor[s], digits = 0) ; n_LoE_all
+    
     
     sampled_prop_AE_exp <- sample(prop_AE_exp, 1)
     n_AE_exp <- round(sampled_prop_AE_exp*n * scaling_factor[s], digits = 0) ; n_AE_exp
@@ -283,8 +284,9 @@ for (s in 1:length(scaling_factor)) {
     #### plot of longitudinal outcomes LoE----
     # plot the outcomes to see in big lines how the trajectories look like 
     p<- ggplot(data = d_LoE_all, aes(x = visit, y = MADRS10, group = id)) 
-    plot_LoE <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM-LoE pattern") ; plot_LoE
+    plot_LoE_PMMM <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM-LoE pattern") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_LoE_PMMM
     
     #View(d_LoE_all)
     
@@ -457,8 +459,9 @@ for (s in 1:length(scaling_factor)) {
     
     #### plot of longitudinal outcomes AE----
     p<- ggplot(data = d_AE_all, aes(x = visit, y = MADRS10, group = id)) 
-    plot_AE <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE pattern") ; plot_AE
+    plot_AE_PMMM <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE pattern") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_AE_PMMM
     
     #tail(d_LoE_all)
     
@@ -620,8 +623,9 @@ for (s in 1:length(scaling_factor)) {
     #### plot of longitudinal outcomes No IE----
     # plot the outcomes to see in big lines how the trajectories look like  
     p<- ggplot(data = d_No_IE, aes(x = visit, y = MADRS10, group = id)) 
-    plot_NoIE <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-No IE pattern"); plot_NoIE
+    plot_NoIE_PMMM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-No IE pattern") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_NoIE_PMMM
     
     #View(d_No_IE)
     
@@ -736,14 +740,15 @@ for (s in 1:length(scaling_factor)) {
     ##### All behaviors----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=Pattern)) 
     #p + geom_line() + facet_grid(~ Treat) 
-    plot_all <- p + geom_line(size=0.5) + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM - All patterns") ; plot_all
+    plot_all_PMMM <- p + geom_line(size=0.5) + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM - All patterns") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")) ; plot_all_PMMM
 
     
     
     
     ##### plots for the paper----
-    (plot_all / plot_LoE) | (plot_AE / plot_NoIE)
+the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMMM) ; the_plot_PMMM
     
     ##### MMRM model on the combined-patterns trial dataset
     fit_pmmm<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
@@ -895,3 +900,127 @@ cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
       rbind(all_confint_fit_1, all_confint_fit_2, all_confint_fit_3, all_confint_fit_4, all_confint_fit_5),
       rbind(all_N_Exp_1, all_N_Exp_2, all_N_Exp_3, all_N_Exp_4, all_N_Exp_5),
       rbind(all_N_Control_1, all_N_Control_2, all_N_Control_3, all_N_Control_4, all_N_Control_5))
+
+
+
+# Table for the paper ----
+
+n_LoE_Control<- n_LoE_Exp <- n_LoE_all/2
+n_AE_exp
+n_AE_control
+n_No_IE
+
+
+
+table_AE_PMMM <- data.frame(
+  # descriptives AE  
+  n_AE_control,
+  n_AE_exp); table_AE_PMMM
+
+mean(n_AE_control)
+mean(n_AE_exp)
+
+
+
+# descriptives LoE  
+table_LoE_PMMM <-data.frame(
+  n_LoE_Control,
+  n_LoE_Exp); table_LoE_PMMM
+
+mean(n_LoE_Control)
+mean(n_LoE_Exp)
+
+
+#describe(table_IE_PMMM)
+
+
+table_AE_PMMM %>% 
+  as.data.frame() %>% 
+  mutate("Intercurrent event" = "AE") %>% 
+  rename(N_C_arm=n_AE_control) %>% 
+  rename(N_E_arm=n_AE_exp)
+
+table_LoE_PMMM %>% 
+  as.data.frame() %>% 
+  mutate("Intercurrent event" = "LoE") %>% 
+  rename(N_C_arm=n_LoE_Control) %>% 
+  rename(N_E_arm=n_LoE_Exp)
+
+
+tab_PMMM <- tibble(bind_rows(table_AE_PMMM %>% 
+                          as.data.frame() %>% 
+                          mutate("Intercurrent event" = "AE") %>% 
+                          rename(N_C_arm=n_AE_control) %>% 
+                          rename(N_E_arm=n_AE_exp), 
+                        table_LoE_PMMM %>% 
+                          as.data.frame() %>% 
+                          mutate("Intercurrent event" = "LoE") %>% 
+                          rename(N_C_arm=n_LoE_Control) %>% 
+                          rename(N_E_arm=n_LoE_Exp))); tab_PMMM
+
+
+
+tab2_PMMM <- tab_PMMM %>% group_by(`Intercurrent event`) %>%
+  summarise("N" = mean(N_C_arm), 
+            "%" = round(mean(N_C_arm/n*100), digits=1),
+            "N " = mean(N_E_arm), 
+            "% " = round(mean(N_E_arm/n*100), digits=1),
+            " N " = mean(N_C_arm + N_E_arm),
+            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
+  adorn_totals("row"); tab2_PMMM
+
+
+
+
+gt(tab2_PMMM) %>% 
+  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Pattern-mixture mixed model DGM")) %>%
+  tab_source_note(md("Averaged over n simulated trials")) %>% 
+  tab_spanner(
+    label = md("**Control**"),
+    columns = c("N", "%")) %>% 
+  cols_align(
+    align = "center",
+    columns =  c("N", "%")
+  ) %>% 
+  tab_spanner(
+    label = md("**Treatment**"),
+    columns = c("N ", "% ")) %>% 
+  cols_align(
+    align = "center",
+    columns =  c("N ", "% ")
+  ) %>% 
+  tab_spanner(
+    label = md("**Total**"),
+    columns = c(" N ", " % ")) %>% 
+  cols_align(
+    align = "center",
+    columns =  c(" N ", " % ")
+  ) %>% 
+  data_color(
+    columns = c("%", "% ", " % "),
+    colors = scales::col_numeric(
+      palette = c(
+        "light blue"),
+      domain = NULL)
+  ) %>% 
+  cols_align(
+    align = "center",
+    columns =  "Intercurrent event"
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_fill(color = "white"),
+      cell_text(weight = "bold")
+    ),
+    locations = cells_body(
+      columns = "Intercurrent event"
+    )
+  )
+
+
+
+
+
+
+
+
