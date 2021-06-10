@@ -141,7 +141,7 @@ pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
 # it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
-
+#s<-1
 ## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
@@ -283,8 +283,8 @@ for (s in 1:length(scaling_factor)) {
     #### plot of longitudinal outcomes LoE----
     # plot the outcomes to see in big lines how the trajectories look like 
     p<- ggplot(data = d_LoE_all, aes(x = visit, y = MADRS10, group = id)) 
-    plot_LoE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-LoE pattern"); plot_LoE
+    plot_LoE <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM-LoE pattern") ; plot_LoE
     
     #View(d_LoE_all)
     
@@ -457,7 +457,7 @@ for (s in 1:length(scaling_factor)) {
     
     #### plot of longitudinal outcomes AE----
     p<- ggplot(data = d_AE_all, aes(x = visit, y = MADRS10, group = id)) 
-    plot_AE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+    plot_AE <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE pattern") ; plot_AE
     
     #tail(d_LoE_all)
@@ -620,7 +620,7 @@ for (s in 1:length(scaling_factor)) {
     #### plot of longitudinal outcomes No IE----
     # plot the outcomes to see in big lines how the trajectories look like  
     p<- ggplot(data = d_No_IE, aes(x = visit, y = MADRS10, group = id)) 
-    plot_NoIE <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+    plot_NoIE <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat) +
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-No IE pattern"); plot_NoIE
     
     #View(d_No_IE)
@@ -736,9 +736,12 @@ for (s in 1:length(scaling_factor)) {
     ##### All behaviors----
     p<- ggplot(data = d_pmmm, aes(x = visit, y = MADRS10, group = id, color=Pattern)) 
     #p + geom_line() + facet_grid(~ Treat) 
-    plot_all <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM - All patterns"); plot_all
+    plot_all <- p + geom_line(size=0.5) + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("PMMM - All patterns") ; plot_all
 
+    
+    
+    
     ##### plots for the paper----
     (plot_all / plot_LoE) | (plot_AE / plot_NoIE)
     
