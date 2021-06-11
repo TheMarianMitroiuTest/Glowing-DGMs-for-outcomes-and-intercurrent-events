@@ -92,13 +92,13 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 10 # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
 # and check out the verification step
 
-n <- 190 # number of patients to be simulated (sample size)
+n <- 2000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 # ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
@@ -1002,19 +1002,22 @@ var(random.effects(fit_lme))
 d_re <- d_mis_w
     #View(d_re)
 
-fit_LoE_spm <- glm(LoE_Yes ~ -1 + Baseline + Treat,
+
+# add back the Baseline and CfB and CfW2 in the model specifications
+
+fit_LoE_spm <- glm(LoE_Yes ~ Treat,
                    data = d_re, 
                    family = "binomial")
 
 summary(fit_LoE_spm)
 
-fit_AE_exp_spm <- glm(AE_Exp_Yes ~ -1 + Baseline,
+fit_AE_exp_spm <- glm(AE_Exp_Yes ~ 1,
                    data = d_re[d_re$Treat==1,], 
                    family = "binomial")
 
 summary(fit_AE_exp_spm)
 
-fit_AE_control_spm <- glm(AE_Control_Yes ~ -1 + Baseline,
+fit_AE_control_spm <- glm(AE_Control_Yes ~ 1,
                       data = d_re[d_re$Treat==0,], 
                       family = "binomial")
 

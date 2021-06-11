@@ -223,7 +223,7 @@ p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_samp
         bi <- mvrnorm(n, bi_means, bi_covm)	
         eps.sd <-3.247  
         
-        c1 <- 0.1
+        c1 <- -0.6
         
     
     d <- data.frame(
@@ -234,29 +234,173 @@ p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_samp
       bi_1 = rep(bi[,2], each = length(visits))
     )
     
+    describe(d$bi_0)
+    hist(d$bi_0)
+    
+    describe(d$bi_1)
+    hist(d$bi_1)
+    
+    
+    
+    #Linear mixed-effects model fit by REML
+    #Data: SimTrial_sm_2000_1_5 
+    #AIC      BIC    logLik
+    #81952.29 82005.11 -40969.14
+    
+    #Random effects:
+     # Formula: ~1 + Visit | id
+    #Structure: General positive-definite, Log-Cholesky parametrization
+    #StdDev   Corr  
+    #(Intercept) 5.105087 (Intr)
+    #Visit       1.167398 0.094 
+    #Residual    3.266564       
+    
+    #Fixed effects:  MADRS10 ~ Visit + Visit:Treat 
+    #Value  Std.Error    DF   t-value p-value
+    #(Intercept)  29.559688 0.12453122 11998 237.36769       0
+    #Visit        -0.689634 0.04181960 11998 -16.49069       0
+    #Visit:Treat1 -0.467898 0.05887265 11998  -7.94762       0
+    #Correlation: 
+    #  (Intr) Visit 
+    #Visit        -0.056       
+    #Visit:Treat1  0.000 -0.708
+    
+    #Standardized Within-Group Residuals:
+     # Min           Q1          Med           Q3          Max 
+    #-3.598299215 -0.571764262  0.005260421  0.576205652  3.476429878 
+    
+    #Number of Observations: 14000
+    #Number of Groups: 2000 
     
     
     # insert model specification from fitted models on the SM super trial
-    # insert Rutger's code and adjust it
+
     
-  
+    
+    ## Suppose we want to simulate binomial data using a logistic regression model of the form logit(Y) ~ b0 + b1 * x
+    ## where x is available and b1 is fixed, but we want to tweak b0 such that the expected proportion of '1's equals
+    ## a prespecified target, the following function can perhaps be a solution (but note that it gives an approximate solution):
+    tweak.intercept <- function(target, x = x, beta1, K = 10, grid = seq(-200, 200, length.out = 400), show.plot = TRUE){
+      res <- rep(NA, length(grid))
+      for(i in 1:length(res))    res[i] <- mean(replicate(K, mean(rbinom(length(x), 1, plogis(grid[i] + beta1 * x)))))
+      if(show.plot) plot(res ~ grid, ylim = c(0, 1))
+      d <- data.frame(intercept = grid, prop1 = res)
+      int <- d$intercept[abs(d$prop1 - target) == min(abs(d$prop1 - target))]
+      if(show.plot) abline(h = target, col = 2)
+      if(show.plot) abline(v = int, col = 2)
+      return(int)
+    }
+    
+    ## E.g.
+    x <- rbinom(190, 1, 0.5)
+    tweak.intercept(target = 0.97, x = x, beta1 = 0.4, grid = seq(-200, 200, length.out = 400))
+    tweak.intercept(target = 0.97, x = x, beta1 = 0.4, grid = seq(-60, 0, length.out = 400))
+    tweak.intercept(target = 0.97, x = x, beta1 = 0.4, grid = seq(-60, 0, length.out = 400), K = 100)
+    tweak.intercept(target = 0.97, x = x, beta1 = 0.4, grid = seq(-60, 0, length.out = 800), K = 100)
+    
+    test <- replicate(10000, mean(rbinom(length(x), 1, plogis(3.5 + 0.4 * x))))
+    hist(test)
+    mean(test)
+    
+    mean(plogis(3.5 + 0.4 * x))
+    
+    ## E.g.
+    x <- rbinom(1000, 1, 0.5)
+    tweak.intercept(target = 0.15, x = x, beta1 = 1.4, grid = seq(-200, 200, length.out = 400))
+    tweak.intercept(target = 0.15, x = x, beta1 = 1.4, grid = seq(-200, 200, length.out = 400), K = 100)
+    tweak.intercept(target = 0.15, x = x, beta1 = 1.4, grid = seq(-50, 100, length.out = 400), K = 100)
+    tweak.intercept(target = 0.15, x = x, beta1 = 1.4, grid = seq(8, 20, length.out = 800), K = 500)
+    tweak.intercept(target = 0.15, x = x, beta1 = 1.4, grid = seq(14, 20, length.out = 800), K = 500)
+    test <- replicate(10000, mean(rbinom(length(x), 1, plogis(17.36421 + 1.4 * x))))
+    hist(test)
+    mean(test)
+    
+    
+    p_LoE_sample <-  0.35 #c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy at trial level
+    p_AE_Exp_sample <- c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the experimental arm
+    p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
+    
+    # Determine intercept for % of LoE at trial level according to the target %
+    x <- rbinom(10000, 1, 0.5)
+    det.intercept <- tweak.intercept(target = p_LoE_sample, x = x, beta1 = c1, grid = seq(-5, 5, length.out = 400)) ; det.intercept
+    test <- replicate(10000, mean(rbinom(length(x), 1, plogis(det.intercept + c1 * x))))
+    hist(test)
+    mean(test)
+    
+    #mean(plogis(-0.5012531 + 0.4 * x))
+    
+    
+    # Determine intercept for % of AE in experimental arm according to the target %
+    tweak.intercept(target = p_AE_Exp_sample, x = x, beta1 = 1.4, grid = seq(14, 20, length.out = 800))
+    
+    # Determine intercept for % of AE in control arm according to the target %
+    tweak.intercept(target = p_AE_Control_sample, x = x, beta1 = 1.4, grid = seq(14, 20, length.out = 800))
+    
     
     #####################################################
     # Logit model and Probabilities for LoE at trial level
-    logit_Pr_LoE <- (b0 + d$bi_1)/1000 +  c1 * d$Treat
+    # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
+    logit_Pr_LoE <- (det.intercept + d$bi_0) + c1 * d$Treat
+    #mean(logit_Pr_LoE)
+    
     Pr_LoE <- 1/(1+exp(-logit_Pr_LoE))
+    plogis((det.intercept + d$bi_0) + c1 * d$Treat)
+    
+    
+    head(Pr_LoE)
+    head(plogis((det.intercept + d$bi_0) + c1 * d$Treat))
+    
+    
+    #mean(Pr_LoE)
     
     describe(Pr_LoE[d$Treat==1])
     describe(Pr_LoE[d$Treat==0])
     
-    d$Pr_LoE <- Pr_LoE
+    d$Pr_LoE <- plogis((det.intercept + d$bi_0) + c1 * d$Treat)
     
-    d$LoE_yes[d$Treat==1] <- ifelse(Pr_LoE[d$Treat==1]<0.532, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==1])), 1, 0.7), each = length(visits))
-    d$LoE_yes[d$Treat==0] <- ifelse(Pr_LoE[d$Treat==0]>0.5075, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==0])), 1, 0.7), each = length(visits))
-  
+    #View(d)
+    
+    #Use rbinom() directly with each patients characteristics
+    
+    #d$LoE_yes[d$Treat==1] <- ifelse(Pr_LoE[d$Treat==1]<0.532, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==1])), 1, 0.7), each = length(visits))
+    #d$LoE_yes[d$Treat==0] <- ifelse(Pr_LoE[d$Treat==0]>0.5075, 1, 0) * rep(rbinom(length(unique(d$id[d$Treat==0])), 1, 0.7), each = length(visits))
+
+    
+    d$LoE_yes <- rep(rbinom(length(unique(d$id)), 1, unique(d$Pr_LoE)), each = length(visits)) 
+    
+    
+    #reshape to wide
+    
+    # get the probabilities
+    # reshape back to long keeping LoE_yes constant
+    
+    # do the same for all intercurrent events
+    
+    # go back to the SM stochastic model and fix that
+    
+    # check JM model to see how and which RE are in the survival model
+    # fit JM model on the SM super trial see if it can be parameterised Weibull and check back here
+    
+    
+    # get final plots with % of IEs
+    
+    # Results and Discussion 
+    
+    
+    #unique(d$Pr_LoE)
+    
+    describe(d$LoE_yes[d$Treat==0])
+    describe(d$LoE_yes[d$Treat==1])
+    
+    describe(d$LoE_yes)
+    
+    View(d)
+    
+    
     #####################################################
     # Logit model and Probabilities for AE in experimental arm
-    logit_Pr_AE_exp <- (d$bi_1[d$Treat==1])*5  # for the subset of experimental arm patients
+    # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
+    logit_Pr_AE_exp <- (d$bi_0[d$Treat==1])*5  # for the subset of experimental arm patients
     
     
     
@@ -286,7 +430,8 @@ p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_samp
     
     #####################################################
     # Logit model and Probabilities for AE in control arm
-    logit_Pr_AE_control <- (b1 + d$bi_1[d$Treat==0])*2 # for the subset of control arm patients
+    # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
+    logit_Pr_AE_control <- (b1 + d$bi_0[d$Treat==0])*2 # for the subset of control arm patients
     
     Pr_AE_control <- 1/(1+exp(-logit_Pr_AE_control))
     
