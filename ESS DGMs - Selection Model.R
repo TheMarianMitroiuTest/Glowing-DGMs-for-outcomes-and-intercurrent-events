@@ -1010,6 +1010,17 @@ fit_LoE_spm <- glm(LoE_Yes ~ Treat,
                    family = "binomial")
 
 summary(fit_LoE_spm)
+#Call:
+#glm(formula = LoE_Yes ~ Treat, family = "binomial", data = d_re)
+
+#Deviance Residuals: 
+#  Min      1Q  Median      3Q     Max  
+#-1.200  -0.956  -0.956   1.155   1.416  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)  0.05233    0.06346   0.825     0.41    
+#Treat       -0.59830    0.09114  -6.565 5.22e-11 ***
 
 fit_AE_exp_spm <- glm(AE_Exp_Yes ~ 1,
                    data = d_re[d_re$Treat==1,], 
@@ -1017,12 +1028,35 @@ fit_AE_exp_spm <- glm(AE_Exp_Yes ~ 1,
 
 summary(fit_AE_exp_spm)
 
+#Call:
+#glm(formula = AE_Exp_Yes ~ 1, family = "binomial", data = d_re[d_re$Treat == 
+#                                                                 1, ])
+
+#Deviance Residuals: 
+#  Min       1Q   Median       3Q      Max  
+#-0.4527  -0.4527  -0.4527  -0.4527   2.1581  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)  -2.2263     0.1063  -20.94   <2e-16 ***
+
+
 fit_AE_control_spm <- glm(AE_Control_Yes ~ 1,
                       data = d_re[d_re$Treat==0,], 
                       family = "binomial")
 
 summary(fit_AE_control_spm)
+#Call:
+#glm(formula = AE_Control_Yes ~ 1, family = "binomial", data = d_re[d_re$Treat == 
+#                                                                     0, ])
 
+#Deviance Residuals: 
+#  Min       1Q   Median       3Q      Max  
+#-0.2517  -0.2517  -0.2517  -0.2517   2.6335  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)  -3.4361     0.1825  -18.83   <2e-16 ***
 
 # These coefficients were used in the shared-parameter model (SPM) method
 
