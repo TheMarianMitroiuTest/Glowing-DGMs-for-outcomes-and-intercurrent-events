@@ -436,6 +436,8 @@ for (s in 1:length(scaling_factor)) {
     sum(d_mis_w$AE_Control_Yes)
     sum(d_mis_w$LoE_Yes)
     
+    describe(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0))
+    
     #
     
     d_mis_L <- d_mis_w %>% gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
@@ -456,8 +458,10 @@ for (s in 1:length(scaling_factor)) {
         # [7] "AE_Control_Yes" "Visit"          "MADRS10"       
         #[10] "V10"  
     
-    d_mis_L$AE_Yes <- ifelse(d_mis_L[,6]==1, 1, 
-                             ifelse(d_mis_L[,7]==1, 1, 0))
+    View(d_mis_L)
+    
+    d_mis_L$AE_Yes <- ifelse(d_mis_L$AE_Exp_Yes==1, 1, 
+                             ifelse(d_mis_L$AE_Control_Yes==1, 1, 0))
     
         # create the NAs by AE variable
         #d_mis_L[,10] <-ifelse(d_mis_L[,11]==1 & d_mis_L[,8]=="Week3", "NA",
@@ -467,7 +471,7 @@ for (s in 1:length(scaling_factor)) {
     
         #View(d_mis_L)
     
-    d_mis_L$LoE_YES <- ifelse(d_mis_L[,5]==1 & d_mis_L[,10]==0, 1, 0)
+    d_mis_L$LoE_YES <- ifelse(d_mis_L$LoE_Yes==1 & d_mis_L$AE_Yes==0, 1, 0)
     describe(d_mis_L$LoE_YES)
     
         #View(d_mis_L)
@@ -628,13 +632,13 @@ for (s in 1:length(scaling_factor)) {
   
   assign(paste('all_delta', s, sep="_"), delta)
   
-  assign(paste('all_delta_errorz', s, sep="_"), delta_errorz)
+  #assign(paste('all_delta_errorz', s, sep="_"), delta_errorz)
   
-  assign(paste('all_confint_fit', s, sep="_"), confint_fit)
+  #assign(paste('all_confint_fit', s, sep="_"), confint_fit)
   
-  assign(paste('all_N_Exp', s, sep="_"), N_Exp)
+  #assign(paste('all_N_Exp', s, sep="_"), N_Exp)
   
-  assign(paste('all_N_Control', s, sep="_"), N_Control)
+  #assign(paste('all_N_Control', s, sep="_"), N_Control)
   
 
   setTxtProgressBar(pb3, s)
@@ -735,7 +739,7 @@ tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
   
 gt(tab2_SM) %>% 
   tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - deterministic rule")) %>%
-  tab_source_note(md("Averaged over n simulated trials")) %>% 
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
 tab_spanner(
   label = md("**Control**"),
   columns = c("N", "%")) %>% 
