@@ -19,7 +19,7 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 ## load libraries ----
-rm(list=ls()) #
+#rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
@@ -92,20 +92,27 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
+
+n <- 10^5 # number of patients to be simulated (sample size)
+# this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
+
 m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
-scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
+scaling_factor <- 1 # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
 # and check out the verification step
 
-n <- 2000 # number of patients to be simulated (sample size)
-# this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 # ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
 # this is done to increase variability in intercurrent events percentages between trials
-p_LoE_sample <-c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy at trial level
-p_AE_Exp_sample <- c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the experimental arm
-p_AE_Control_sample <- c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
+# aim is to obtain 0.35 LoE
+# AE exp arm 0.1, and AE control arm 0.5
+# the probabilities below should make possible to obtain the desired percentages of intercurrent events
+
+
+p_LoE_sample <- 0.35 #c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy at trial level
+p_AE_Exp_sample <- 0.10 #c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the experimental arm
+p_AE_Control_sample <- 0.05 #c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
 
 visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline (day 0) + follow-up measurements at day 7, 14, ..., 42
 delta <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
@@ -417,8 +424,17 @@ for (s in 1:length(scaling_factor)) {
     # this allows to obtain different smaller/larger percentages of LoE at trial level and cover a broad range of scenarios as would be in reality, and to ensure variability,
     # not all patients that it in the rule will automatically experience the intercurrent event
     
+    
+    # determine adjustment factors (parameters) in order to obtain desired percentages of intercurrent events
+    # simulate a trial with samplesize 10^5, see how many patients fit the IE rules
+    # then determine adjustment factors for the Bernoulli process in order to obtain the desired percentages of intercurrent events
+    
+    
+    
+    
     d_mis_w$LoE_Yes <-ifelse(d_mis_w$CfB<5, 1, 0)*rbinom(n, 1, p_LoE);  d_mis_w # all patients that fit in the deterministic rule are then adjusted with probability abovementioned
     # to adjust the probabilty of LoE# create the LoE variable
+    #sum(ifelse(d_mis_w$CfB<5, 1, 0))
     sum(d_mis_w$LoE_Yes) # check how many patients experienced the intercurrent event
         #View(d_mis_w)  
     
@@ -427,13 +443,17 @@ for (s in 1:length(scaling_factor)) {
     
     p_AE_Exp <- sample(p_AE_Exp_sample, 1) * scaling_factor[s]
     
-    d_mis_w$AE_Exp_Yes <-ifelse(d_mis_w$Treat==1 & d_mis_w$CfW2>8, 1, 0)*rbinom(n, 1, p_AE_Exp);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
+    d_mis_w$AE_Exp_Yes <-ifelse(d_mis_w$Treat==1 & d_mis_w$CfW2>8, 1, 0)*rbinom(n, 1, p_AE_Exp*10);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
+    sum(ifelse(d_mis_w$Treat==1 & d_mis_w$CfW2>8, 1, 0))
+    
     sum(d_mis_w$AE_Exp_Yes)
     
     p_AE_Control <- sample(p_AE_Control_sample, 1) * scaling_factor[s]
     
-    d_mis_w$AE_Control_Yes <-ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0)*rbinom(n, 1, p_AE_Control);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
+    d_mis_w$AE_Control_Yes <-ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0)*rbinom(n, 1, p_AE_Control*10);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
+    sum(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0))
     sum(d_mis_w$AE_Control_Yes)
+
     sum(d_mis_w$LoE_Yes)
     
     describe(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0))
@@ -648,8 +668,6 @@ for (s in 1:length(scaling_factor)) {
 end_time <- Sys.time() # timestamp for end of simulation
 end_time-start_time # total time to complete the simulation
 
-colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
-hist(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Plot relevant graphs for the paper----
@@ -657,18 +675,6 @@ hist(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
 the_plot_SM <- (plot_all_SM / plot_LoE_SM) | (plot_AE_SM / plot_NoIE_SM); the_plot_SM
 
-
-# check
-colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
-colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
-
-# compile to report
-cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
-      rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5),
-      rbind(all_delta_errorz_1, all_delta_errorz_2, all_delta_errorz_3, all_delta_errorz_4, all_delta_errorz_5),
-      rbind(all_confint_fit_1, all_confint_fit_2, all_confint_fit_3, all_confint_fit_4, all_confint_fit_5),
-      rbind(all_N_Exp_1, all_N_Exp_2, all_N_Exp_3, all_N_Exp_4, all_N_Exp_5),
-      rbind(all_N_Control_1, all_N_Control_2, all_N_Control_3, all_N_Control_4, all_N_Control_5))
 
 
 
