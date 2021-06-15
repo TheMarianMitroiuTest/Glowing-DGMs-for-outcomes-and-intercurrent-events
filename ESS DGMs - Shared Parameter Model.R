@@ -85,9 +85,6 @@ Scenario <- c("A")
 
 
 
-
-n <- 190# number of patients
-
 #0.11*sqrt(24.611*1.157)
 
 #0.12*sqrt(24.893*1.049)
@@ -97,9 +94,11 @@ n <- 190# number of patients
 ## simulation parameters #----
 
 set.seed(2147483629)
+n <- 190 # number of patients to be simulated (sample size)
+# this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-#m<-1
-m.iterations <- 500 # number of generated datasets 
+
+m.iterations <- 10 # number of generated datasets 
 
 
 
@@ -221,7 +220,7 @@ c1 <- -0.6 # coefficient for treatment in the logit model for LoE
 det.intercept_LoE <- tweak.intercept(target = (p_LoE_sample*overlap.adjust), x = x, beta1 = c1, grid = seq(-20, 20, length.out = 400)) ; det.intercept_LoE
 test_LoE <- replicate(10000, mean(rbinom(length(x), 1, plogis(det.intercept_LoE + c1 * x))))
 hist(test_LoE)
-mean(test_LoE)
+mean(test_LoE) # at trial level is divided by 2
 
 #describe(d$bi_0)
 #hist(d$bi_0)
@@ -231,7 +230,7 @@ det.intercept_AE_exp <- tweak.intercept(target = (p_AE_Exp_sample*2), x = x, bet
 # p_AE_Exp_sample is multiplied by 2 to adjust for the trial size, not just the arm size
 test_AE_exp <- replicate(10000, mean(rbinom(length(x), 1, plogis(det.intercept_AE_exp))))
 hist(test_AE_exp)
-mean(test_AE_exp)
+mean(test_AE_exp)# # at trial level is divided by 2
 
 
 # Determine intercept for % of AE in control arm according to the target %
@@ -309,15 +308,14 @@ for(m in 1:m.iterations) {
   
   #m<-1
   
-  #fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat, 
-  #              random=~1 + visit| id,
-  #             method="REML", 
-  #            data=d)
+  fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat, 
+                random=~1 + visit| id,
+                method="REML", 
+                data=d)
   
-  #summary(fit_lme)
-  #m<-1
-  #betas[m, ] <- fixef(fit_lme)[2:3]
-  #delta[m, ] <- fixef(fit_lme)[3] * max(visits)
+  summary(fit_lme)
+  betas[m, ] <- fixef(fit_lme)[2:3]
+  delta[m, ] <- fixef(fit_lme)[3] * max(visits)
   #-0.788534/0.1696878
   
   
@@ -519,15 +517,18 @@ for(m in 1:m.iterations) {
   
   #d_L <- d_L[order(d_L$id, d_L$visit),]; #d # order by subject id and Visit
   
+  # determine th adjustment factor
+  # set sample size to 10^5 and simulate 1 trial
+  # then determine as below
+  #d$compete <- ifelse(d$AE_yes==1 & d$LoE_yes==1, 1, 0)
   
-  d$compete <- ifelse(d$AE_yes==1 & d$LoE_yes==1, 1, 0)
-  
-  sum(ifelse(d$AE_yes==1 & d$LoE_yes==1, 1, 0))/7
-  sum(d$AE_yes)/7
-  (sum(d$compete)/7)/(sum(d$LoE_yes)/7)*100# this is the percentage adjustment that needs to be added to the actual targeted proportion of LoE
+  #sum(ifelse(d$AE_yes==1 & d$LoE_yes==1, 1, 0))/7
+  #sum(d$AE_yes)/7
+  #(sum(d$compete)/7)/(sum(d$LoE_yes)/7)*100# this is the percentage adjustment that needs to be added to the actual targeted proportion of LoE
   
   
   d$AE_YES <- d$AE_yes
+  
   sum(d$AE_YES)/7
   
   d$LoE_YES <- ifelse(d$AE_YES==0 & d$LoE_yes==1, 1, 0)

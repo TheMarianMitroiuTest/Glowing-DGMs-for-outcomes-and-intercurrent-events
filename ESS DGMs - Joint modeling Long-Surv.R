@@ -87,7 +87,7 @@ Scenario <- c("A")
 # simulation
 
 
-n <- 190# number of patients to be simulated (sample size)
+n <- 10^5# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 
@@ -193,23 +193,24 @@ describe(t.event_LoE)
 
 
 
-min(t.event_LoE)
-median(t.event_LoE)
-max(t.event_LoE)
+#min(t.event_LoE)
+#median(t.event_LoE)
+#max(t.event_LoE)
 
-t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.50))[[1]]) + 1 , digits=0)
-describe(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.50))[[1]]) + 1)
-hist(t.event_LoE)
-describe(t.event_LoE)
+#t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.35))[[1]]) + 1 , digits=0)
+#describe(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.35))[[1]]) + 1)
+#hist(t.event_LoE)
+#describe(t.event_LoE)
 
-median(t.event_LoE)
-quantile(t.event_LoE, probs = c(0.50))[[1]]
+#median(t.event_LoE)
+#quantile(t.event_LoE, probs = c(0.35))[[1]]
 
-quantile(t.event_LoE, probs = c(seq(0,1, 0.1)))
+#quantile(t.event_LoE, probs = c(seq(0,1, 0.1)))
 
-table(t.event_LoE)
+#table(t.event_LoE)
+#t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0)
 
-t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
+t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.39))[[1]]) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
 # the standardisation could be to fit tte to the entire trial duration, or to fit it to be at specific visits. We standardise it to fit the entire trial duration (6 weeks) and to have most of the intercurrent events up to and including week 4
 # Other Weibull distributions (parameters) can be used to better describe the wanted time to events
 # Depending on the desired percentages of intercurrent events and how they can be achieved. The standardisation can be used such that only a certain percentage of patients experience
@@ -218,40 +219,45 @@ t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0) # standard
 
 describe(t.event_LoE)
 d$t.LoE <- t.event_LoE
+hist(d$t.LoE)
 
-d$t.LoE <- d$t.LoE * rep(rbinom(n, 1, 0.5), each = length(visits))
+#d$t.LoE <- d$t.LoE * rep(rbinom(n, 1, 0.5), each = length(visits))
 # this particular step could be also used piecewise with different Binomial probabilities for time intervals, while keeping the intercurrent event percentage similar at  trial level.
 
     #cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
 
-d$LoE_yes <-factor(ifelse(d$t.LoE !=0, 1, 0))
+d$LoE_yes <- ifelse(d$t.LoE <=6 & d$t.LoE!=0, 1, 0)
+
+#d$LoE_yes <-factor(ifelse(d$t.LoE !=0, 1, 0))
 describe(d$LoE_yes)
 
-d$t.LoE[d$t.LoE==0] <- c("No LoE")
+#d$t.LoE[d$t.LoE==0] <- c("No LoE")
 
 describe(d$t.LoE)
 
-cbind(d$Treat,d$bi_0, d$bi_1, t.event_LoE, d$t.LoE)
+#cbind(d$Treat,d$bi_0, d$bi_1, t.event_LoE, d$t.LoE)
 
     #View(d[,c(1, 3, 4, 5, 8, 9)])
     #View(d)
 
+
 describe(t.event_LoE[d$Treat==1])
 describe(t.event_LoE[d$Treat==0])
-
+#View(d)
 head(d)
+
 
 d$t.AE <- d$AE_yes <- 0
 
 # just LoE
-p<- ggplot(data = d[d$LoE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
+p<- ggplot(data = d[d$LoE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=factor(LoE_yes))) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE pattern")
 
 
 
 # LoE
-p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id, color=LoE_yes)) 
+p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id, color=factor(LoE_yes))) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE all")
 
@@ -291,21 +297,32 @@ max(t.event_AE_exp)
 
 d_c_exp$t.event_AE_exp <- t.event_AE_exp
 
-t.event_AE_exp <- round(t.event_AE_exp*(5/max(t.event_AE_exp)) + 1 , digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
-# the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
+#check the rounding!!!!!!!!! to ceiling
 
+t.event_AE_exp <- round(t.event_AE_exp*(5/quantile(t.event_AE_exp, probs = c(0.20))[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+# the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
+# the quantile is to 0.2 (2*0.1) to adjust for the trial size, which is twice the arm size.
     #describe(t.event_AE_exp)
 d_c_exp$t.AE_exp <- t.event_AE_exp
 
-d_c_exp$t.AE_exp <- d_c_exp$t.AE_exp * rep(rbinom(length(unique(d_c_exp$id)), 1, 0.5), each = length(visits))
+#d_c_exp$t.AE_exp <- d_c_exp$t.AE_exp * rep(rbinom(length(unique(d_c_exp$id)), 1, 0.5), each = length(visits))
 
     #cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
 
-d_c_exp$AE_yes <-factor(ifelse(d_c_exp$t.AE_exp !=0, 1, 0))
+
+#d_c_exp$AE_yes <-factor(ifelse(d_c_exp$t.AE_exp !=0, 1, 0))
+
+
+d_c_exp$AE_yes <-factor(ifelse(d_c_exp$t.AE_exp <=6 & d_c_exp$t.AE_exp!=0, 1, 0))
+
+
 describe(d_c_exp$AE_yes)
 
-d_c_exp$t.AE_exp[d_c_exp$t.AE_exp==0] <- c("No AE")
+#d_c_exp$t.AE_exp[d_c_exp$t.AE_exp==0] <- c("No AE")
 
+
+
+#d_c_exp[d_c_exp$AE_yes==1,] <- ifelse(d$t.LoE <=6 & d$t.LoE!=0, 1, 0 )
 #describe(d_c_exp$t.AE_exp)
   
     #d_c_exp_AE <- d_c_exp[d_c_exp$bi_1<-1,]
@@ -332,15 +349,17 @@ d_c_exp$t.AE_exp[d_c_exp$t.AE_exp==0] <- c("No AE")
 #View(d_c_cAEexp)
 
 
+
+
 # just AE in experimental arm
-p<- ggplot(data = d_c_exp[d_c_exp$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+p<- ggplot(data = d_c_exp[d_c_exp$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=factor(AE_yes))) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - AE exp pattern")
 
 
 
 # AE in experimental arm and the others
-p<- ggplot(data = d_c_exp, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+p<- ggplot(data = d_c_exp, aes(x = visit, y = MADRS10_collected, group = id, color=factor(AE_yes))) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - AE all")
 
@@ -421,19 +440,25 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   
   d_c_control$t.event_AE_control <- t.event_AE_control
   
-  t.event_AE_control <- round(t.event_AE_control*(1) + 2 , digits=0) 
+  #t.event_AE_control <- round(t.event_AE_control*(1) + 2 , digits=0) 
+  t.event_AE_control <- round(t.event_AE_control*(5/quantile(t.event_AE_control, probs = c(0.1))[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+  # the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
+  # quantile is to 0.1 (2*0.05) in order to adjust for the trial size, double the arm size.
+  
+  
   
   describe(t.event_AE_control)
   d_c_control$t.AE_control <- t.event_AE_control
   
-  d_c_control$t.AE_control <- d_c_control$t.AE_control * rep(rbinom(length(unique(d_c_control$id)), 1, 0.5), each = length(visits))
+  #d_c_control$t.AE_control <- d_c_control$t.AE_control * rep(rbinom(length(unique(d_c_control$id)), 1, 0.5), each = length(visits))
   
   #cbind(d$t.LoE, rep(rbinom(n, 1, 0.5), each = length(visits)))
   
-  d_c_control$AE_yes <-factor(ifelse(d_c_control$t.AE_control !=0, 1, 0))
+  #d_c_control$AE_yes <-factor(ifelse(d_c_control$t.AE_control !=0, 1, 0))
+  d_c_control$AE_yes <-factor(ifelse(d_c_control$t.AE_control <=6 & d_c_control$t.AE_control!=0, 1, 0))
   describe(d_c_control$AE_yes)
   
-  d_c_control$t.AE_control[d_c_control$t.AE_control==0] <- c("No AE")
+  #d_c_control$t.AE_control[d_c_control$t.AE_control==0] <- c("No AE")
   
   describe(d_c_control$t.AE_control)
   
@@ -466,18 +491,19 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   
   
   # just AE in control arm
-  p<- ggplot(data = d_c_control[d_c_control$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+  p<- ggplot(data = d_c_control[d_c_control$AE_yes==1,], aes(x = visit, y = MADRS10_collected, group = id, color=factor(AE_yes))) 
   p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
     scale_y_continuous(limits = c(-10, 60))
   
   
   
   # AE in control arm and the others
-  p<- ggplot(data = d_c_control, aes(x = visit, y = MADRS10_collected, group = id, color=AE_yes)) 
+  p<- ggplot(data = d_c_control, aes(x = visit, y = MADRS10_collected, group = id, color=factor(AE_yes))) 
   p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
     scale_y_continuous(limits = c(-10, 60))
   
   
+  describe(d_c_control$AE_yes)
   # change parameters to get more at week 2
   
   d_c_exp$t.event_AE_control <-0
@@ -527,14 +553,15 @@ d_united$AE_yes <- factor(d_united$AE_yes)
 d_united$AE_YES <- ifelse(d_united$AE_yes==1, 1, 0)
 d_united$LoE_YES <- ifelse(d_united$AE_yes==0 & d_united$LoE_yes==1, 1, 0)
 
-#View(d_united)
 
 d_united$Behavior <- ifelse(d_united$AE_YES==1, "AE",
                             ifelse(d_united$AE_YES==0 & d_united$LoE_YES==1, "LoE", "No IE"))
 
 #View(d_united)
 
-#describe(d_united$Behavior)
+describe(d_united$Behavior)
+
+
 
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
@@ -550,6 +577,7 @@ p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = factor(visit), y = MAD
 plot_LoE_JM <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern"); plot_LoE_JM
 
+describe(d_united[d_united$LoE_YES==1,])
 
 #just AE
 # AE
@@ -563,7 +591,9 @@ p<- ggplot(data = d_united[d_united$Behavior=="No IE",], aes(x = factor(visit), 
 plot_NoIE_JM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - No IE pattern"); plot_NoIE_JM
 
+View(d_united[d_united$LoE_YES==1,])
 
+describe(d_united$Behavior)
 
 # All behaviors
 p<- ggplot(data = d_united, aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
@@ -576,7 +606,7 @@ the_plot_JM <- (plot_all_JM / plot_LoE_JM) | (plot_AE_JM / plot_NoIE_JM); the_pl
 
 
 
-
+## ONLY AFTER ALL DGMs have been ran.
 #### Plots for the paper after running all DGMs
 ### LoE patterns side by side by each DGM
 (plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
@@ -610,3 +640,125 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 #describe(d_united)
 #View(d_united)
+
+
+
+
+# compile to report
+
+# Table for the paper ----
+
+table_AE_SM <- data.frame(
+  # descriptives AE  
+  n_AE_Control,
+  n_AE_Exp); table_AE_SM
+
+mean(n_AE_Control)
+mean(n_AE_Exp)
+
+
+
+
+# descriptives LoE  
+table_LoE_SM <-data.frame(
+  n_LoE_Control,
+  n_LoE_Exp); table_LoE_SM
+
+mean(n_LoE_Control)
+mean(n_LoE_Exp)
+
+
+#describe(table_IE_SM)
+
+
+table_AE_SM %>% 
+  as.data.frame() %>% 
+  mutate("Intercurrent event" = "AE") %>% 
+  rename(N_C_arm=N.AE.Control) %>% 
+  rename(N_E_arm=N.AE.Exp)
+
+table_LoE_SM %>% 
+  as.data.frame() %>% 
+  mutate("Intercurrent event" = "LoE") %>% 
+  rename(N_C_arm=N.LoE.Control) %>% 
+  rename(N_E_arm=N.LoE.Exp)
+
+
+tab_SM <- tibble(bind_rows(table_AE_SM %>% 
+                             as.data.frame() %>% 
+                             mutate("Intercurrent event" = "AE") %>% 
+                             rename(N_C_arm=N.AE.Control) %>% 
+                             rename(N_E_arm=N.AE.Exp), 
+                           table_LoE_SM %>% 
+                             as.data.frame() %>% 
+                             mutate("Intercurrent event" = "LoE") %>% 
+                             rename(N_C_arm=N.LoE.Control) %>% 
+                             rename(N_E_arm=N.LoE.Exp))); tab_SM
+
+
+
+tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
+  summarise("N" = mean(N_C_arm), 
+            "%" = round(mean(N_C_arm/n*100), digits=1),
+            "N " = mean(N_E_arm), 
+            "% " = round(mean(N_E_arm/n*100), digits=1),
+            " N " = mean(N_C_arm + N_E_arm),
+            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
+  adorn_totals("row"); tab2_SM
+
+
+
+
+gt(tab2_SM) %>% 
+  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM")) %>%
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
+  tab_spanner(
+    label = md("**Control**"),
+    columns = c("N", "%")) %>% 
+  cols_align(
+    align = "center",
+    columns =  c("N", "%")
+  ) %>% 
+  tab_spanner(
+    label = md("**Treatment**"),
+    columns = c("N ", "% ")) %>% 
+  cols_align(
+    align = "center",
+    columns =  c("N ", "% ")
+  ) %>% 
+  tab_spanner(
+    label = md("**Total**"),
+    columns = c(" N ", " % ")) %>% 
+  cols_align(
+    align = "center",
+    columns =  c(" N ", " % ")
+  ) %>% 
+  data_color(
+    columns = c("%", "% ", " % "),
+    colors = scales::col_numeric(
+      palette = c(
+        "light blue"),
+      domain = NULL)
+  ) %>% 
+  cols_align(
+    align = "center",
+    columns =  "Intercurrent event"
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_fill(color = "white"),
+      cell_text(weight = "bold")
+    ),
+    locations = cells_body(
+      columns = "Intercurrent event"
+    )
+  )
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+

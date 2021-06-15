@@ -93,10 +93,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 10^5 # number of patients to be simulated (sample size)
+n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1000 # number of generated datasets # number of trials per scaling factor
 scaling_factor <- 1 # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -109,10 +109,12 @@ scaling_factor <- 1 # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary t
 # AE exp arm 0.1, and AE control arm 0.5
 # the probabilities below should make possible to obtain the desired percentages of intercurrent events
 
-
-p_LoE_sample <- 0.35 #c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy at trial level
-p_AE_Exp_sample <- 0.10 #c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the experimental arm
-p_AE_Control_sample <- 0.05 #c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
+# for 0.35 LoE
+p_LoE_sample <- 0.83 #c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy at trial level
+#for 0.1 AE exp arm
+p_AE_Exp_sample <- 0.45 #c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the experimental arm
+#for 0.05 AE control arm
+p_AE_Control_sample <- 0.4 #c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
 
 visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline (day 0) + follow-up measurements at day 7, 14, ..., 42
 delta <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
@@ -417,10 +419,10 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_w$CfB <- d_mis_w[,3] - d_mis_w[,9]; d_mis_w # create the CfB (change from baseline) variable. Could also be d_mis_w[,9] - d_mis_w[,3]
     
-    d_mis_w$CfW2 <- d_mis_w[,3] - d_mis_w[,5]; d_mis_w # create the CfW2 (change from week 2) variable
+    d_mis_w$CfW1 <- d_mis_w[,3] - d_mis_w[,4]; d_mis_w # create the CfW1 (change from week 1) variable
         #s<-1
         #View(d_mis_w)
-    p_LoE <-sample(p_LoE_sample, 1) * scaling_factor[s] # proportion of e.g., treatment discontinuation due to lack of efficacy multiplied by the scaling factor. 
+    p_LoE <- sample(p_LoE_sample, 1) * scaling_factor[s] # proportion of e.g., treatment discontinuation due to lack of efficacy multiplied by the scaling factor. 
     # this allows to obtain different smaller/larger percentages of LoE at trial level and cover a broad range of scenarios as would be in reality, and to ensure variability,
     # not all patients that it in the rule will automatically experience the intercurrent event
     
@@ -434,7 +436,7 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_w$LoE_Yes <-ifelse(d_mis_w$CfB<5, 1, 0)*rbinom(n, 1, p_LoE);  d_mis_w # all patients that fit in the deterministic rule are then adjusted with probability abovementioned
     # to adjust the probabilty of LoE# create the LoE variable
-    #sum(ifelse(d_mis_w$CfB<5, 1, 0))
+    #35000/sum(ifelse(d_mis_w$CfB<5, 1, 0))
     sum(d_mis_w$LoE_Yes) # check how many patients experienced the intercurrent event
         #View(d_mis_w)  
     
@@ -443,20 +445,20 @@ for (s in 1:length(scaling_factor)) {
     
     p_AE_Exp <- sample(p_AE_Exp_sample, 1) * scaling_factor[s]
     
-    d_mis_w$AE_Exp_Yes <-ifelse(d_mis_w$Treat==1 & d_mis_w$CfW2>8, 1, 0)*rbinom(n, 1, p_AE_Exp*10);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
-    sum(ifelse(d_mis_w$Treat==1 & d_mis_w$CfW2>8, 1, 0))
+    d_mis_w$AE_Exp_Yes <-ifelse(d_mis_w$Treat==1 & d_mis_w$CfW1>3, 1, 0)*rbinom(n, 1, p_AE_Exp);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
+    #sum(ifelse(d_mis_w$Treat==1 & d_mis_w$CfW1>3, 1, 0))
     
     sum(d_mis_w$AE_Exp_Yes)
     
     p_AE_Control <- sample(p_AE_Control_sample, 1) * scaling_factor[s]
     
-    d_mis_w$AE_Control_Yes <-ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0)*rbinom(n, 1, p_AE_Control*10);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
-    sum(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0))
+    d_mis_w$AE_Control_Yes <-ifelse(d_mis_w$Treat==0 & d_mis_w$CfW1< (-2), 1, 0)*rbinom(n, 1, p_AE_Control);  d_mis_w # # to adjust the probabilty of LoE# create the LoE variable
+    #sum(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW1< (-2), 1, 0))
     sum(d_mis_w$AE_Control_Yes)
 
     sum(d_mis_w$LoE_Yes)
     
-    describe(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW2< (-2), 1, 0))
+    describe(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW1< (-2), 1, 0))
     
     #
     
@@ -478,7 +480,10 @@ for (s in 1:length(scaling_factor)) {
         # [7] "AE_Control_Yes" "Visit"          "MADRS10"       
         #[10] "V10"  
     
-    View(d_mis_L)
+    
+    #View(d_mis_L)
+    
+
     
     d_mis_L$AE_Yes <- ifelse(d_mis_L$AE_Exp_Yes==1, 1, 
                              ifelse(d_mis_L$AE_Control_Yes==1, 1, 0))
@@ -491,8 +496,20 @@ for (s in 1:length(scaling_factor)) {
     
         #View(d_mis_L)
     
+    # determine competing AE and LoE on the same patients
+    #d_mis_L$compete <- ifelse(d_mis_L$AE_Yes==1 & d_mis_L$LoE_Yes==1, 1, 0)
+    
+    #sum(ifelse(d_mis_L$AE_Yes==1 & d_mis_L$LoE_Yes==1, 1, 0))/7
+    
+    #sum(as.numeric(d_mis_L[,c("AE_Yes")])-1)/7
+    
+    #(sum(d_mis_L$compete)/7)/(sum(as.numeric(d_mis_L$LoE_Yes)-1)/7)*100# this is the percentage adjustment that needs to be added to achieve targeted proportion of LoE
+    
+    
     d_mis_L$LoE_YES <- ifelse(d_mis_L$LoE_Yes==1 & d_mis_L$AE_Yes==0, 1, 0)
     describe(d_mis_L$LoE_YES)
+    
+    
     
         #View(d_mis_L)
     
@@ -535,7 +552,7 @@ for (s in 1:length(scaling_factor)) {
     #### Intercurrent events descriptives needed for the verification step ----
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    LoE_Y <- d_mis_L[,c(2, 11)]
+    LoE_Y <- d_mis_L[,c("Treat", "LoE_YES")]
     LoE_Y$LoE_YES <- as.numeric(LoE_Y$LoE_YES)-1
     
     LoE_Y_total <- sum(LoE_Y$LoE_YES)/length(visits)
@@ -551,7 +568,7 @@ for (s in 1:length(scaling_factor)) {
     n_LoE_Exp[m, ] <- tb_LoE_Exp
     n_LoE_Control[m, ] <- tb_LoE_Control
 
-    AE_Y <- d_mis_L[,c(2, 10)]
+    AE_Y <- d_mis_L[,c("Treat", "AE_Yes")]
     AE_Y$AE_Yes <- as.numeric(AE_Y$AE_Yes)-1
     
     AE_Y_total <- sum(AE_Y$AE_Yes)/length(visits)
