@@ -98,7 +98,7 @@ n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 
-m.iterations <- 100 # number of generated datasets 
+m.iterations <- 500 # number of generated datasets 
 
 
 
@@ -387,7 +387,7 @@ for(m in 1:m.iterations) {
   #####################################################
   # Logit model and Probabilities for LoE at trial level
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
-  d$Pr_LoE <- plogis((det.intercept_LoE + d$bi_0 + d$bi_1) + c1 * d$Treat)
+  d$Pr_LoE <- plogis((det.intercept_LoE + d$bi_0/100 + d$bi_1/100) + c1 * d$Treat)
   
   describe(d$Pr_LoE[d$Treat==1])
   describe(d$Pr_LoE[d$Treat==0])
@@ -434,7 +434,7 @@ for(m in 1:m.iterations) {
   #####################################################
   # Logit model and Probabilities for AE in experimental arm
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
-  d$Pr_AE[d$Treat==1] <- plogis((det.intercept_AE_exp + d$bi_0[d$Treat==1] +  d$bi_1[d$Treat==1]))
+  d$Pr_AE[d$Treat==1] <- plogis((det.intercept_AE_exp + d$bi_0[d$Treat==1]/100 +  d$bi_1[d$Treat==1]/100))
   describe(d$Pr_AE[d$Treat==1])
   
   
@@ -450,7 +450,7 @@ for(m in 1:m.iterations) {
   #####################################################
   # Logit model and Probabilities for AE in control arm
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
-  d$Pr_AE[d$Treat==0] <- plogis((det.intercept_AE_control + d$bi_1[d$Treat==0] + d$bi_1[d$Treat==0]))
+  d$Pr_AE[d$Treat==0] <- plogis((det.intercept_AE_control + d$bi_0[d$Treat==0]/100 + d$bi_1[d$Treat==0]/100))
   describe(d$Pr_AE[d$Treat==0])
   
   
@@ -677,7 +677,7 @@ for(m in 1:m.iterations) {
   
   
   
-  View(d_SPM)
+  #View(d_SPM)
   
   
   
@@ -755,7 +755,6 @@ tab_SM <- tibble(bind_rows(table_AE_SM %>%
                              mutate("Intercurrent event" = "LoE") %>% 
                              rename(N_C_arm=N.LoE.Control) %>% 
                              rename(N_E_arm=N.LoE.Exp))); tab_SM
-
 
 
 tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
