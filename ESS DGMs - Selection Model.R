@@ -27,6 +27,8 @@ library(tidyverse)
 library(nlme)
 library(Hmisc)
 library(janitor)
+library(JM)
+library(JMbayes)
 
 # not needed here
 library(survival)
@@ -398,7 +400,7 @@ for (s in 1:length(scaling_factor)) {
     # store the number of patients in the objects defined a priori
     Randomised_Exp <- sum(d[,3])/7 #number of patients in the experimental arm # make sure it is divided by the number of visits (6/7), without or with the baseline included as response
     Randomised_Control <- n-sum(d[,3])/7 #number of patients in the control arm
-    
+    #m<-s<-1
     N_Exp[m,] <- Randomised_Exp
     N_Control[m,] <- Randomised_Control
 
@@ -1004,7 +1006,7 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 # The code for SPM method. On the same trial generated with the selection model (above), we fitted a mixed-effects model with random intercept and random slope # 
 # fit LMM model on the simulated trial
 # fit the glm to get the intercurrent events models with random effects in the linear predictor
-    #View(SimTrial_sm_190_1_5)
+
 
 class(SimTrial_sm_2000_1_5$Visit)
 SimTrial_sm_2000_1_5$Visit <- as.numeric(SimTrial_sm_2000_1_5$Visit)-1
@@ -1015,7 +1017,7 @@ summary(fit_lmer)
 fit_lme <- lme(fixed = MADRS10 ~ Visit + Visit : Treat, 
               random = ~ 1 + Visit| id,
               method ="REML", 
-               data = SimTrial_sm_2000_1_5)
+               data = SimTrial_sm_2000_1_5_surv)
 
 summary(fit_lme)
 
@@ -1023,6 +1025,35 @@ vcov(fit_lme)
 VarCorr(fit_lme)
 random.effects(fit_lme)[,1]
 var(random.effects(fit_lme))
+
+#View(SimTrial_sm_2000_1_5)
+# Fit the Survival model: time to LoE
+# but first, bring the dataset in the right format, namely all LoE at week 3 and all at week 2.
+SimTrial_sm_2000_1_5_surv <- SimTrial_sm_2000_1_5
+SimTrial_sm_2000_1_5_surv$LoE_yes_surv <- ifelse(SimTrial_sm_2000_1_5_surv$LoE_YES==1 & SimTrial_sm_2000_1_5_surv$Visit==3, 1, 0)
+View(SimTrial_sm_2000_1_5_surv)
+SimTrial_sm_2000_1_5_surv$AE_yes_surv <- ifelse(SimTrial_sm_2000_1_5_surv$AE_Yes==1 & SimTrial_sm_2000_1_5_surv$Visit==2, 1, 0)
+
+
+# now fit the survival models on the source trials (own source trial)
+cox_fit_LoE <- coxph(Surv(Visit, LoE_yes_surv) ~ Treat, data = SimTrial_sm_2000_1_5_surv, x = TRUE)
+summary(cox_fit_LoE)
+
+
+# jointModel() takes the above fitted models as arguments, and fits the
+# joint model; below we fit a joint model with a relative risk submodel
+# for the event time outcome, in which the baseline risk function is assumed
+# piecewise-constant
+jointFit.LoE <- jointModel(fit_lme, cox_fit_LoE, timeVar = "Visit", 
+                            method = "piecewise-PH-aGH")
+
+summary(jointFit.LoE)
+
+
+
+
+
+
 
     # logit(Pr(IE_ij)) = (beta_0 + b0_ij) [aka baseline MADRS] + beta_1 * Treat
     # baseline MADRS10 is made of the general intercept + each individual random intercept
@@ -1124,6 +1155,15 @@ fit_glmm_AE_control <- glmer(AE_Control_Yes ~ 1 +
 summary(fit_glmm_AE_control)
 
 # difficult to use due to overdispersion
+
+
+
+#### the code for Survival models fitted on the large trial
+
+
+
+
+
 
 
 

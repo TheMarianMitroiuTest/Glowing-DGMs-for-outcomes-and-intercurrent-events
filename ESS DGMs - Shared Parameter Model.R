@@ -17,7 +17,7 @@
 
 
 ### DGM
-rm(list=ls())
+#rm(list=ls())
 library(MASS)
 library(nlme)
 library(survival)
@@ -98,7 +98,7 @@ n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 
-m.iterations <- 10 # number of generated datasets 
+m.iterations <- 100 # number of generated datasets 
 
 
 
@@ -217,7 +217,7 @@ tweak.intercept <- function(target, x = x, beta1, K = 10, grid = seq(-200, 200, 
 x <- rbinom(10000, 1, 0.5)
 
 c1 <- -0.6 # coefficient for treatment in the logit model for LoE
-det.intercept_LoE <- tweak.intercept(target = (p_LoE_sample*overlap.adjust), x = x, beta1 = c1, grid = seq(-20, 20, length.out = 400)) ; det.intercept_LoE
+det.intercept_LoE <- tweak.intercept(target = (p_LoE_sample*overlap.adjust), x = x, beta1 = c1, grid = seq(-5, 5, length.out = 400)) ; det.intercept_LoE
 test_LoE <- replicate(10000, mean(rbinom(length(x), 1, plogis(det.intercept_LoE + c1 * x))))
 hist(test_LoE)
 mean(test_LoE) # at trial level is divided by 2
@@ -387,7 +387,7 @@ for(m in 1:m.iterations) {
   #####################################################
   # Logit model and Probabilities for LoE at trial level
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
-  d$Pr_LoE <- plogis((det.intercept_LoE + d$bi_1) + c1 * d$Treat)
+  d$Pr_LoE <- plogis((det.intercept_LoE + d$bi_0 + d$bi_1) + c1 * d$Treat)
   
   describe(d$Pr_LoE[d$Treat==1])
   describe(d$Pr_LoE[d$Treat==0])
@@ -434,7 +434,7 @@ for(m in 1:m.iterations) {
   #####################################################
   # Logit model and Probabilities for AE in experimental arm
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
-  d$Pr_AE[d$Treat==1] <- plogis((det.intercept_AE_exp + d$bi_1[d$Treat==1]))
+  d$Pr_AE[d$Treat==1] <- plogis((det.intercept_AE_exp + d$bi_0[d$Treat==1] +  d$bi_1[d$Treat==1]))
   describe(d$Pr_AE[d$Treat==1])
   
   
@@ -450,7 +450,7 @@ for(m in 1:m.iterations) {
   #####################################################
   # Logit model and Probabilities for AE in control arm
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
-  d$Pr_AE[d$Treat==0] <- plogis((det.intercept_AE_control + d$bi_1[d$Treat==0]))
+  d$Pr_AE[d$Treat==0] <- plogis((det.intercept_AE_control + d$bi_1[d$Treat==0] + d$bi_1[d$Treat==0]))
   describe(d$Pr_AE[d$Treat==0])
   
   
@@ -562,7 +562,7 @@ for(m in 1:m.iterations) {
   #### assign and save the generated datasets----
   # naming sequence is "SimTrial"_"Method"_"trial sample size"_"iteration number"
   
-  assign(paste0("SimTrial_spm", "_", n,"_"), d)
+  assign(paste0("SimTrial_spm", "_", n), d)
   #View(SimTrial_sm_1_5)
   dataset_name.Rdata <- paste0("SimTrial_spm", "_", n, ".Rdata")
   dataset_name <- paste0("SimTrial_spm", "_", n)
@@ -644,27 +644,27 @@ for(m in 1:m.iterations) {
   
   # All patients with TRUE trajectory 
   # LoE
-  p<- ggplot(data = d_SPM[d_SPM$Behavior=="LoE",], aes(x = factor(visit), y = MADRS10_collected, group = id, color=LoE_YES)) 
+  p<- ggplot(data = d_SPM[d_SPM$Behavior=="LoE",], aes(x = visit, y = MADRS10_collected, group = id, color=LoE_YES)) 
   plot_LoE_SPM <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat)+
     scale_y_continuous(limits = c(-10, 60)) + ggtitle("SPM-LoE pattern") +
     scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_LoE_SPM
   
   # AE
-  p<- ggplot(data = d_SPM[d_SPM$Behavior=="AE",], aes(x = factor(visit), y = MADRS10_collected, group = id, color=AE_YES)) 
+  p<- ggplot(data = d_SPM[d_SPM$Behavior=="AE",], aes(x = visit, y = MADRS10_collected, group = id, color=AE_YES)) 
   plot_AE_SPM <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
     scale_y_continuous(limits = c(-10, 60)) + ggtitle("SPM-AE pattern")  +
     scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_AE_SPM
   
   #just No IE
   # No IE
-  p<- ggplot(data = d_SPM[d_SPM$Behavior=="No IE",], aes(x = factor(visit), y = MADRS10_collected, group = id)) 
+  p<- ggplot(data = d_SPM[d_SPM$Behavior=="No IE",], aes(x = visit, y = MADRS10_collected, group = id)) 
   plot_NoIE_SPM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat)+
     scale_y_continuous(limits = c(-10, 60))+ ggtitle("SPM-No IE pattern") +
     scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")) ; plot_NoIE_SPM
   
   
   # All behaviors
-  p<- ggplot(data = d_SPM, aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+  p<- ggplot(data = d_SPM, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
   plot_all_SPM <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat)+
     scale_y_continuous(limits = c(-10, 60))+ ggtitle("SPM-All patterns")+
     scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_all_SPM
@@ -677,7 +677,7 @@ for(m in 1:m.iterations) {
   
   
   
-  
+  View(d_SPM)
   
   
   
@@ -771,7 +771,7 @@ tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
 
 
 gt(tab2_SM) %>% 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM")) %>%
+  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Shared parameter model DGM")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
     label = md("**Control**"),
@@ -820,3 +820,27 @@ gt(tab2_SM) %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# checks
+#View(SimTrial_spm_2000)
+
+#SimTrial_spm_2000$visit <- as.numeric(SimTrial_spm_2000$visit)-1
+# estimate the model and store results in m
+#fit_glmm_LoE <- glmer(LoE_yes ~ Treat +  
+ #                       (1 | id), data = SimTrial_spm_2000, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+  #                    nAGQ = 10)
+
+#summary(fit_glmm_LoE)
+#describe(d$bi_0)
+#hist(d$bi_0)
+#var(d$bi_0)
+#var(d$bi_1)
+
+
+
+
+
+
+
+
+

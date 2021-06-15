@@ -16,7 +16,7 @@
 # add the ceiling to make sure the time to event are at the next visit.
 # change 0 to Inf for those that do not experience the intercurrent event.
 ### DGM
-rm(list=ls())
+#rm(list=ls())
 library(MASS)
 library(nlme)
 library(survival)
@@ -87,7 +87,7 @@ Scenario <- c("A")
 # simulation
 
 
-n <- 10^5# number of patients to be simulated (sample size)
+n <- 190# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 
@@ -164,7 +164,7 @@ nu_LoE 		<- 	1.4		# shape parameter
 # other distributions could be used (e.g., exponential) to describe the time to intercurrent event distribution.
 
 # linear predictor
-LP1 <- (d$bi_0 + d$bi_1)/100 +  c1 * d$Treat # this can be used to generate time to intercurrent events with differing durations up to intercurrent event between arms.
+LP1 <- (d$bi_0 + d$bi_1) +  c1 * d$Treat # this can be used to generate time to intercurrent events with differing durations up to intercurrent event between arms.
 # e.g., in the control arm the LoE will appear (slightly) earlier than in the experimental/treatment arm 
     #describe(LP1)
 
@@ -210,7 +210,7 @@ describe(t.event_LoE)
 #table(t.event_LoE)
 #t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0)
 
-t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.39))[[1]]) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
+t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.50))[[1]]) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
 # the standardisation could be to fit tte to the entire trial duration, or to fit it to be at specific visits. We standardise it to fit the entire trial duration (6 weeks) and to have most of the intercurrent events up to and including week 4
 # Other Weibull distributions (parameters) can be used to better describe the wanted time to events
 # Depending on the desired percentages of intercurrent events and how they can be achieved. The standardisation can be used such that only a certain percentage of patients experience
@@ -280,7 +280,7 @@ c2 <- -1 # parameter in the linear predictor
 lambda_AE_exp 	<- 3			# scale parameter
 nu_AE_exp 		<- 	1.2		# shape parameter
 
-LP2 <- (d_c_exp$bi_0 + d_c_exp$bi_1)/100 +  c2
+LP2 <- (d_c_exp$bi_0 + d_c_exp$bi_1) +  c2
 describe(LP2)
 
 #hist(d$bi_1)
@@ -425,7 +425,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   nu_AE_control 		<- 	3.5	# shape parameter
   
   
-  LP3 <- (d_c_control$bi_0 + d_c_control$bi_1)/100 +  c3
+  LP3 <- (d_c_control$bi_0 + d_c_control$bi_1) +  c3
   describe(LP3)
   
 
@@ -567,13 +567,13 @@ p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id))
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
   scale_y_continuous(limits = c(-10, 60))
 
-
+d_united$visit <- as.factor(d_united$visit)
 
 # Plot trajectories
 
 # just LoE
 # LoE
-p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_LoE_JM <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern"); plot_LoE_JM
 
@@ -581,47 +581,26 @@ describe(d_united[d_united$LoE_YES==1,])
 
 #just AE
 # AE
-p<- ggplot(data = d_united[d_united$AE_YES==1,], aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+p<- ggplot(data = d_united[d_united$AE_YES==1,], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_AE_JM <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - AE pattern"); plot_AE_JM
 
 #just No IE
 # No IE
-p<- ggplot(data = d_united[d_united$Behavior=="No IE",], aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+p<- ggplot(data = d_united[d_united$Behavior=="No IE",], aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_NoIE_JM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM - No IE pattern"); plot_NoIE_JM
 
-View(d_united[d_united$LoE_YES==1,])
+#View(d_united[d_united$LoE_YES==1,])
 
 describe(d_united$Behavior)
 
 # All behaviors
-p<- ggplot(data = d_united, aes(x = factor(visit), y = MADRS10_collected, group = id, color=Behavior)) 
+p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
 plot_all_JM <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - All patterns"); plot_all_JM
 
 the_plot_JM <- (plot_all_JM / plot_LoE_JM) | (plot_AE_JM / plot_NoIE_JM); the_plot_JM
-
-
-
-
-
-## ONLY AFTER ALL DGMs have been ran.
-#### Plots for the paper after running all DGMs
-### LoE patterns side by side by each DGM
-(plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
-
-### AE patterns side by side by each DGM
-(plot_AE_SM + plot_AE_PMMM) / (plot_AE_SPM + plot_AE_JM)
-
-
-### No IE patterns side by side by each DGM
-(plot_NoIE_SM + plot_NoIE_PMMM) / (plot_NoIE_SPM + plot_NoIE_JM)
-
-
-### All patterns in a trial side by side by each DGM
-(plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
-
 
 
 
@@ -640,6 +619,27 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 #describe(d_united)
 #View(d_united)
+
+
+
+## ONLY AFTER ALL four DGMs have been ran.
+#### Plots for the paper after running all DGMs
+### LoE patterns side by side by each DGM
+(plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
+
+### AE patterns side by side by each DGM
+(plot_AE_SM + plot_AE_PMMM) / (plot_AE_SPM + plot_AE_JM)
+
+
+### No IE patterns side by side by each DGM
+(plot_NoIE_SM + plot_NoIE_PMMM) / (plot_NoIE_SPM + plot_NoIE_JM)
+
+
+### All patterns in a trial side by side by each DGM
+(plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
+
+
+
 
 
 
@@ -761,4 +761,4 @@ gt(tab2_SM) %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-
+#add the for loop stuff

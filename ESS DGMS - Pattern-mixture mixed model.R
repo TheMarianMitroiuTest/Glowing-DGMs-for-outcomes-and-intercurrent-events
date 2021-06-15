@@ -32,7 +32,7 @@
 
 
 ## load libraries ----
-rm(list=ls()) #
+#rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
@@ -121,9 +121,9 @@ n <- 190# # number of patients to be simulated (sample size)
 
 # ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
 # this is done to increase variability in intercurrent events percentages between trials
-prop_LoE <- 0.38 #c(0.36, 0.37, 0.38, 0.39, 0.40); mean(prop_LoE) # c(0.383) 
-prop_AE_exp <- 0.04#c(0.020, 0.025, 0.03, 0.035, 0.04); mean(prop_AE_exp) # c(0.0298) 
-prop_AE_control <-  0.02#c(0.010, 0.0125, 0.0150, 0.0175, 0.020) ; mean(prop_AE_control) # c(0.0158)
+prop_LoE <- 0.35 #c(0.36, 0.37, 0.38, 0.39, 0.40); mean(prop_LoE) # c(0.383) 
+prop_AE_exp <- 0.10#c(0.020, 0.025, 0.03, 0.035, 0.04); mean(prop_AE_exp) # c(0.0298) 
+prop_AE_control <-  0.05#c(0.010, 0.0125, 0.0150, 0.0175, 0.020) ; mean(prop_AE_control) # c(0.0158)
 prop_AE <-prop_AE_exp + prop_AE_control
 
 #CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
