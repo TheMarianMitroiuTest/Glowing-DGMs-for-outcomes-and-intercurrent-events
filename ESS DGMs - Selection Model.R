@@ -93,10 +93,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 190 # number of patients to be simulated (sample size)
+n <- 2000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 1000 # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
 scaling_factor <- 1 # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -357,13 +357,13 @@ for (s in 1:length(scaling_factor)) {
     
     
     # fit a model to check if the estimated parameters are similar/close to the true parameters
-    fit <- gls(MADRS10 ~ visit * Treat + Baseline, 
-             data=d,
-             correlation = corSymm(form=~1 | id),
+    #fit <- gls(MADRS10 ~ visit * Treat + Baseline, 
+     #        data=d,
+      #       correlation = corSymm(form=~1 | id),
              #weights = varIdent(form = ~ 1 | visit),
-             method="REML")
+       #      method="REML")
     
-    summary(fit)
+    #summary(fit)
     
         #sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"])
         #sqrt(vcov(fit)["Treat", "Treat"])
@@ -385,9 +385,9 @@ for (s in 1:length(scaling_factor)) {
         #summary(fit_lme)
         #model_parameters(fit_lme)
     #### store estimated parameters----
-    betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
+    #betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
     
-    delta[m, ] <- sum(fit$coefficients[c(8,15)]) # store the treatment effect at the end of the trial, at week 6
+    #delta[m, ] <- sum(fit$coefficients[c(8,15)]) # store the treatment effect at the end of the trial, at week 6
     
         #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
         #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
@@ -829,6 +829,7 @@ tab_spanner(
 # e.g., to have more patients in each pattern such that models fit
 
     #View(SimTrial_sm_2000_1_5)
+SimTrial_sm_2000_1_5 <-SimTrial_sm_2000_1_1
 describe(SimTrial_sm_2000_1_5)
 
 # prepare the dataset for reparameterisation to not have any treatment coefficient at baseline
@@ -1090,6 +1091,43 @@ summary(fit_AE_control_spm)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+######### The code for SPM and glmm for logit models for LoE  at trial level, AE in experimental arm and AE in control arm
+
+
+
+View(SimTrial_sm_2000_1_5)
+# estimate the model LoE
+fit_glmm_LoE <- glmer(LoE_YES ~ Visit + Treat +  
+                        (1 | id), data = SimTrial_sm_2000_1_5, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                      nAGQ = 10)
+
+summary(fit_glmm_LoE)
+
+
+
+
+# estimate the model AE exp arm
+fit_glmm_AE_exp <- glmer(AE_Exp_Yes ~ 1 +  
+                        (1 | id), data = SimTrial_sm_2000_1_5[d$Treat==1,], family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                      nAGQ = 10)
+
+summary(fit_glmm_AE_exp)
+
+
+# estimate the model AE exp arm
+fit_glmm_AE_control <- glmer(AE_Control_Yes ~ 1 +  
+                           (1 | id), data = SimTrial_sm_2000_1_5[d$Treat==0,], family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                         nAGQ = 10)
+
+summary(fit_glmm_AE_control)
+
+# difficult to use due to overdispersion
+
+
+
+
 
 # Selection model via marginal model----
 # for outcomes-generating model and FULLY STOCHASTIC models for generation of intercurrent events
