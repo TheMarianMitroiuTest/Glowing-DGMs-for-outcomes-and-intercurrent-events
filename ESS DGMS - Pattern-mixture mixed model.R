@@ -111,7 +111,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 1# 355 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 408 # 408 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -136,6 +136,69 @@ betas <- matrix(ncol=1,nrow=m.iterations)
 colnames(betas) <-c("visit42:Treat")
 
 pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
+
+## randomisation objects, allocation
+N_Exp  <- matrix(ncol=1,nrow=m.iterations)
+colnames(N_Exp) <-c("N randomised Exp")
+
+N_Control  <- matrix(ncol=1,nrow=m.iterations)
+colnames(N_Control) <-c("N randomised Control")
+
+
+# Intercurrent events objects
+# LoE
+n_LoE_total <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(n_LoE_total) <- c("N LoE Total")
+
+n_LoE_Exp <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(n_LoE_Exp) <- c("N LoE Exp")
+
+n_LoE_Control <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(n_LoE_Control) <- c("N LoE Control")
+
+
+# AE
+n_AE_total <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(n_AE_total) <- c("N AE Total")
+
+n_AE_Exp <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(n_AE_Exp) <- c("N AE Exp")
+
+n_AE_Control <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(n_AE_Control) <- c("N AE Control")
+
+# AE + LoE Total
+
+n_AE_and_LoE_T <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(n_AE_and_LoE_T) <- c("N AE and LoE Total")
+
+
+# for percentages
+# LoE
+LoE_total_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(LoE_total_Perc) <- c("% LoE Total")
+
+LoE_Exp_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(LoE_Exp_Perc) <- c("% LoE Exp")
+
+LoE_Control_Perc<- matrix(ncol=1,nrow=m.iterations) # 
+colnames(LoE_Control_Perc) <- c("% LoE Control")
+
+
+#AE
+AE_total_Perc <-  matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_total_Perc) <- c("% AE Total")
+
+AE_Exp_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_Exp_Perc) <- c("% AE Exp")
+
+AE_Control_Perc <-matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_Control_Perc) <- c("% AE Control")
+
+# AE + LoE percentage
+AE_and_LoE_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
+
 
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
@@ -360,7 +423,7 @@ for (s in 1:length(scaling_factor)) {
          6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
     
-    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_LoE_all)	; re_AE_all
+    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_AE_all)	; re_AE_all
     #View(re_AE_all)
     
     re_AE_all <- as.matrix(re_AE_all)
@@ -371,8 +434,10 @@ for (s in 1:length(scaling_factor)) {
     d_AE_all <- data.frame(
       id = rep((n_LoE_all+1):(n_LoE_all+n_AE_all), each = length(visits)),
       visit = visits,
-      Treat = rep(rbinom(n_AE_all, 1, prob_treat_AE), each = length(visits)),
+      Treat = rep(c(rep(1, n_AE_exp), rep(0, n_AE_control)), each = length(visits)),
       MADRS10 = rep(NA, n_AE_all)); d_AE_all # mean(Treat)
+    
+
     
     #describe(d_AE_all$Treat)
     
@@ -463,6 +528,7 @@ for (s in 1:length(scaling_factor)) {
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("PMMM-AE pattern") +
       scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_AE_PMMM
     
+    
     #tail(d_LoE_all)
     
     #View(d_AE_all)
@@ -506,6 +572,7 @@ for (s in 1:length(scaling_factor)) {
     # indicator variable
     d_AE_all$Pattern <- c("AE_all")
     
+    
     # indicator variable
     d_AE_all$AE_Yes <- 1
     #d_AE_all$AE_exp <- 0
@@ -528,7 +595,7 @@ for (s in 1:length(scaling_factor)) {
         11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
     
     
-    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_LoE_all)	; re_No_IE
+    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
     #View(re)
     
     re_No_IE <- as.matrix(re_No_IE)
@@ -803,6 +870,80 @@ the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMM
     
     save(dataset_name, file = dataset_name.Rdata)
     
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #### Intercurrent events descriptives needed for the verification step ----
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #colnames(d_pmmm)
+    # [1] "id"       "visit"    "Treat"    "MADRS10"  "Baseline" "V0"       "V7"      
+    #[8] "V14"      "V21"      "V28"      "V35"      "V42"      "Pattern"  "LoE_Yes" 
+    #[15] "No_IE"    "AE_Yes"  
+    
+    # subset Treat and LoE_Yes
+  
+    LoE_Y <- d_pmmm[,c(3, 14)]
+    LoE_Y$LoE_Yes <- as.numeric(LoE_Y$LoE_Yes)-1
+    
+    LoE_Y_total <- sum(LoE_Y$LoE_Yes)/length(visits)
+    LoE_Y_Exp <- sum(LoE_Y$LoE_Yes[LoE_Y$Treat==1])/length(visits)
+    LoE_Y_Control <- sum(LoE_Y$LoE_Yes[LoE_Y$Treat==0])/length(visits)
+    
+    ## LoE ##
+    tb_LoE_total <- LoE_Y_total
+    tb_LoE_Exp <- LoE_Y_Exp
+    tb_LoE_Control <- LoE_Y_Control
+    
+    n_LoE_total[m, ] <-  tb_LoE_total
+    n_LoE_Exp[m, ] <- tb_LoE_Exp
+    n_LoE_Control[m, ] <- tb_LoE_Control
+    
+    AE_Y <- d_pmmm[,c(3, 16)]
+    AE_Y$AE_Yes <- as.numeric(AE_Y$AE_Yes)-1
+    
+    AE_Y_total <- sum(AE_Y$AE_Yes)/length(visits)
+    AE_Y_Exp <- sum(AE_Y$AE_Yes[AE_Y$Treat==1])/length(visits)
+    AE_Y_Control <- sum(AE_Y$AE_Yes[AE_Y$Treat==0])/length(visits)
+    
+    ## AE ##
+    
+    tb_AE_total <- AE_Y_total
+    tb_AE_Exp <- AE_Y_Exp
+    tb_AE_Control <- AE_Y_Control
+    
+    
+    n_AE_total[m, ] <-  tb_AE_total
+    n_AE_Exp[m, ] <- tb_AE_Exp
+    n_AE_Control[m, ] <- tb_AE_Control
+    
+    #describe(d_pmmm$Treat)
+    # randomisation
+    Randomised_Exp <- sum(as.numeric(d_pmmm$Treat)-1)/length(visits)
+    Randomised_Control <- n-Randomised_Exp
+    
+    N_Exp[m,] <- Randomised_Exp
+    N_Control[m,] <- Randomised_Control
+    
+    ## LoE ##
+    
+    LoE_total_Perc[m,] <- round(LoE_Y_total/n*100, digits=2)
+    LoE_Exp_Perc[m,] <- round(LoE_Y_Exp/Randomised_Exp*100, digits=2)
+    LoE_Control_Perc[m,] <- round(LoE_Y_Control/Randomised_Control*100, digits=2)
+    
+    #AE
+    
+    AE_total_Perc[m,] <-  round(AE_Y_total/n*100, digits=2)
+    AE_Exp_Perc[m,] <- round(AE_Y_Exp/Randomised_Exp*100, digits=2)
+    AE_Control_Perc[m,] <- round(AE_Y_Control/Randomised_Control*100, digits=2)
+    
+    # Total AE + LoE and percentage relative to the entire study population
+    
+    
+    n_AE_and_LoE_T[m, ] <- LoE_Y_total + AE_Y_total
+    AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
+    
+    
+    
+    
     setTxtProgressBar(pb1, m)
   }
   
@@ -829,14 +970,14 @@ tolerance_margin <- 0.1
 difference_Verification <- abs(treatmenteffect_pmmm - colMeans(all_delta_1))
 
 # check if the result satisfies the inequality
-ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification successful", "Verification NOT successful") 
+ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
 
 #hist(treatmenteffect_pmmm - all_betas_1)
 
 hist(all_betas_1)
 
-colMeans(all_betas_1) + 1.96*sd(all_betas_1)/sqrt(n)
-colMeans(all_betas_1) - 1.96*sd(all_betas_1)/sqrt(n)
+#colMeans(all_betas_1) + 1.96*sd(all_betas_1)/sqrt(n)
+#colMeans(all_betas_1) - 1.96*sd(all_betas_1)/sqrt(n)
 
 min(all_betas_1)
 max(all_betas_1)
@@ -881,14 +1022,6 @@ p<- ggplot(data = SimTrial_pmmm_190_1_1, aes(x = visit, y = MADRS10, group = id,
 #p + geom_line() + facet_grid(~ Treat) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
 
-fit_190<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-               Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-             data=SimTrial_pmmm_190_15_1,
-             correlation = corSymm(form=~1 | id),
-             weights = varIdent(form = ~ 1 | visit), 
-             method="REML")
-
-summary(fit_190)
 
 #colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
@@ -898,7 +1031,8 @@ summary(fit_190)
 
 # Table for the paper ----
 
-n_LoE_Control<- n_LoE_Exp <- n_LoE_all/2
+
+
 n_AE_exp
 n_AE_control
 n_No_IE
@@ -907,11 +1041,11 @@ n_No_IE
 
 table_AE_PMMM <- data.frame(
   # descriptives AE  
-  n_AE_control,
-  n_AE_exp); table_AE_PMMM
+  n_AE_Control,
+  n_AE_Exp); table_AE_PMMM
 
-mean(n_AE_control)
-mean(n_AE_exp)
+mean(n_AE_Control)
+mean(n_AE_Exp)
 
 
 
@@ -930,26 +1064,26 @@ mean(n_LoE_Exp)
 table_AE_PMMM %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "AE") %>% 
-  rename(N_C_arm=n_AE_control) %>% 
-  rename(N_E_arm=n_AE_exp)
+  rename(N_C_arm=N.AE.Control) %>% 
+  rename(N_E_arm=N.AE.Exp)
 
 table_LoE_PMMM %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "LoE") %>% 
-  rename(N_C_arm=n_LoE_Control) %>% 
-  rename(N_E_arm=n_LoE_Exp)
+  rename(N_C_arm=N.LoE.Control) %>% 
+  rename(N_E_arm=N.LoE.Exp)
 
 
 tab_PMMM <- tibble(bind_rows(table_AE_PMMM %>% 
                           as.data.frame() %>% 
                           mutate("Intercurrent event" = "AE") %>% 
-                          rename(N_C_arm=n_AE_control) %>% 
-                          rename(N_E_arm=n_AE_exp), 
+                          rename(N_C_arm=N.AE.Control) %>% 
+                          rename(N_E_arm=N.AE.Exp), 
                         table_LoE_PMMM %>% 
                           as.data.frame() %>% 
                           mutate("Intercurrent event" = "LoE") %>% 
-                          rename(N_C_arm=n_LoE_Control) %>% 
-                          rename(N_E_arm=n_LoE_Exp))); tab_PMMM
+                          rename(N_C_arm=N.LoE.Control) %>% 
+                          rename(N_E_arm=N.LoE.Exp))); tab_PMMM
 
 
 
@@ -1017,10 +1151,10 @@ gt(tab2_PMMM) %>%
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # Formula from Burton paper
 #tolerance_margin <- 0.1 # bias allowed
-#std.e <- 0.9608614 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
+#std.e <- 1.0294222 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
 
 #n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
-# 355 trials
+# 408 trials
 # verification of the longitudinal outcomes was successful
 
 
