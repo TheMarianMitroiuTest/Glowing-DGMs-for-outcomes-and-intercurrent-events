@@ -111,7 +111,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 408 # 408 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 10 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -231,7 +231,7 @@ for (s in 1:length(scaling_factor)) {
     #### Generate correlated errors----
     re_means <- c(0, 0, 0, 0, 0, 0, 0)
     
-    size_diag <- 0.001
+    size_diag <- 0.1
     re_covm_proof <- matrix(
       c(size_diag, 0, 0, 0, 0, 0, 0,
         0, size_diag, 0, 0, 0, 0, 0,
@@ -404,15 +404,6 @@ for (s in 1:length(scaling_factor)) {
     #### Generate correlated errors----
     re_means <- c(0, 0, 0, 0, 0, 0, 0)
     
-    size_diag <- 0.001
-    re_covm_proof <- matrix(
-      c(size_diag, 0, 0, 0, 0, 0, 0,
-        0, size_diag, 0, 0, 0, 0, 0,
-        0, 0, size_diag, 0, 0, 0, 0,
-        0, 0, 0, size_diag, 0, 0, 0,
-        0, 0, 0, 0, size_diag, 0, 0,
-        0, 0, 0, 0, 0, size_diag, 0,
-        0, 0, 0, 0, 0, 0, size_diag), nrow = 7)
     
     re_covm_AE_all <- matrix(
       c( 6.9032, 10.336,  8.0566,  7.7261,  5.4332,  6.7676,  6.2245,
@@ -423,7 +414,7 @@ for (s in 1:length(scaling_factor)) {
          6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
     
-    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_AE_all)	; re_AE_all
+    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_LoE_all)	; re_AE_all
     #View(re_AE_all)
     
     re_AE_all <- as.matrix(re_AE_all)
@@ -434,10 +425,8 @@ for (s in 1:length(scaling_factor)) {
     d_AE_all <- data.frame(
       id = rep((n_LoE_all+1):(n_LoE_all+n_AE_all), each = length(visits)),
       visit = visits,
-      Treat = rep(c(rep(1, n_AE_exp), rep(0, n_AE_control)), each = length(visits)),
+       #Treat = rep(c(rep(1, n_AE_exp), rep(0, n_AE_control)), each = length(visits)),
       MADRS10 = rep(NA, n_AE_all)); d_AE_all # mean(Treat)
-    
-
     
     #describe(d_AE_all$Treat)
     
@@ -557,11 +546,11 @@ for (s in 1:length(scaling_factor)) {
     
     # fit a model to check if the estimated parameters are similar/close to the true parameters
     #fit_AE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-    #                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-    #               data=d_AE_all,
-    #              correlation = corSymm(form=~1 | id),
-    #             weights = varIdent(form = ~ 1 | visit), 
-    #            method="REML")
+     #                 Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+      #             data=d_AE_all,
+       #           correlation = corSymm(form=~1 | id),
+        #         weights = varIdent(form = ~ 1 | visit), 
+         #       method="REML")
     
     #summary(fit_AE_all)
     
@@ -595,7 +584,7 @@ for (s in 1:length(scaling_factor)) {
         11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
     
     
-    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
+    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_LoE_all)	; re_No_IE
     #View(re)
     
     re_No_IE <- as.matrix(re_No_IE)
@@ -822,7 +811,7 @@ the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMM
                     Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
                   data=d_pmmm,
                   correlation = corSymm(form=~1 | id),
-                  weights = varIdent(form = ~ 1 | visit), 
+                  #weights = varIdent(form = ~ 1 | visit), 
                   method="REML")
     
     summary(fit_pmmm)
@@ -923,6 +912,9 @@ the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMM
     N_Exp[m,] <- Randomised_Exp
     N_Control[m,] <- Randomised_Control
     
+    colMeans(N_Exp)
+    colMeans(N_Control)
+    
     ## LoE ##
     
     LoE_total_Perc[m,] <- round(LoE_Y_total/n*100, digits=2)
@@ -967,6 +959,7 @@ all_betas_1;
 colMeans(all_delta_1); treatmenteffect_pmmm
 
 tolerance_margin <- 0.1 
+
 difference_Verification <- abs(treatmenteffect_pmmm - colMeans(all_delta_1))
 
 # check if the result satisfies the inequality
@@ -1151,10 +1144,10 @@ gt(tab2_PMMM) %>%
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # Formula from Burton paper
 #tolerance_margin <- 0.1 # bias allowed
-#std.e <- 1.0294222 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
+std.e <- 1.12 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
 
 #n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
-# 408 trials
+# 482 trials
 # verification of the longitudinal outcomes was successful
 
 
