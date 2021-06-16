@@ -95,11 +95,11 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 2000 # number of patients to be simulated (sample size)
+n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 1 # number of generated datasets # number of trials per scaling factor
-scaling_factor <- 1 # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
+m.iterations <- 382 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
 # and check out the verification step
@@ -351,6 +351,8 @@ for (s in 1:length(scaling_factor)) {
         #CFE[s*m,4] <- m
     
     
+    
+    
     #### plot of longitudinal outcomes ----
     # plot the outcomes to see in big lines how they trajectories look like  
     p<- ggplot(data = d, aes(x = visit, y = MADRS10, group = id)) 
@@ -359,13 +361,13 @@ for (s in 1:length(scaling_factor)) {
     
     
     # fit a model to check if the estimated parameters are similar/close to the true parameters
-    #fit <- gls(MADRS10 ~ visit * Treat + Baseline, 
-     #        data=d,
-      #       correlation = corSymm(form=~1 | id),
+    fit <- gls(MADRS10 ~ visit * Treat + Baseline, 
+             data=d,
+             correlation = corSymm(form=~1 | id),
              #weights = varIdent(form = ~ 1 | visit),
-       #      method="REML")
+             method="REML")
     
-    #summary(fit)
+    summary(fit)
     
         #sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"])
         #sqrt(vcov(fit)["Treat", "Treat"])
@@ -387,9 +389,9 @@ for (s in 1:length(scaling_factor)) {
         #summary(fit_lme)
         #model_parameters(fit_lme)
     #### store estimated parameters----
-    #betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
+    betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
     
-    #delta[m, ] <- sum(fit$coefficients[c(8,15)]) # store the treatment effect at the end of the trial, at week 6
+    delta[m, ] <- sum(fit$coefficients[c(8,15)]) # store the treatment effect at the end of the trial, at week 6
     
         #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
         #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
@@ -688,6 +690,19 @@ end_time <- Sys.time() # timestamp for end of simulation
 end_time-start_time # total time to complete the simulation
 
 
+
+betas; 
+colMeans(delta); treatmenteffect
+
+tolerance_margin <- 0.1 
+difference_Verification <- abs(treatmenteffect - colMeans(delta))
+
+# check if the result satisfies the inequality
+ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
+
+
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Plot relevant graphs for the paper----
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -751,11 +766,11 @@ tab_SM <- tibble(bind_rows(table_AE_SM %>%
   
 
 tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
-  summarise("N" = mean(N_C_arm), 
+  summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
-            "N " = mean(N_E_arm), 
+            "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
-            " N " = mean(N_C_arm + N_E_arm),
+            " N " = round(mean(N_C_arm + N_E_arm), digits=1),
             " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
   adorn_totals("row"); tab2_SM
 
@@ -807,6 +822,18 @@ tab_spanner(
     )
 )
 
+
+
+
+
+# determine the number of trials needed to simulate for the verification of the longitudinal outcomes
+# Formula from Burton paper
+#tolerance_margin <- 0.1 # bias allowed
+#std.e <- 0.997 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
+
+#n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
+# 382 trials
+# verification of the longitudinal outcomes was successful
 
 
 
@@ -1470,7 +1497,6 @@ for (s in 1:length(scaling_factor)) {
     N_Exp[m,] <- Randomised_Exp
     N_Control[m,] <- Randomised_Control
 
-    
     
     ## IEGM (intercurrent events generating model)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

@@ -98,7 +98,7 @@ n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 
-m.iterations <- 500 # number of generated datasets 
+m.iterations <- 500 #416 for the verification of the longitudinal outcomes # number of generated datasets 
 
 
 
@@ -109,7 +109,7 @@ p_LoE_sample <-  0.35 #c(0.31, 0.33, 0.34, 0.35, 0.37); mean(p_LoE_sample) # pro
 p_AE_Exp_sample <- 0.10 # c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the experimental arm
 p_AE_Control_sample <- 0.05 # c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
 
-overlap.adjust <- 1.15 # to adjust for AE overlap with LoE
+overlap.adjust <- 1.16 # to adjust for AE overlap with LoE
 
 treatmenteffect <- -3.5
 
@@ -313,7 +313,9 @@ for(m in 1:m.iterations) {
                 method="REML", 
                 data=d)
   
-  summary(fit_lme)
+  #std.e <- 0.1749478*length(visits)
+  
+  #summary(fit_lme)
   betas[m, ] <- fixef(fit_lme)[2:3]
   delta[m, ] <- fixef(fit_lme)[3] * max(visits)
   #-0.788534/0.1696878
@@ -702,7 +704,11 @@ colMeans(betas)
 colMeans(delta) ; treatmenteffect
 
 
+tolerance_margin <- 0.1 
+difference_Verification <- abs(treatmenteffect - colMeans(delta))
 
+# check if the result satisfies the inequality
+ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
 
 
 # compile to report
@@ -758,11 +764,11 @@ tab_SM <- tibble(bind_rows(table_AE_SM %>%
 
 
 tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
-  summarise("N" = mean(N_C_arm), 
+  summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
-            "N " = mean(N_E_arm), 
+            "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
-            " N " = mean(N_C_arm + N_E_arm),
+            " N " = round(mean(N_C_arm + N_E_arm), digits=1),
             " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
   adorn_totals("row"); tab2_SM
 
@@ -839,7 +845,13 @@ gt(tab2_SM) %>%
 
 
 
+# determine the number of trials needed to simulate for the verification of the longitudinal outcomes
+# Formula from Burton paper
+#tolerance_margin <- 0.1 # bias allowed
+#std.e <- 1.04 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
 
-
+#n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
+# 416 trials
+# verification of the longituinal outcomes was successful
 
 

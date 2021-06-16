@@ -698,11 +698,11 @@ tab_SM <- tibble(bind_rows(table_AE_SM %>%
 
 
 tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
-  summarise("N" = mean(N_C_arm), 
+  summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
-            "N " = mean(N_E_arm), 
+            "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
-            " N " = mean(N_C_arm + N_E_arm),
+            " N " = round(mean(N_C_arm + N_E_arm), digits=1),
             " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
   adorn_totals("row"); tab2_SM
 
@@ -761,4 +761,9 @@ gt(tab2_SM) %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#add the for loop stuff
+
+# determine the number of trials needed to simulate for the verification of the longitudinal outcomes
+# the underlying linear mixed effects model used in the JM is the exact same linear mixed effects model from the SPM DGM
+# please see details there.
+# the verification was successful
+

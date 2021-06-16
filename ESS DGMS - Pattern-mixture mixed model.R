@@ -85,7 +85,7 @@ sessionInfo()
 installed.packages()
 
 
-?# Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
+# Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
 
 ## gmail setup----
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
@@ -111,7 +111,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 10# number of generated datasets # number of trials per scaling factor
+m.iterations <- 1# 355 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -230,7 +230,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_LoE_all <- -0.5#-1.6#-0.712452
     beta_v4_treatment_LoE_all <- -1#-2.15#-0.816656
     beta_v5_treatment_LoE_all <- -1.6#-2.75#-0.737112
-    beta_v6_treatment_LoE_all <- -2.15#0#-2#-1.909406  #-1.318160
+    beta_v6_treatment_LoE_all <- -2.1#0#-2#-1.909406  #-1.318160
     
     treatmenteffect_LoE_all <-  beta_v6_treatment_LoE_all ; treatmenteffect_LoE_all
     
@@ -392,16 +392,16 @@ for (s in 1:length(scaling_factor)) {
     beta.baseline_AE_all <- 29.79
     beta_week1_AE_all <- 0.1#0.93#-0.117613
     beta_week2_AE_all <- 0.1#2.3#0.556190
-    beta_week3_AE_all <- 0.2#2.2#0.053362
-    beta_week4_AE_all <- 0.5#3#0.947715 
+    beta_week3_AE_all <- 0.1#2.2#0.053362
+    beta_week4_AE_all <- 0.3#3#0.947715 
     beta_week5_AE_all <- 1#4#1.562001
-    beta_week6_AE_all <- 1#2#1.450964
+    beta_week6_AE_all <- 0#2#1.450964
     
-    beta_v1_treatment_AE_all <- -7.7#-0.5#-0.271627
-    beta_v2_treatment_AE_all <- -12#-1#-0.024667
-    beta_v3_treatment_AE_all <- -11#-1.6#-0.712452
-    beta_v4_treatment_AE_all <- -12#-2.15#-0.816656
-    beta_v5_treatment_AE_all <- -11#-2.75#-0.737112
+    beta_v1_treatment_AE_all <- -6#-0.5#-0.271627
+    beta_v2_treatment_AE_all <- -9.5#-1#-0.024667
+    beta_v3_treatment_AE_all <- -9#-1.6#-0.712452
+    beta_v4_treatment_AE_all <- -10#-2.15#-0.816656
+    beta_v5_treatment_AE_all <- -10.5#-2.75#-0.737112
     beta_v6_treatment_AE_all <- -8#0#-2#-1.909406  #-1.318160
     
     treatmenteffect_AE_all <-  beta_v6_treatment_AE_all ; treatmenteffect_AE_all
@@ -555,19 +555,19 @@ for (s in 1:length(scaling_factor)) {
     
     #### model parameters No IE in both arms----
     beta.baseline_No_IE <- 29.79
-    beta_week1_No_IE <- -2.5#-2#-2.061548
-    beta_week2_No_IE <- -3.5#-3.864898
-    beta_week3_No_IE <- -4.4#-4.360199
-    beta_week4_No_IE <- -5.75# -5.975185
-    beta_week5_No_IE <- -7.4#-7.406465
-    beta_week6_No_IE <- -7#-8.161270
+    beta_week1_No_IE <- -2.75#-2#-2.061548
+    beta_week2_No_IE <- -3.85#-3.864898
+    beta_week3_No_IE <- -4.85#-4.360199
+    beta_week4_No_IE <- -6.35# -5.975185
+    beta_week5_No_IE <- -8.25#-7.406465
+    beta_week6_No_IE <- -7.65#-8.161270
     
-    beta_v1_treatment_No_IE <- -1.3#-1.5# -0.469287
-    beta_v2_treatment_No_IE <- -2#-0.268673
-    beta_v3_treatment_No_IE <- -2.5#-0.724476
-    beta_v4_treatment_No_IE <- -3#-1.037980
-    beta_v5_treatment_No_IE <- -3.5#-1.420660
-    beta_v6_treatment_No_IE <- -4.25#-4.25#-4.195854 # -1.904595
+    beta_v1_treatment_No_IE <- -0.8#-1.5# -0.469287
+    beta_v2_treatment_No_IE <- -1.25#-0.268673
+    beta_v3_treatment_No_IE <- -1.9#-0.724476
+    beta_v4_treatment_No_IE <- -2.35#-1.037980
+    beta_v5_treatment_No_IE <- -2.9#-1.420660
+    beta_v6_treatment_No_IE <- -3.95#-4.25#-4.195854 # -1.904595
   
     treatmenteffect_No_IE <-  beta_v6_treatment_No_IE ; treatmenteffect_No_IE
     
@@ -829,7 +829,7 @@ tolerance_margin <- 0.1
 difference_Verification <- abs(treatmenteffect_pmmm - colMeans(all_delta_1))
 
 # check if the result satisfies the inequality
-ifelse(isTRUE(paste(difference_check) < tolerance_margin), "Verification successful", "Verification NOT successful") 
+ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification successful", "Verification NOT successful") 
 
 #hist(treatmenteffect_pmmm - all_betas_1)
 
@@ -890,16 +890,9 @@ fit_190<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
 
 summary(fit_190)
 
-colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
+#colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
-colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
-
-cbind(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5),
-      rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5),
-      rbind(all_delta_errorz_1, all_delta_errorz_2, all_delta_errorz_3, all_delta_errorz_4, all_delta_errorz_5),
-      rbind(all_confint_fit_1, all_confint_fit_2, all_confint_fit_3, all_confint_fit_4, all_confint_fit_5),
-      rbind(all_N_Exp_1, all_N_Exp_2, all_N_Exp_3, all_N_Exp_4, all_N_Exp_5),
-      rbind(all_N_Control_1, all_N_Control_2, all_N_Control_3, all_N_Control_4, all_N_Control_5))
+#colMeans(rbind(all_delta_1,all_delta_2, all_delta_3, all_delta_4,all_delta_5))
 
 
 
@@ -974,7 +967,7 @@ tab2_PMMM <- tab_PMMM %>% group_by(`Intercurrent event`) %>%
 
 gt(tab2_PMMM) %>% 
   tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Pattern-mixture mixed model DGM")) %>%
-  tab_source_note(md("Averaged over n simulated trials")) %>% 
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations*length(scaling_factor),  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
     label = md("**Control**"),
     columns = c("N", "%")) %>% 
@@ -1018,6 +1011,17 @@ gt(tab2_PMMM) %>%
   )
 
 
+
+
+
+# determine the number of trials needed to simulate for the verification of the longitudinal outcomes
+# Formula from Burton paper
+#tolerance_margin <- 0.1 # bias allowed
+#std.e <- 0.9608614 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
+
+#n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
+# 355 trials
+# verification of the longitudinal outcomes was successful
 
 
 
