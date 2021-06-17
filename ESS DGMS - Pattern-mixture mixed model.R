@@ -111,7 +111,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 8 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 500 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -636,8 +636,8 @@ for (s in 1:length(scaling_factor)) {
     beta_v2_treatment_No_IE <- -1.15#-0.268673
     beta_v3_treatment_No_IE <- -2#-0.724476
     beta_v4_treatment_No_IE <- -2.45#-1.037980
-    beta_v5_treatment_No_IE <- -3.25#-1.420660
-    beta_v6_treatment_No_IE <- 4.75#-4.25#-4.195854 # -1.904595
+    beta_v5_treatment_No_IE <- -3.3#-1.420660
+    beta_v6_treatment_No_IE <- -4.75#-4.25#-4.195854 # -1.904595
   
     treatmenteffect_No_IE <-  beta_v6_treatment_No_IE ; treatmenteffect_No_IE
     
@@ -1152,9 +1152,10 @@ gt(tab2_PMMM) %>%
   )
 
 
+colMeans(all_delta_1); treatmenteffect_pmmm
 
-
-
+min(all_delta_1)
+max(all_delta_1)
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # Formula from Burton paper
 #tolerance_margin <- 0.1 # bias allowed
@@ -1163,7 +1164,6 @@ gt(tab2_PMMM) %>%
 #n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
 # 482 trials
 # verification of the longitudinal outcomes was successful
-
 
 
 
