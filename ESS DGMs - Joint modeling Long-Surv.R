@@ -79,7 +79,6 @@ gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.goog
                   secret = "Orgt-B5-eAEplGIbfWmr4Uhy")
 
 
-
 options(mc.cores = parallel::detectCores()) # M1 with parallel, Old1 without parallel
 
 Scenario <- c("A")
@@ -87,13 +86,126 @@ Scenario <- c("A")
 # simulation
 
 
+set.seed(2147483629) # set seed for reproducibility
+
 n <- 190# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
+m.iterations <- 50
+
+# proportions of Intercurrent events. These correspond to the qt values for the standardisation of time to IE
+# for 0.35 LoE
+p_LoE_sample <- 0.35  
+#for 0.1 AE exp arm
+p_AE_Exp_sample <- 0.10 
+#for 0.05 AE control arm
+p_AE_Control_sample <- 0.05
+
+treatmenteffect <- -3.5
+
+adjustment.fctr <- 1.2
 
 
-set.seed(2147483629) # set seed for reproducibility
+visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# protocolled visits
 
+
+delta <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
+colnames(delta) <-c("TreatmentEffect")
+betas <- matrix(ncol=2,nrow=m.iterations) # object to store parameters for the treatment effect at week 6 based on the MMRM model fitted on each generated dataset
+colnames(betas) <-c("Treat", "visit42:Treat")
+
+pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
+
+#confint_fit <- matrix(ncol=2,nrow=m.iterations) # object to store the 95% confidence interval bounds for the estimated treatment effect
+#colnames(confint_fit) <-c("Lower boundary 95% CI", "Upper boundary 95% CI")
+#delta_errorz <- matrix(ncol=1,nrow=m.iterations) # standard error of the estimated treatment effect
+#colnames(delta_errorz) <- c("SE")
+
+#bias_f <- matrix(ncol=1,nrow=m.iterations) # object to store the bias (estimated treatment effect - true treatment effect)
+#colnames(bias_f) <- c("bias_f")
+
+## Randomisation objects
+N_Exp  <- matrix(ncol=1,nrow=m.iterations)
+colnames(N_Exp) <-c("N randomised Exp")
+
+N_Control  <- matrix(ncol=1,nrow=m.iterations)
+colnames(N_Control) <-c("N randomised Control")
+
+# Intercurrent events objects
+# lack of efficacy (LoE)
+n_LoE_total <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to lack of efficacy at trial level
+colnames(n_LoE_total) <- c("N LoE Total")
+
+n_LoE_Exp <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to lack of efficacy in the experimental arm
+colnames(n_LoE_Exp) <- c("N LoE Exp")
+
+n_LoE_Control <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to lack of efficacy in the control arm
+colnames(n_LoE_Control) <- c("N LoE Control")
+
+
+# Adverse events (AE)
+n_AE_total <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to adverse events at trial level
+colnames(n_AE_total) <- c("N AE Total")
+
+n_AE_Exp <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to adverse events in the experimental arm
+colnames(n_AE_Exp) <- c("N AE Exp")
+
+n_AE_Control <- matrix(ncol=1,nrow=m.iterations) # object to store the number of patients experiencing e.g., treatment discontinuation due to adverse events in the control arm
+colnames(n_AE_Control) <- c("N AE Control")
+
+# AE + LoE Total
+n_AE_and_LoE_T <- matrix(ncol=1,nrow=m.iterations) # object to store the total number of patients experiencing e.g., treatment discontinuation due to lack of efficacy or adverse events at trial level
+colnames(n_AE_and_LoE_T) <- c("N AE and LoE Total")
+
+# For percentages
+# LoE
+# below are objects to store percentages data following the above structure
+LoE_total_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(LoE_total_Perc) <- c("% LoE Total")
+
+LoE_Exp_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(LoE_Exp_Perc) <- c("% LoE Exp")
+
+LoE_Control_Perc<- matrix(ncol=1,nrow=m.iterations) # 
+colnames(LoE_Control_Perc) <- c("% LoE Control")
+
+
+#AE
+AE_total_Perc <-  matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_total_Perc) <- c("% AE Total")
+
+AE_Exp_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_Exp_Perc) <- c("% AE Exp")
+
+AE_Control_Perc <-matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_Control_Perc) <- c("% AE Control")
+
+# AE + LoE percentage
+AE_and_LoE_Perc <- matrix(ncol=1,nrow=m.iterations) # 
+colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
+
+start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
+# it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
+
+
+
+## Begin for loop----
+
+for (m in 1:m.iterations) {
+  
+  
+  # The specification of the model: random intercept and random slope + some random noise
+  # d$MADRS10.true <- (b0 + d$bi_0) + (b1 + d$bi_1) * d$visit +  b2 * d$visit * d$Treat
+  # d$MADRS10_collected <- d$MADRS10.true + rnorm(nrow(d), 0, eps.sd)
+  
+  
+  ### Generate longitudinal outcomes----
+  #### Generate correlated (random) intercepts and slopes for each individual patient----
+  
+  # We used as inspiration the trial 003-002 (ref data analysis paper). Here we used a simplified scenario with linear group trajectories.
+  
+  #### model parameters----
+  
 # linear mixed effects model parameters to generate the longitudinal outcomes
 b0 <- 29.79
 b1 <- -0.55
@@ -103,10 +215,6 @@ bi_covm <- matrix(c(24.611, 0.5869809, 0.5869809, 1.157), nrow = 2)
 bi <- mvrnorm(n, bi_means, bi_covm)	
 eps.sd <-3.247 
 
-
-
-
-visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# protocolled visits
 
 d <- data.frame(
   id = rep(1:n, each = length(visits)),
@@ -122,6 +230,35 @@ d$MADRS10.true <- (b0 + d$bi_0) + (b1 + d$bi_1) * d$visit +  b2 * d$visit * d$Tr
 # generate the what would be observed values of the outcome = true values + some error 
 d$MADRS10_collected <- d$MADRS10.true + rnorm(nrow(d), 0, eps.sd)
 
+
+
+describe(d$bi_0)
+hist(d$bi_0)
+
+describe(d$bi_1)
+hist(d$bi_1)
+
+
+fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat, 
+               random=~1 + visit| id,
+               method="REML", 
+               data=d)
+
+#std.e <- 0.1749478*length(visits)
+
+summary(fit_lme)
+#m<-1
+betas[m, ] <- fixef(fit_lme)[2:3]
+delta[m, ] <- fixef(fit_lme)[3] * max(visits)
+
+
+#m<-1
+# store the number of patients in the objects defined a priori
+Randomised_Exp <- sum(as.numeric(d[,3]))/7 #number of patients in the experimental arm # make sure it is divided by the number of visits (6/7), without or with the baseline included as response
+Randomised_Control <- n-sum(as.numeric(d[,3]))/7  #number of patients in the control arm
+
+N_Exp[m,] <- Randomised_Exp
+N_Control[m,] <- Randomised_Control
 
 
 
@@ -190,9 +327,6 @@ t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lam
 
 describe(t.event_LoE)
 
-
-
-
 #min(t.event_LoE)
 #median(t.event_LoE)
 #max(t.event_LoE)
@@ -210,7 +344,7 @@ describe(t.event_LoE)
 #table(t.event_LoE)
 #t.event_LoE <- round(t.event_LoE*(5/max(t.event_LoE)) + 1 , digits=0)
 
-t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = c(0.50))[[1]]) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
+t.event_LoE <- round(t.event_LoE*(5/quantile(t.event_LoE, probs = p_LoE_sample*adjustment.fctr)[[1]]) + 1 , digits=0) # standardize the time to event (to fit with the trial duration)
 # the standardisation could be to fit tte to the entire trial duration, or to fit it to be at specific visits. We standardise it to fit the entire trial duration (6 weeks) and to have most of the intercurrent events up to and including week 4
 # Other Weibull distributions (parameters) can be used to better describe the wanted time to events
 # Depending on the desired percentages of intercurrent events and how they can be achieved. The standardisation can be used such that only a certain percentage of patients experience
@@ -299,7 +433,7 @@ d_c_exp$t.event_AE_exp <- t.event_AE_exp
 
 #check the rounding!!!!!!!!! to ceiling
 
-t.event_AE_exp <- round(t.event_AE_exp*(5/quantile(t.event_AE_exp, probs = c(0.20))[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+t.event_AE_exp <- round(t.event_AE_exp*(5/quantile(t.event_AE_exp, probs = p_AE_Exp_sample)[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
 # the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
 # the quantile is to 0.2 (2*0.1) to adjust for the trial size, which is twice the arm size.
     #describe(t.event_AE_exp)
@@ -441,7 +575,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   d_c_control$t.event_AE_control <- t.event_AE_control
   
   #t.event_AE_control <- round(t.event_AE_control*(1) + 2 , digits=0) 
-  t.event_AE_control <- round(t.event_AE_control*(5/quantile(t.event_AE_control, probs = c(0.1))[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+  t.event_AE_control <- round(t.event_AE_control*(5/quantile(t.event_AE_control, probs = p_AE_Control_sample)[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
   # the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
   # quantile is to 0.1 (2*0.05) in order to adjust for the trial size, double the arm size.
   
@@ -516,21 +650,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   head(d_c_exp)
   head(d_c_control)
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
 
 
 d_c_c_all <- rbind(d_c_exp, d_c_control)
@@ -560,6 +680,78 @@ d_united$Behavior <- ifelse(d_united$AE_YES==1, "AE",
 #View(d_united)
 
 describe(d_united$Behavior)
+
+
+
+#### assign and save the generated datasets----
+# naming sequence is "SimTrial"_"Method"_"trial sample size"_"iteration number"
+
+assign(paste0("SimTrial_jm", "_", n), d)
+#View(SimTrial_sm_1_5)
+dataset_name.Rdata <- paste0("SimTrial_jm", "_", n, ".Rdata")
+dataset_name <- paste0("SimTrial_jm", "_", n)
+save(dataset_name, file = dataset_name.Rdata)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Intercurrent events descriptives needed for the verification step ----
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LoE_Y <- d_united[ ,c("Treat", "LoE_YES")]
+head(LoE_Y)
+
+LoE_Y_total <- sum(LoE_Y$LoE_YES)/length(visits)
+LoE_Y_Exp <- sum(LoE_Y$LoE_YES[LoE_Y$Treat==1])/length(visits)
+LoE_Y_Control <- sum(LoE_Y$LoE_YES[LoE_Y$Treat==0])/length(visits)
+
+## LoE ##
+tb_LoE_total <- LoE_Y_total
+tb_LoE_Exp <- LoE_Y_Exp
+tb_LoE_Control <- LoE_Y_Control
+
+n_LoE_total[m, ] <-  tb_LoE_total
+n_LoE_Exp[m, ] <- tb_LoE_Exp
+n_LoE_Control[m, ] <- tb_LoE_Control
+
+AE_Y <- d_united[ ,c("Treat", "AE_YES")]
+head(AE_Y)
+
+
+AE_Y_total <- sum(AE_Y$AE_YES)/length(visits)
+AE_Y_Exp <- sum(AE_Y$AE_YES[AE_Y$Treat==1])/length(visits)
+AE_Y_Control <- sum(AE_Y$AE_YES[AE_Y$Treat==0])/length(visits)
+
+## AE ##
+
+tb_AE_total <- AE_Y_total
+tb_AE_Exp <- AE_Y_Exp
+tb_AE_Control <- AE_Y_Control
+
+
+n_AE_total[m, ] <-  tb_AE_total
+n_AE_Exp[m, ] <- tb_AE_Exp
+n_AE_Control[m, ] <- tb_AE_Control
+
+## LoE ##
+
+LoE_total_Perc[m,] <- round(LoE_Y_total/n*100, digits=2)
+LoE_Exp_Perc[m,] <- round(LoE_Y_Exp/Randomised_Exp*100, digits=2)
+LoE_Control_Perc[m,] <- round(LoE_Y_Control/Randomised_Control*100, digits=2)
+
+#AE
+
+AE_total_Perc[m,] <-  round(AE_Y_total/n*100, digits=2)
+AE_Exp_Perc[m,] <- round(AE_Y_Exp/Randomised_Exp*100, digits=2)
+AE_Control_Perc[m,] <- round(AE_Y_Control/Randomised_Control*100, digits=2)
+
+# Total AE + LoE and percentage relative to the entire study population
+
+
+n_AE_and_LoE_T[m, ] <- LoE_Y_total + AE_Y_total
+AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
+
+
 
 
 
@@ -603,7 +795,29 @@ plot_all_JM <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fu
 the_plot_JM <- (plot_all_JM / plot_LoE_JM) | (plot_AE_JM / plot_NoIE_JM); the_plot_JM
 
 
+setTxtProgressBar(pb1, m)
+}
 
+
+end_time <- Sys.time()
+
+end_time-start_time
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# delete what is below
 # All patients with their trajectory 
 # LoE
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
@@ -619,6 +833,40 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 #describe(d_united)
 #View(d_united)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -710,7 +958,7 @@ tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
 
 
 gt(tab2_SM) %>% 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM")) %>%
+  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Joint Model DGM")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
     label = md("**Control**"),
