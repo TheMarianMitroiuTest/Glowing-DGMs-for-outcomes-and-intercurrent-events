@@ -121,7 +121,11 @@ n <- 190# # number of patients to be simulated (sample size)
 
 # ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
 # this is done to increase variability in intercurrent events percentages between trials
-prop_LoE <- 0.35 #c(0.36, 0.37, 0.38, 0.39, 0.40); mean(prop_LoE) # c(0.383) 
+
+prop_LoE_exp <- 0.14
+prop_LoE_control <- 0.21
+prop_LoE <- prop_LoE_exp + prop_LoE_control #c(0.36, 0.37, 0.38, 0.39, 0.40); mean(prop_LoE) # c(0.383) 
+
 prop_AE_exp <- 0.10#c(0.020, 0.025, 0.03, 0.035, 0.04); mean(prop_AE_exp) # c(0.0298) 
 prop_AE_control <-  0.05#c(0.010, 0.0125, 0.0150, 0.0175, 0.020) ; mean(prop_AE_control) # c(0.0158)
 prop_AE <-prop_AE_exp + prop_AE_control
@@ -211,7 +215,14 @@ for (s in 1:length(scaling_factor)) {
 
     ### percentages of intercurrent events to be filled in from the SM tables ----
     sampled_prop_LoE <- sample(prop_LoE, 1)
-    n_LoE_all <- round(sampled_prop_LoE*n * scaling_factor[s], digits = 0) ; n_LoE_all
+    #n_LoE_all <- round(sampled_prop_LoE*n * scaling_factor[s], digits = 0) ; n_LoE_all
+    
+    sampled_prop_LoE_exp <- sample(prop_LoE_exp, 1)
+    n_LoE_exp <- round(sampled_prop_LoE_exp*n * scaling_factor[s], digits = 0) ; n_LoE_exp
+    
+    sampled_prop_LoE_control <- sample(prop_LoE_control, 1)
+    n_LoE_control <- round(sampled_prop_LoE_control*n * scaling_factor[s], digits = 0) ; n_LoE_control
+    n_LoE_all <- n_LoE_exp + n_LoE_control; n_LoE_all
     
     
     sampled_prop_AE_exp <- sample(prop_AE_exp, 1)
@@ -222,7 +233,7 @@ for (s in 1:length(scaling_factor)) {
   
     n_AE_all <- n_AE_exp + n_AE_control ; n_AE_all
     
-    n_No_IE <- n - (n_LoE_all + n_AE_exp + n_AE_control); n_No_IE
+    n_No_IE <- n - (n_LoE_exp + n_LoE_control + n_AE_exp + n_AE_control); n_No_IE
     prop_No_IE <- 1 - (sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control) ; prop_No_IE
   
     
@@ -251,7 +262,7 @@ for (s in 1:length(scaling_factor)) {
         11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
     
     
-    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_LoE_all)	; re_LoE_all
+    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_proof)	; re_LoE_all
     #View(re_LoE_all)
     
     re_LoE_all <- as.matrix(re_LoE_all)
@@ -260,8 +271,11 @@ for (s in 1:length(scaling_factor)) {
     d_LoE_all <- data.frame(
       id = rep(1:n_LoE_all, each = length(visits)),
       visit = visits,
-      Treat = rep(rbinom(n_LoE_all, 1, 0.5), each = length(visits)),
+      Treat = rep(sample(c(rep(1, n_LoE_exp), rep(0, n_LoE_control)), n_LoE_all, replace = F), each = length(visits)),
       MADRS10 = rep(NA, n_LoE_all)); d_LoE_all # mean(Treat)
+    describe(d_LoE_all)
+    #describe(sample(c(rep(1, n_LoE_exp), rep(0, n_LoE_control)), n_LoE_all, replace =F))
+    #describe(rep(c(rep(1, n_LoE_exp), rep(0, n_LoE_control)), each = length(visits)))
     
     #head(re_LoE_all)
     d_LoE_all <- d_LoE_all[order(d_LoE_all$visit, d_LoE_all$id),]; #d_LoE_all
@@ -286,14 +300,14 @@ for (s in 1:length(scaling_factor)) {
     beta_week3_LoE_all <- 1.2#2.2#0.053362
     beta_week4_LoE_all <- 1.8#3#0.947715 
     beta_week5_LoE_all <- 2.8#4#1.562001
-    beta_week6_LoE_all <- 0.95#2#1.450964
+    beta_week6_LoE_all <- 0#2#1.450964
     
-    beta_v1_treatment_LoE_all <- 0#-0.5#-0.271627
-    beta_v2_treatment_LoE_all <- 0.2#-1#-0.024667
-    beta_v3_treatment_LoE_all <- -0.5#-1.6#-0.712452
-    beta_v4_treatment_LoE_all <- -1#-2.15#-0.816656
-    beta_v5_treatment_LoE_all <- -1.6#-2.75#-0.737112
-    beta_v6_treatment_LoE_all <- -2.1#0#-2#-1.909406  #-1.318160
+    beta_v1_treatment_LoE_all <- 0.1#-0.5#-0.271627
+    beta_v2_treatment_LoE_all <- 0.75#-1#-0.024667
+    beta_v3_treatment_LoE_all <- -0.2#-1.6#-0.712452
+    beta_v4_treatment_LoE_all <- -1.15#-2.15#-0.816656
+    beta_v5_treatment_LoE_all <- -1.2#-2.75#-0.737112
+    beta_v6_treatment_LoE_all <- -2.3#0#-2#-1.909406  #-1.318160
     
     treatmenteffect_LoE_all <-  beta_v6_treatment_LoE_all ; treatmenteffect_LoE_all
     
@@ -414,7 +428,7 @@ for (s in 1:length(scaling_factor)) {
          6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
     
-    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_LoE_all)	; re_AE_all
+    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_proof)	; re_AE_all
     #View(re_AE_all)
     
     re_AE_all <- as.matrix(re_AE_all)
@@ -425,10 +439,10 @@ for (s in 1:length(scaling_factor)) {
     d_AE_all <- data.frame(
       id = rep((n_LoE_all+1):(n_LoE_all+n_AE_all), each = length(visits)),
       visit = visits,
-       #Treat = rep(c(rep(1, n_AE_exp), rep(0, n_AE_control)), each = length(visits)),
+       Treat = rep(sample(c(rep(1, n_AE_exp), rep(0, n_AE_control)), n_AE_all, replace = F), each = length(visits)),
       MADRS10 = rep(NA, n_AE_all)); d_AE_all # mean(Treat)
     
-    #describe(d_AE_all$Treat)
+    #describe(sample(c(rep(1, n_AE_exp), rep(0, n_AE_control)), n_AE_all, replace = F))
     
     #head(re_AE_all)
     d_AE_all <- d_AE_all[order(d_AE_all$visit, d_AE_all$id),]; #d_AE_all
@@ -584,7 +598,7 @@ for (s in 1:length(scaling_factor)) {
         11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
     
     
-    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_LoE_all)	; re_No_IE
+    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_proof)	; re_No_IE
     #View(re)
     
     re_No_IE <- as.matrix(re_No_IE)
@@ -616,14 +630,14 @@ for (s in 1:length(scaling_factor)) {
     beta_week3_No_IE <- -4.85#-4.360199
     beta_week4_No_IE <- -6.35# -5.975185
     beta_week5_No_IE <- -8.25#-7.406465
-    beta_week6_No_IE <- -7.65#-8.161270
+    beta_week6_No_IE <- -7#-8.161270
     
-    beta_v1_treatment_No_IE <- -0.8#-1.5# -0.469287
-    beta_v2_treatment_No_IE <- -1.25#-0.268673
-    beta_v3_treatment_No_IE <- -1.9#-0.724476
-    beta_v4_treatment_No_IE <- -2.35#-1.037980
-    beta_v5_treatment_No_IE <- -2.9#-1.420660
-    beta_v6_treatment_No_IE <- -3.95#-4.25#-4.195854 # -1.904595
+    beta_v1_treatment_No_IE <- -0.7#-1.5# -0.469287
+    beta_v2_treatment_No_IE <- -1.15#-0.268673
+    beta_v3_treatment_No_IE <- -2#-0.724476
+    beta_v4_treatment_No_IE <- -2.45#-1.037980
+    beta_v5_treatment_No_IE <- -3.25#-1.420660
+    beta_v6_treatment_No_IE <- -4.75#-4.25#-4.195854 # -1.904595
   
     treatmenteffect_No_IE <-  beta_v6_treatment_No_IE ; treatmenteffect_No_IE
     
@@ -823,7 +837,7 @@ the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMM
     
     re_covm_LoE_all
     
-    treatmenteffect_pmmm <- sampled_prop_LoE * beta_v6_treatment_LoE_all +
+    treatmenteffect_pmmm <- (sampled_prop_LoE_exp*(beta_v6_treatment_LoE_all + beta_week6_LoE_all) - (sampled_prop_LoE_control * beta_week6_LoE_all)) +
       
     (sampled_prop_AE_exp*(beta_v6_treatment_AE_all + beta_week6_AE_all) - (sampled_prop_AE_control * beta_week6_AE_all)) +
     
@@ -831,7 +845,7 @@ the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMM
       
       #sampled_prop_AE_control *  beta_week6_AE_control +
       
-    (1-(sampled_prop_LoE + sampled_prop_AE_exp + sampled_prop_AE_control)) *  beta_v6_treatment_No_IE ; treatmenteffect_pmmm
+    (1-(sampled_prop_LoE_exp + sampled_prop_LoE_control + sampled_prop_AE_exp + sampled_prop_AE_control)) *  beta_v6_treatment_No_IE ; treatmenteffect_pmmm
     
     sum(fit_pmmm$coefficients[c(13)]); treatmenteffect_pmmm
     # store parameters from model fit on each dataset
@@ -1081,11 +1095,11 @@ tab_PMMM <- tibble(bind_rows(table_AE_PMMM %>%
 
 
 tab2_PMMM <- tab_PMMM %>% group_by(`Intercurrent event`) %>%
-  summarise("N" = mean(N_C_arm), 
+  summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
-            "N " = mean(N_E_arm), 
+            "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
-            " N " = mean(N_C_arm + N_E_arm),
+            " N " = round(mean(N_C_arm + N_E_arm), digits=1),
             " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
   adorn_totals("row"); tab2_PMMM
 
@@ -1144,7 +1158,7 @@ gt(tab2_PMMM) %>%
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # Formula from Burton paper
 #tolerance_margin <- 0.1 # bias allowed
-std.e <- 1.12 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
+#std.e <- 1.12 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
 
 #n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
 # 482 trials
