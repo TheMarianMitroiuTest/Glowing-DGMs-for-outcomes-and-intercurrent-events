@@ -32,7 +32,7 @@
 
 
 ## load libraries ----
-#rm(list=ls()) #
+rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
@@ -111,12 +111,12 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 500 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 10 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
 
-n <- 190# # number of patients to be simulated (sample size)
+n <- 600# # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided
 
 # ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
@@ -208,11 +208,13 @@ pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
 # it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
-#s<-1
+s<-1
 ## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
 
+
+    
     ### percentages of intercurrent events to be filled in from the SM tables ----
     sampled_prop_LoE <- sample(prop_LoE, 1)
     #n_LoE_all <- round(sampled_prop_LoE*n * scaling_factor[s], digits = 0) ; n_LoE_all
@@ -262,7 +264,7 @@ for (s in 1:length(scaling_factor)) {
         11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
     
     
-    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_LoE_all)	; re_LoE_all
+    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_proof)	; re_LoE_all
     #View(re_LoE_all)
     
     re_LoE_all <- as.matrix(re_LoE_all)
@@ -307,7 +309,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_LoE_all <- -0.2#-1.6#-0.712452
     beta_v4_treatment_LoE_all <- -1.15#-2.15#-0.816656
     beta_v5_treatment_LoE_all <- -1.2#-2.75#-0.737112
-    beta_v6_treatment_LoE_all <- -2.3#0#-2#-1.909406  #-1.318160
+    beta_v6_treatment_LoE_all <- 0#0#-2#-1.909406  #-1.318160
     
     treatmenteffect_LoE_all <-  beta_v6_treatment_LoE_all ; treatmenteffect_LoE_all
     
@@ -428,7 +430,7 @@ for (s in 1:length(scaling_factor)) {
          6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
     
-    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_AE_all)	; re_AE_all
+    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_proof)	; re_AE_all
     #View(re_AE_all)
     
     re_AE_all <- as.matrix(re_AE_all)
@@ -470,7 +472,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_AE_all <- -9#-1.6#-0.712452
     beta_v4_treatment_AE_all <- -10#-2.15#-0.816656
     beta_v5_treatment_AE_all <- -10.5#-2.75#-0.737112
-    beta_v6_treatment_AE_all <- -8#0#-2#-1.909406  #-1.318160
+    beta_v6_treatment_AE_all <- 0 #0#-2#-1.909406  #-1.318160
     
     treatmenteffect_AE_all <-  beta_v6_treatment_AE_all ; treatmenteffect_AE_all
     
@@ -598,7 +600,7 @@ for (s in 1:length(scaling_factor)) {
         11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
     
     
-    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
+    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_proof)	; re_No_IE
     #View(re)
     
     re_No_IE <- as.matrix(re_No_IE)
@@ -637,7 +639,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_No_IE <- -2#-0.724476
     beta_v4_treatment_No_IE <- -2.45#-1.037980
     beta_v5_treatment_No_IE <- -3.3#-1.420660
-    beta_v6_treatment_No_IE <- -4.75#-4.25#-4.195854 # -1.904595
+    beta_v6_treatment_No_IE <- -7#-4.25#-4.195854 # -1.904595
   
     treatmenteffect_No_IE <-  beta_v6_treatment_No_IE ; treatmenteffect_No_IE
     
@@ -724,7 +726,7 @@ for (s in 1:length(scaling_factor)) {
     #fit_No_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
      #                Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
       #             data=d_No_IE,
-       #            correlation = corSymm(form=~1 | id),
+       #           correlation = corSymm(form=~1 | id),
         #           weights = varIdent(form = ~ 1 | visit), 
          #          method="REML")
     
@@ -757,6 +759,8 @@ for (s in 1:length(scaling_factor)) {
                     #d_AE_exp,
                     #d_AE_control,
                     d_No_IE)
+    
+    describe(d_pmmm)
     
     head(d_LoE_all)
     head(d_AE_all)
@@ -816,7 +820,6 @@ for (s in 1:length(scaling_factor)) {
 
     
     
-    
     ##### plots for the paper----
 the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMMM) ; the_plot_PMMM
     
@@ -830,7 +833,9 @@ the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMM
     
     summary(fit_pmmm)
     
-    describe(d_pmmm)
+    #describe(d_pmmm)
+    
+    t.test(d_pmmm$MADRS10[d_pmmm$Treat==1 & d_pmmm$visit==42], d_pmmm$MADRS10[d_pmmm$Treat==0 & d_pmmm$visit==42])
     
     #describe(d_pmmm)
     getVarCov(fit_pmmm, individual = 1)
@@ -870,7 +875,6 @@ the_plot_PMMM <- (plot_all_PMMM / plot_LoE_PMMM) | (plot_AE_PMMM / plot_NoIE_PMM
     
     dataset_name.Rdata <- paste0("SimTrial_pmmm", "_", n,"_", m, "_", s, ".Rdata")
     dataset_name <- paste0("SimTrial_pmmm", "_", n, "_", m, "_", s)
-    
     save(dataset_name, file = dataset_name.Rdata)
     
     
@@ -981,7 +985,7 @@ ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification 
 
 #hist(treatmenteffect_pmmm - all_betas_1)
 
-hist(all_betas_1)
+#hist(all_betas_1)
 
 #colMeans(all_betas_1) + 1.96*sd(all_betas_1)/sqrt(n)
 #colMeans(all_betas_1) - 1.96*sd(all_betas_1)/sqrt(n)
@@ -989,8 +993,8 @@ hist(all_betas_1)
 min(all_betas_1)
 max(all_betas_1)
 
-describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==1])
-describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==0])
+#describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==1])
+#describe(SimTrial_pmmm_190_1_1$LoE_Yes[SimTrial_pmmm_190_1_1$Treat==0])
 
 #### Visualisation of trajectories and patterns
 
@@ -1166,6 +1170,6 @@ max(all_delta_1)
 # verification of the longitudinal outcomes was successful
 
 
-
+#describe(SimTrial_pmmm_190_75_1)
 
 
