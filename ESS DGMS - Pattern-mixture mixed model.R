@@ -116,7 +116,7 @@ scaling_factor <-  c(1) # this is used for coding consistency between the four m
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
 
-n <- 600# # number of patients to be simulated (sample size)
+n <- 190# # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided
 
 # ranges of probabilities centered around desired percentages of each intercurrent events averaged over all simulated trials
