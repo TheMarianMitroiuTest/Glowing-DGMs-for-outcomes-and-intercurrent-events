@@ -95,10 +95,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 190 # number of patients to be simulated (sample size)
+n <- 2000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 10 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -979,6 +979,7 @@ logit_LoE <- glm(LoE_Yes ~ -1 + CfB,
                  family = "binomial")
 
 summary(logit_LoE)
+View(SimTrial_sm_2000_1_5)
 
 predicted_LoE <- predict(logit_LoE, type="response", newdata=SimTrial_sm_2000_1_5)
 
@@ -992,7 +993,7 @@ low_boundary_prob_LoE <- min(probz_predicted_LoE_Yes) ; low_boundary_prob_LoE
 
 ## AE experimental arm----
 #logit(Pr(AE_exp))= fi_AE_exp * (Y_i0 - Y_i2)
-logit_AE_exp <- glm(AE_Exp_Yes ~ -1 + CfW2,
+logit_AE_exp <- glm(AE_Exp_Yes ~ -1 + CfW1,
                  data = trial_AE_exp,
                  family = "binomial")
 
@@ -1011,7 +1012,7 @@ low_boundary_prob_AE_exp <- min(probz_predicted_AE_exp_Yes)  ;  low_boundary_pro
 
 ## AE  control arm----
 #logit(Pr(AE_control))= fi_AE_control * (Y_i0 - Y_i2)
-logit_AE_control <- glm(AE_Control_Yes ~ -1 + CfW2,
+logit_AE_control <- glm(AE_Control_Yes ~ -1 + CfW1,
                     data = trial_AE_control,
                     family = "binomial")
 
@@ -1034,7 +1035,7 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 # fit LMM model on the simulated trial
 # fit the glm to get the intercurrent events models with random effects in the linear predictor
 
-
+SimTrial_sm_2000_1_5 <- SimTrial_sm_2000_1_1
 class(SimTrial_sm_2000_1_5$Visit)
 SimTrial_sm_2000_1_5$Visit <- as.numeric(SimTrial_sm_2000_1_5$Visit)-1
 
@@ -1044,7 +1045,7 @@ summary(fit_lmer)
 fit_lme <- lme(fixed = MADRS10 ~ Visit + Visit : Treat, 
               random = ~ 1 + Visit| id,
               method ="REML", 
-               data = SimTrial_sm_2000_1_5_surv)
+               data = SimTrial_sm_2000_1_5)
 
 summary(fit_lme)
 
@@ -1218,7 +1219,7 @@ Scenario <- c("A")
 set.seed(2147483629)
 #set.seed(2147483399)
 m.iterations <- 1# number of generated datasets # number of trials per scaling factor
-scaling_factor <-  c(0.5, 1.0, 1.5, 2.0, 2.5)
+scaling_factor <-  c(1)#c(0.5, 1.0, 1.5, 2.0, 2.5)
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
 #c(0.25, 0.5, 1, 2, 2.5) steps for scaling factor
@@ -1351,7 +1352,7 @@ for (s in 1:length(scaling_factor)) {
     d <- data.frame(
       id = rep(1:n, each = length(visits)),
       visit = visits,
-      Treat = rep(cccccc, each = length(visits)),
+      Treat = rep(rbinom(n, 1, 0.5), each = length(visits)),
       MADRS10 = rep(NA, n)); d # mean(Treat)
     
     d <- d[order(d$visit, d$id),]; #d
@@ -1475,21 +1476,21 @@ for (s in 1:length(scaling_factor)) {
     
         #summary(fit_lme)
         #model_parameters(fit_lme)
-    
+    #m<-1
     ### Store estimated parameters
     betas[m, ] <- fit$coefficients[c(7,13)]
     
     delta[m, ] <- sum(fit$coefficients[c(7,13)])
     
-    bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
+    #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
     
-    delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
+    #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
     
-    delta_errorz[m, ] <- delta_error 
+    #delta_errorz[m, ] <- delta_error 
     
     
-    confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
-    confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
+    #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
+    #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
     
     Randomised_Exp <- sum(d[,3])/6 #number of patients in the experimental arm
     Randomised_Control <- n-sum(d[,3])/6 #number of patients in the control arm
@@ -1517,16 +1518,21 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_w$CfB <- d_mis_w[,3] - d_mis_w[,9]; d_mis_w # create the CfB variable
     
-    d_mis_w$CfW2 <- d_mis_w[,3] - d_mis_w[,5]; d_mis_w # create the CfW2 variable
+    #View(d_mis_w)
+    
+    d_mis_w$CfW1 <- d_mis_w[,3] - d_mis_w[,4]; d_mis_w # create the CfW2 variable
     
     d_mis_L <- d_mis_w %>% gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
     
+    ??predict
+    
     d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
         #describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
+    View(d_mis_L)
     
-    d_mis_L$LoE_yes <- ifelse(d_mis_L$predicted_LoE < up_boundary_prob_LoE & d_mis_L$predicted_LoE > low_boundary_prob_LoE, 1, 0)
+    d_mis_L$LoE_yes <- rep(rbinom(length(unique(d_mis_L$id)), 1, unique(d_mis_L$predicted_LoE)), each = length(visits)) 
     d_mis_L$CfB
     
     trial_AE_X <- d_mis_L[d_mis_L$Treat==1,]
@@ -1534,30 +1540,31 @@ for (s in 1:length(scaling_factor)) {
     trial_AE_X$predicted_AE <- predict(logit_AE_exp, type="response", newdata = trial_AE_X) #  predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the experimental arm
         #describe(predict(logit_LoE, type="response", newdata=d_mis_L))
     
-    trial_AE_X$AE_yes <- ifelse(trial_AE_X$predicted_AE  < 0.28 & trial_AE_X$predicted_AE  > low_boundary_prob_AE_exp, 1, 0)
+    trial_AE_X$AE_yes <- rep(rbinom(length(unique(trial_AE_X$id)), 1, unique(trial_AE_X$predicted_AE)), each = length(visits)) 
     
-    trial_AE_X$CfW2
+    trial_AE_X$CfW1
     
     trial_AE_C <- d_mis_L[d_mis_L$Treat==0,]
     
     trial_AE_C$predicted_AE <- predict(logit_AE_control, type="response", newdata = trial_AE_C) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the control arm
 
     ### need to change here to not use a cutoff anymore, but directly rbinom with means equal to the estimated probabilities from the logit models
-    trial_AE_C$AE_yes <- ifelse(trial_AE_C$predicted_AE  < up_boundary_prob_AE_control & trial_AE_C$predicted_AE  > low_boundary_prob_AE_control, 1, 0)
+    trial_AE_C$AE_yes <- rep(rbinom(length(unique(trial_AE_C$id)), 1, unique(trial_AE_C$predicted_AE)), each = length(visits)) 
     
-    trial_AE_C$CfW2
+    trial_AE_C$CfW1
     
     
     # AE and LoE in experimental arm
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #View(trial_AE_X)
     trial_AE_X$AE_YES <- ifelse(trial_AE_X[,10]==1, 1, 0)
-    trial_AE_X$LoE_YES <- ifelse(trial_AE_X[,10]==0 & trial_AE_X[,8]==1 , 1, 0)
+    trial_AE_X$LoE_YES <- ifelse(trial_AE_X[,10]==0 & trial_AE_X[,8]==1, 1, 0)
     
     
     # AE and LoE in control arm #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~#
-    trial_AE_C$LoE_YES <- ifelse(trial_AE_C[,8]==1, 1, 0)
-    trial_AE_C$AE_YES <- ifelse(trial_AE_C[,8]==0 & trial_AE_C[,10]==1, 1, 0)
+    trial_AE_C$AE_YES <- ifelse(trial_AE_C[,10]==1, 1, 0)
+    trial_AE_C$LoE_YES <- ifelse(trial_AE_C[,10]==0 & trial_AE_C[,8]==1, 1, 0)
 
   
     d_mis_LL <- rbind(trial_AE_X, trial_AE_C)
@@ -1683,10 +1690,10 @@ for (s in 1:length(scaling_factor)) {
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    
-    d_mis_L_LoE <- d_mis_L[d_mis_L$LoE_YES==1,] # subset only patients that experienced LoE
-    d_mis_L_AE <- d_mis_L[d_mis_L$AE_Yes==1,] # subset only patients that experienced AE
-    d_mis_L_NoIE <- d_mis_L[d_mis_L$LoE_YES==0 & d_mis_L$AE_Yes==0,] # subset only patients that did not experience any IE
+  #  head(d_mis_LL)
+    d_mis_LL_LoE <- d_mis_LL[d_mis_LL$LoE_YES==1,] # subset only patients that experienced LoE
+    d_mis_LL_AE <- d_mis_LL[d_mis_LL$AE_YES==1,] # subset only patients that experienced AE
+    d_mis_LL_NoIE <- d_mis_LL[d_mis_LL$LoE_YES==0 & d_mis_LL$AE_YES==0,] # subset only patients that did not experience any IE
     
         # View(d_mis_L)
     
@@ -1696,7 +1703,7 @@ for (s in 1:length(scaling_factor)) {
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark red") + facet_wrap(~ Treat)
     
     # just LoE patients with their trajectory
-    p<- ggplot(data = d_mis_L_LoE, aes(x = Visit, y = MADRS10, group = id))
+    p<- ggplot(data = d_mis_LL_LoE, aes(x = Visit, y = MADRS10, group = id))
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
     
@@ -1704,12 +1711,12 @@ for (s in 1:length(scaling_factor)) {
     
     
     # All patients with their trajectory with different colours by AE (Y/N)
-    p<- ggplot(data = d_mis_L, aes(x = Visit, y = MADRS10, group = id, color=AE_Yes))
+    p<- ggplot(data = d_mis_LL, aes(x = Visit, y = MADRS10, group = id, color=AE_YES))
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark red") + facet_wrap(~ Treat)
     
     # just AE patients with their trajectory
-    p<- ggplot(data = d_mis_L_AE, aes(x = Visit, y = MADRS10, group = id))
+    p<- ggplot(data = d_mis_LL_AE, aes(x = Visit, y = MADRS10, group = id))
     #p + geom_line() + facet_grid(~ Treat) 
     p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)
     
@@ -1740,3 +1747,12 @@ end_time-start_time
 colMeans(rbind(all_betas_1,all_betas_2, all_betas_3, all_betas_4,all_betas_5))
 
 # end of code
+
+
+# make the stochastic SM automatic
+# add the gt table
+# add Rutger's code to determine the logit models parameters to get the right percentages of intercurrent events
+
+
+
+
