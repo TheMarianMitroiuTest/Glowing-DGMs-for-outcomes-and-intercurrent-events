@@ -111,7 +111,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 10 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 8 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -262,7 +262,7 @@ for (s in 1:length(scaling_factor)) {
         11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
     
     
-    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_proof)	; re_LoE_all
+    re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_LoE_all)	; re_LoE_all
     #View(re_LoE_all)
     
     re_LoE_all <- as.matrix(re_LoE_all)
@@ -428,7 +428,7 @@ for (s in 1:length(scaling_factor)) {
          6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
          6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
     
-    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_proof)	; re_AE_all
+    re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_AE_all)	; re_AE_all
     #View(re_AE_all)
     
     re_AE_all <- as.matrix(re_AE_all)
@@ -598,7 +598,7 @@ for (s in 1:length(scaling_factor)) {
         11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
     
     
-    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_proof)	; re_No_IE
+    re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
     #View(re)
     
     re_No_IE <- as.matrix(re_No_IE)
@@ -637,7 +637,7 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment_No_IE <- -2#-0.724476
     beta_v4_treatment_No_IE <- -2.45#-1.037980
     beta_v5_treatment_No_IE <- -3.25#-1.420660
-    beta_v6_treatment_No_IE <- -4.75#-4.25#-4.195854 # -1.904595
+    beta_v6_treatment_No_IE <- 4.75#-4.25#-4.195854 # -1.904595
   
     treatmenteffect_No_IE <-  beta_v6_treatment_No_IE ; treatmenteffect_No_IE
     
