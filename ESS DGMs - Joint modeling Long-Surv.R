@@ -91,7 +91,7 @@ set.seed(2147483629) # set seed for reproducibility
 n <- 190# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 50
+m.iterations <- 10
 
 # proportions of Intercurrent events. These correspond to the qt values for the standardisation of time to IE
 # for 0.35 LoE
@@ -433,7 +433,7 @@ d_c_exp$t.event_AE_exp <- t.event_AE_exp
 
 #check the rounding!!!!!!!!! to ceiling
 
-t.event_AE_exp <- round(t.event_AE_exp*(5/quantile(t.event_AE_exp, probs = p_AE_Exp_sample)[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+t.event_AE_exp <- round(t.event_AE_exp*(5/quantile(t.event_AE_exp, probs = p_AE_Exp_sample*2)[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
 # the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
 # the quantile is to 0.2 (2*0.1) to adjust for the trial size, which is twice the arm size.
     #describe(t.event_AE_exp)
@@ -575,7 +575,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   d_c_control$t.event_AE_control <- t.event_AE_control
   
   #t.event_AE_control <- round(t.event_AE_control*(1) + 2 , digits=0) 
-  t.event_AE_control <- round(t.event_AE_control*(5/quantile(t.event_AE_control, probs = p_AE_Control_sample)[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
+  t.event_AE_control <- round(t.event_AE_control*(5/quantile(t.event_AE_control, probs = p_AE_Control_sample*2)[[1]]) + 1, digits=0) # at this step you can steer more or less extra the timings of AE or any other intercurrent event
   # the standardisation can be used to fit the intercurrent events at a specific visit or for a specific visits interval
   # quantile is to 0.1 (2*0.05) in order to adjust for the trial size, double the arm size.
   
@@ -669,7 +669,7 @@ d_united$Treat <- factor(d_united$Treat)
 d_united$LoE_yes <- factor(d_united$LoE_yes)
 d_united$AE_yes <- factor(d_united$AE_yes)
 
-
+describe(d_united$AE_yes)
 d_united$AE_YES <- ifelse(d_united$AE_yes==1, 1, 0)
 d_united$LoE_YES <- ifelse(d_united$AE_yes==0 & d_united$LoE_yes==1, 1, 0)
 
