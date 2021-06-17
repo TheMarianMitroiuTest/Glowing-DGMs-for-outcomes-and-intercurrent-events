@@ -111,7 +111,7 @@ p_AE_Control_sample <- 0.05 # c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Contr
 
 overlap.adjust <- 1.16 # to adjust for AE overlap with LoE
 
-treatmenteffect <- -3.5
+
 
 
 visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	

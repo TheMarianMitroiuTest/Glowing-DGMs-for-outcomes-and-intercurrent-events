@@ -103,7 +103,7 @@ p_AE_Control_sample <- 0.05
 
 treatmenteffect <- -3.5
 
-adjustment.fctr <- 1.2
+adjustment.fctr <- 1.4
 
 
 visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# protocolled visits
