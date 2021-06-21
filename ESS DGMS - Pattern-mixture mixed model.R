@@ -111,7 +111,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 1 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 482 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -208,11 +208,10 @@ pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
 start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
 # it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
-s<-1
+#s<-1
 ## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
-  
   
       
       ### percentages of intercurrent events to be filled in from the SM tables ----
@@ -244,7 +243,7 @@ for (s in 1:length(scaling_factor)) {
       #### Generate correlated errors----
       re_means <- c(0, 0, 0, 0, 0, 0, 0)
       
-      size_diag <- 0.001
+      size_diag <- 0.1
       re_covm_proof <- matrix(
         c(size_diag, 0, 0, 0, 0, 0, 0,
           0, size_diag, 0, 0, 0, 0, 0,
@@ -264,7 +263,7 @@ for (s in 1:length(scaling_factor)) {
           11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
       
       
-      re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_proof)	; re_LoE_all
+      re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_LoE_all)	; re_LoE_all
       #View(re_LoE_all)
       
       re_LoE_all <- as.matrix(re_LoE_all)
@@ -307,11 +306,11 @@ for (s in 1:length(scaling_factor)) {
       beta_week6_LoE_all <- 0#2#1.450964
       
       beta_v1_treatment_LoE_all <- 0.1#-0.5#-0.271627
-      beta_v2_treatment_LoE_all <- 0.75#-1#-0.024667
+      beta_v2_treatment_LoE_all <- 0.8#-1#-0.024667
       beta_v3_treatment_LoE_all <- -0.2#-1.6#-0.712452
-      beta_v4_treatment_LoE_all <- -1.15#-2.15#-0.816656
-      beta_v5_treatment_LoE_all <- -1.2#-2.75#-0.737112
-      beta_v6_treatment_LoE_all <- 0#0#-2#-1.909406  #-1.318160
+      beta_v4_treatment_LoE_all <- -0.5#-2.15#-0.816656
+      beta_v5_treatment_LoE_all <- -0.5#-2.75#-0.737112
+      beta_v6_treatment_LoE_all <- -1#0#-2#-1.909406  #-1.318160
       
       treatmenteffect_LoE_all <-  beta_v6_treatment_LoE_all ; treatmenteffect_LoE_all
       
@@ -394,20 +393,21 @@ for (s in 1:length(scaling_factor)) {
       #d_LoE_all
       
       # fit a model to check if the estimated parameters are similar/close to the true parameters
-      fit_LoE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                         Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-                       data=d_LoE_all,
-                       correlation = corSymm(form=~1 | id),
-                       weights = varIdent(form = ~ 1 | visit), 
-                       method="REML")
+      #fit_LoE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
+       #                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+        #               data=d_LoE_all,
+         #              correlation = corSymm(form=~1 | id),
+          #             weights = varIdent(form = ~ 1 | visit), 
+           #            method="REML")
       
-      summary(fit_LoE_all)
+      #summary(fit_LoE_all)
       
       t.test(d_LoE_all$MADRS10[d_LoE_all$Treat==1 & d_LoE_all$visit==42], 
              d_LoE_all$MADRS10[d_LoE_all$Treat==0 & d_LoE_all$visit==42])
-      
+      #29.26483 - 29.85404 
       #27.48376 -  29.78916 
-      
+      #27.49178 - 29.79398 
+      #28.79178  29.79398 
       #fit_LoE_all$coefficients[c(13)]
       
       #sum(fit_LoE_all$coefficients[c(13)]); treatmenteffect_LoE_all
@@ -437,7 +437,7 @@ for (s in 1:length(scaling_factor)) {
            6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
            6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
       
-      re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_proof)	; re_AE_all
+      re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_AE_all)	; re_AE_all
       #View(re_AE_all)
       
       re_AE_all <- as.matrix(re_AE_all)
@@ -474,12 +474,12 @@ for (s in 1:length(scaling_factor)) {
       beta_week5_AE_all <- 1#4#1.562001
       beta_week6_AE_all <- 0#2#1.450964
       
-      beta_v1_treatment_AE_all <- -6#-0.5#-0.271627
-      beta_v2_treatment_AE_all <- -9.5#-1#-0.024667
-      beta_v3_treatment_AE_all <- -9#-1.6#-0.712452
-      beta_v4_treatment_AE_all <- -10#-2.15#-0.816656
-      beta_v5_treatment_AE_all <- -10.5#-2.75#-0.737112
-      beta_v6_treatment_AE_all <- -8 #0#-2#-1.909406  #-1.318160
+      beta_v1_treatment_AE_all <- -2#-0.5#-0.271627
+      beta_v2_treatment_AE_all <- -4#-1#-0.024667
+      beta_v3_treatment_AE_all <- -4#-1.6#-0.712452
+      beta_v4_treatment_AE_all <- -3.4#-2.15#-0.816656
+      beta_v5_treatment_AE_all <- -5#-2.75#-0.737112
+      beta_v6_treatment_AE_all <- -5 #0#-2#-1.909406  #-1.318160
       
       treatmenteffect_AE_all <-  beta_v6_treatment_AE_all ; treatmenteffect_AE_all
       
@@ -568,20 +568,22 @@ for (s in 1:length(scaling_factor)) {
       #d_AE_all
       
       # fit a model to check if the estimated parameters are similar/close to the true parameters
-      fit_AE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                        Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-                     data=d_AE_all,
-                    correlation = corSymm(form=~1 | id),
-                   weights = varIdent(form = ~ 1 | visit), 
-                  method="REML")
+      #fit_AE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
+       #                 Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+        #             data=d_AE_all,
+         #           correlation = corSymm(form=~1 | id),
+          #         weights = varIdent(form = ~ 1 | visit), 
+           #       method="REML")
       
-      summary(fit_AE_all)
+      #summary(fit_AE_all)
       
       t.test(d_AE_all$MADRS10[d_AE_all$Treat==1 & d_AE_all$visit==42], 
              d_AE_all$MADRS10[d_AE_all$Treat==0 & d_AE_all$visit==42])
       
-      #21.78548  - 29.79121 
       
+      #24.77475 - 29.79620 
+      #21.78548  - 29.79121 
+      #21.77475 - 29.79620 
       #fit_AE_all$coefficients[c(13)]
       
       #sum(fit_AE_all$coefficients[c(13)]); treatmenteffect_AE_all
@@ -612,7 +614,7 @@ for (s in 1:length(scaling_factor)) {
           11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
       
       
-      re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_proof)	; re_No_IE
+      re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
       #View(re)
       
       re_No_IE <- as.matrix(re_No_IE)
@@ -648,10 +650,10 @@ for (s in 1:length(scaling_factor)) {
       
       beta_v1_treatment_No_IE <- -0.7#-1.5# -0.469287
       beta_v2_treatment_No_IE <- -1.15#-0.268673
-      beta_v3_treatment_No_IE <- -2#-0.724476
-      beta_v4_treatment_No_IE <- -2.45#-1.037980
-      beta_v5_treatment_No_IE <- -3.3#-1.420660
-      beta_v6_treatment_No_IE <- -4.75#-4.25#-4.195854 # -1.904595
+      beta_v3_treatment_No_IE <- -1.5#-0.724476
+      beta_v4_treatment_No_IE <- -2.25#-1.037980
+      beta_v5_treatment_No_IE <- -2#-1.420660
+      beta_v6_treatment_No_IE <- -4#-4.25#-4.195854 # -1.904595
     
       treatmenteffect_No_IE <-  beta_v6_treatment_No_IE ; treatmenteffect_No_IE
       
@@ -735,20 +737,21 @@ for (s in 1:length(scaling_factor)) {
       d_No_IE$V42[d_No_IE$visit == 42] <- 1
       
       # fit a model to check if the estimated parameters are similar/close to the true parameters
-      fit_No_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                      Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
-                     data=d_No_IE,
-                    correlation = corSymm(form=~1 | id),
-                     weights = varIdent(form = ~ 1 | visit), 
-                     method="REML")
+      #fit_No_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
+       #               Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+        #             data=d_No_IE,
+         #           correlation = corSymm(form=~1 | id),
+          #           weights = varIdent(form = ~ 1 | visit), 
+           #          method="REML")
       
   
-      summary(fit_No_IE)
+      #summary(fit_No_IE)
       
       t.test(d_No_IE$MADRS10[d_No_IE$Treat==1 & d_No_IE$visit==42], 
              d_No_IE$MADRS10[d_No_IE$Treat==0 & d_No_IE$visit==42])
-      
+      #18.79236 - 22.79606 
       #18.03998  - 22.79172 
+      #20.74236 -  22.79606 
       #getVarCov(fit_No_IE)
       #vcov(fit_No_IE)
       #re_covm_proof
@@ -853,31 +856,30 @@ for (s in 1:length(scaling_factor)) {
     
     #describe(d_pmmm)
     
-    t.test(d_pmmm$MADRS10[d_pmmm$Treat==1 & d_pmmm$visit==42], d_pmmm$MADRS10[d_pmmm$Treat==0 & d_pmmm$visit==42])
-    
+    #t.test(d_pmmm$MADRS10[d_pmmm$Treat==1 & d_pmmm$visit==42], d_pmmm$MADRS10[d_pmmm$Treat==0 & d_pmmm$visit==42])
+    #22.78871 - 26.51859 
     #27.36382 -  29.79062 
     #23.79239 -  26.35924 
-    22.15974 -  26.35924 
-      
-    #take it backwawrds to refill each value with the right beta and see what
-    #resume here, check betas
+    #22.15974 -  26.35924 
+    #21.39779 - 26.55417 
+    #22.77710  - 26.56528 
+    #22.8449 -  26.51859
+    #22.84451  - 26.36479 
+    
+    #22.81197 - 26.33347 
     
     #21.50259  - 26.35924 
     
     #describe(d_pmmm)
     getVarCov(fit_pmmm, individual = 1)
-    
+     
     re_covm_LoE_all
     
-    treatmenteffect_pmmm <- (sampled_prop_LoE_exp*(beta_v6_treatment_LoE_all + beta_week6_LoE_all) - (sampled_prop_LoE_control * beta_week6_LoE_all)) +
-      
-    (sampled_prop_AE_exp*(beta_v6_treatment_AE_all + beta_week6_AE_all) - (sampled_prop_AE_control * beta_week6_AE_all)) +
+    #=((C18*J7) + (D18*J2) + J13*(E11+E18))/(J2+J7+J13) - ((J8*C11) + (J3*D11) + (J14*E11)/(J3+J8+J14))
     
-     # sampled_prop_AE_exp *  beta_week6_AE_exp +
-      
-      #sampled_prop_AE_control *  beta_week6_AE_control +
-      
-    (1-(sampled_prop_LoE_exp + sampled_prop_LoE_control + sampled_prop_AE_exp + sampled_prop_AE_control)) *  beta_v6_treatment_No_IE ; treatmenteffect_pmmm
+    treatmenteffect_pmmm <- 
+      ((beta_v6_treatment_LoE_all*sampled_prop_LoE_exp) + (beta_v6_treatment_AE_all*sampled_prop_AE_exp) + (prop_No_IE/2)*(beta_v6_treatment_No_IE+beta_week6_No_IE))/(sampled_prop_LoE_exp+sampled_prop_AE_exp+prop_No_IE/2) - 
+      ((sampled_prop_LoE_control*beta_week6_LoE_all) + (sampled_prop_AE_control*beta_week6_AE_all) + ((prop_No_IE/2))*beta_week6_No_IE)/(sampled_prop_LoE_control+sampled_prop_AE_control+prop_No_IE/2); treatmenteffect_pmmm
     
     sum(fit_pmmm$coefficients[c(13)]); treatmenteffect_pmmm
     # store parameters from model fit on each dataset
@@ -1187,6 +1189,10 @@ colMeans(all_delta_1); treatmenteffect_pmmm
 
 min(all_delta_1)
 max(all_delta_1)
+hist(all_delta_1)
+
+
+
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # Formula from Burton paper
 #tolerance_margin <- 0.1 # bias allowed
@@ -1197,28 +1203,19 @@ max(all_delta_1)
 # verification of the longitudinal outcomes was successful
 
 
-#describe(SimTrial_pmmm_190_75_1)
 
 
 
 
 
-
-#weighted.mean(c(27.49, 21.79, 18.04), c(.14, .1, .25)) - 
- # weighted.mean(c(29.79, 29.79, 22.79), c(.21, .05, .25))
-
-#weighted.mean(c(-2.3, -8, -4.75), c(.35, .15, .5))    ## Not correct, unless equal allocation in each subgroup
+#weighted.mean(c(-2.3, -8, -9.05), c(.14, .1, .25)) -
+#  weighted.mean(c(0, 0, -7), c(.21, .05, .25))
 
 
 
 
-weighted.mean(c(-2.3, -8, -11.75), c(.14, .1, .25)) -
-  weighted.mean(c(0, 0, -7), c(.21, .05, .25))
-
-
-
-
-
+#(-2.3*0.14-8*0.1-9.05*0.25)/(0.14+0.1+0.25)-
+ #(0*0.21 + 0*0.05 + -7*0.25)/(0.21+0.05+0.25)
 
 
 
