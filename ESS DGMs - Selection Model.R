@@ -19,7 +19,7 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 ## load libraries ----
-#rm(list=ls()) #
+rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
@@ -95,10 +95,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 2000 # number of patients to be simulated (sample size)
+n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 10 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -716,7 +716,7 @@ the_plot_SM <- (plot_all_SM / plot_LoE_SM) | (plot_AE_SM / plot_NoIE_SM); the_pl
 
 # Table for the paper ----
 
-table_AE_SM <- data.frame(
+table_AE_SMd <- data.frame(
 # descriptives AE  
 n_AE_Control,
 n_AE_Exp); table_AE_SM
@@ -728,9 +728,9 @@ mean(n_AE_Exp)
 
 
 # descriptives LoE  
-table_LoE_SM <-data.frame(
+table_LoE_SMd <-data.frame(
 n_LoE_Control,
-n_LoE_Exp); table_LoE_SM
+n_LoE_Exp); table_LoE_SMd
 
 mean(n_LoE_Control)
 mean(n_LoE_Exp)
@@ -739,45 +739,45 @@ mean(n_LoE_Exp)
 #describe(table_IE_SM)
 
 
-table_AE_SM %>% 
+table_AE_SMd %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "AE") %>% 
   rename(N_C_arm=N.AE.Control) %>% 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_SM %>% 
+table_LoE_SMd %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "LoE") %>% 
   rename(N_C_arm=N.LoE.Control) %>% 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_SM <- tibble(bind_rows(table_AE_SM %>% 
+tab_SMd <- tibble(bind_rows(table_AE_SMd %>% 
             as.data.frame() %>% 
             mutate("Intercurrent event" = "AE") %>% 
             rename(N_C_arm=N.AE.Control) %>% 
             rename(N_E_arm=N.AE.Exp), 
-          table_LoE_SM %>% 
+          table_LoE_SMd %>% 
             as.data.frame() %>% 
             mutate("Intercurrent event" = "LoE") %>% 
             rename(N_C_arm=N.LoE.Control) %>% 
-            rename(N_E_arm=N.LoE.Exp))); tab_SM
+            rename(N_E_arm=N.LoE.Exp))); tab_SMd
 
   
 
-tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
+tab2_SMd<- tab_SMd %>% group_by(`Intercurrent event`) %>%
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
             " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
-  adorn_totals("row"); tab2_SM
+  adorn_totals("row"); tab2_SMd
 
 
 
   
-gt(tab2_SM) %>% 
+gt(tab2_SMd) %>% 
   tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - deterministic rule")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
 tab_spanner(
@@ -821,6 +821,8 @@ tab_spanner(
       columns = "Intercurrent event"
     )
 )
+
+
 
 
 
