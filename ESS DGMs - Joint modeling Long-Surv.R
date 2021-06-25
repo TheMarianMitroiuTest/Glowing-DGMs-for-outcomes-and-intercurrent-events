@@ -91,7 +91,7 @@ set.seed(2147483629) # set seed for reproducibility
 n <- 190# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 10
+m.iterations <- 416 # 416 as per the LMM also used in the SPM DGM to verify the longitudinal outcomes
 
 # proportions of Intercurrent events. These correspond to the qt values for the standardisation of time to IE
 # for 0.35 LoE
@@ -836,70 +836,14 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## ONLY AFTER ALL four DGMs have been ran.
-#### Plots for the paper after running all DGMs
-### LoE patterns side by side by each DGM
-(plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
-
-### AE patterns side by side by each DGM
-(plot_AE_SM + plot_AE_PMMM) / (plot_AE_SPM + plot_AE_JM)
-
-
-### No IE patterns side by side by each DGM
-(plot_NoIE_SM + plot_NoIE_PMMM) / (plot_NoIE_SPM + plot_NoIE_JM)
-
-
-### All patterns in a trial side by side by each DGM
-(plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
-
-
-
-
-
-
-
 # compile to report
 
 # Table for the paper ----
 
-table_AE_SM <- data.frame(
+table_AE_JM <- data.frame(
   # descriptives AE  
   n_AE_Control,
-  n_AE_Exp); table_AE_SM
+  n_AE_Exp); table_AE_JM
 
 mean(n_AE_Control)
 mean(n_AE_Exp)
@@ -908,56 +852,56 @@ mean(n_AE_Exp)
 
 
 # descriptives LoE  
-table_LoE_SM <-data.frame(
+table_LoE_JM <-data.frame(
   n_LoE_Control,
-  n_LoE_Exp); table_LoE_SM
+  n_LoE_Exp); table_LoE_JM
 
 mean(n_LoE_Control)
 mean(n_LoE_Exp)
 
 
-#describe(table_IE_SM)
+#describe(table_IE_JM)
 
 
-table_AE_SM %>% 
+table_AE_JM %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "AE") %>% 
   rename(N_C_arm=N.AE.Control) %>% 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_SM %>% 
+table_LoE_JM %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "LoE") %>% 
   rename(N_C_arm=N.LoE.Control) %>% 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_SM <- tibble(bind_rows(table_AE_SM %>% 
+tab_JM <- tibble(bind_rows(table_AE_JM %>% 
                              as.data.frame() %>% 
                              mutate("Intercurrent event" = "AE") %>% 
                              rename(N_C_arm=N.AE.Control) %>% 
                              rename(N_E_arm=N.AE.Exp), 
-                           table_LoE_SM %>% 
+                           table_LoE_JM %>% 
                              as.data.frame() %>% 
                              mutate("Intercurrent event" = "LoE") %>% 
                              rename(N_C_arm=N.LoE.Control) %>% 
-                             rename(N_E_arm=N.LoE.Exp))); tab_SM
+                             rename(N_E_arm=N.LoE.Exp))); tab_JM
 
 
 
-tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
+tab2_JM <- tab_JM %>% group_by(`Intercurrent event`) %>%
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
             " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
-  adorn_totals("row"); tab2_SM
+  adorn_totals("row"); tab2_JM
 
 
 
 
-gt(tab2_SM) %>% 
+gt(tab2_JM) %>% 
   tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Joint Model DGM")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
@@ -1007,6 +951,27 @@ gt(tab2_SM) %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## ONLY AFTER ALL four DGMs have been ran.
+#### Plots for the paper after running all DGMs
+### LoE patterns side by side by each DGM
+(plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
+
+### AE patterns side by side by each DGM
+(plot_AE_SM + plot_AE_PMMM) / (plot_AE_SPM + plot_AE_JM)
+
+
+### No IE patterns side by side by each DGM
+(plot_NoIE_SM + plot_NoIE_PMMM) / (plot_NoIE_SPM + plot_NoIE_JM)
+
+
+### All patterns in a trial side by side by each DGM
+(plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
+
 
 
 
