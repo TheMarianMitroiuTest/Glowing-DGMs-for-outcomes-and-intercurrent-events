@@ -16,7 +16,7 @@
 # add the ceiling to make sure the time to event are at the next visit.
 # change 0 to Inf for those that do not experience the intercurrent event.
 ### DGM
-#rm(list=ls())
+rm(list=ls())
 library(MASS)
 library(nlme)
 library(survival)
@@ -103,7 +103,7 @@ p_AE_Control_sample <- 0.05
 
 treatmenteffect <- -3.5
 
-adjustment.fctr <- 1.4
+adjustment.fctr <- 1.45
 
 
 visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# protocolled visits

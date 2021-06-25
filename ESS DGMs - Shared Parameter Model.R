@@ -17,7 +17,7 @@
 
 
 ### DGM
-#rm(list=ls())
+rm(list=ls())
 library(MASS)
 library(nlme)
 library(survival)
@@ -96,10 +96,9 @@ Scenario <- c("A")
 set.seed(2147483629)
 n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
+   
 
-
-m.iterations <- 10 #416 for the verification of the longitudinal outcomes # number of generated datasets 
-
+m.iterations <- 416 #416 for the verification of the longitudinal outcomes # number of generated datasets 
 
 
 # these will be used in the target proportions of intercurrent events used in the function to determine the intercept value in order to obtain the right percentage of intercurrent events
@@ -111,7 +110,7 @@ p_AE_Control_sample <- 0.05 # c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Contr
 
 overlap.adjust <- 1.16 # to adjust for AE overlap with LoE
 
-
+ljknlk
 
 
 visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	
@@ -120,6 +119,8 @@ delta <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect est
 colnames(delta) <-c("TreatmentEffect")
 betas <- matrix(ncol=2,nrow=m.iterations) # object to store parameters for the treatment effect at week 6 based on the MMRM model fitted on each generated dataset
 colnames(betas) <-c("Treat", "visit42:Treat")
+
+treatmenteffect <- -3.5
 
 pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
 
@@ -715,10 +716,10 @@ ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification 
 
 # Table for the paper ----
 
-table_AE_SM <- data.frame(
+table_AE_SPM <- data.frame(
   # descriptives AE  
   n_AE_Control,
-  n_AE_Exp); table_AE_SM
+  n_AE_Exp); table_AE_SPM
 
 mean(n_AE_Control)
 mean(n_AE_Exp)
@@ -727,9 +728,9 @@ mean(n_AE_Exp)
 
 
 # descriptives LoE  
-table_LoE_SM <-data.frame(
+table_LoE_SPM <-data.frame(
   n_LoE_Control,
-  n_LoE_Exp); table_LoE_SM
+  n_LoE_Exp); table_LoE_SPM
 
 mean(n_LoE_Control)
 mean(n_LoE_Exp)
@@ -738,44 +739,44 @@ mean(n_LoE_Exp)
 #describe(table_IE_SM)
 
 
-table_AE_SM %>% 
+table_AE_SPM %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "AE") %>% 
   rename(N_C_arm=N.AE.Control) %>% 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_SM %>% 
+table_LoE_SPM %>% 
   as.data.frame() %>% 
   mutate("Intercurrent event" = "LoE") %>% 
   rename(N_C_arm=N.LoE.Control) %>% 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_SM <- tibble(bind_rows(table_AE_SM %>% 
+tab_SPM <- tibble(bind_rows(table_AE_SPM %>% 
                              as.data.frame() %>% 
                              mutate("Intercurrent event" = "AE") %>% 
                              rename(N_C_arm=N.AE.Control) %>% 
                              rename(N_E_arm=N.AE.Exp), 
-                           table_LoE_SM %>% 
+                           table_LoE_SPM %>% 
                              as.data.frame() %>% 
                              mutate("Intercurrent event" = "LoE") %>% 
                              rename(N_C_arm=N.LoE.Control) %>% 
-                             rename(N_E_arm=N.LoE.Exp))); tab_SM
+                             rename(N_E_arm=N.LoE.Exp))); tab_SPM
 
 
-tab2_SM <- tab_SM %>% group_by(`Intercurrent event`) %>%
+tab2_SPM <- tab_SPM %>% group_by(`Intercurrent event`) %>%
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
             " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
-  adorn_totals("row"); tab2_SM
+  adorn_totals("row"); tab2_SPM
 
 
 
 
-gt(tab2_SM) %>% 
+gt(tab2_SPM) %>% 
   tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Shared parameter model DGM")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
