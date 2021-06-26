@@ -939,6 +939,8 @@ gt(tab2_JM) %>%
 (plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
 
 
+
+
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # the underlying linear mixed effects model used in the JM is the exact same linear mixed effects model from the SPM DGM
 # please see details there.
