@@ -25,45 +25,10 @@ library(gmailr)
 library(MASS)
 library(tidyverse)
 library(nlme)
+library(lme4)
 library(Hmisc)
 library(janitor)
-library(JM)
-
-
-# not needed here
-library(survival)
-library(foreign)
-library(tidyr)
-library(haven)
-library(Hmisc)
-library(lme4)
-library(car)
-library(ggplot2)
-library(predictmeans)
-library(tableone)
-library(lattice)
-library(mice)
-library(data.table)
-library(VIM)
-library(naniar)
-library(patchwork)
-library(dplyr)
-library(primes)
 library(gt)
-library(equatiomatic)
-library(parallel)
-#install.packages("rsimsum",repos="http://cran.r-project.org")
-library(gridExtra)
-library(metafolio)
-library(scales)
-library(lavaSearch2)
-library(lmerTest)
-library(parameters)
-library(sandwich)
-library(lmtest)
-library(optimx)
-library(rsimsum)
-#library(clubSandwich)
 
 
 
@@ -93,7 +58,7 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 2000 # number of patients to be simulated (sample size)
+n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
@@ -510,10 +475,6 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_L$LoE_YES <- ifelse(d_mis_L$LoE_Yes==1 & d_mis_L$AE_Yes==0, 1, 0)
     describe(d_mis_L$LoE_YES)
-    
-    
-    
-        #View(d_mis_L)
     
     d_mis_L <- d_mis_L[order(d_mis_L$id),]; #d # order by subject id and Visit
         #colnames(d_mis_L)[10] <- c("MADRS10_mis"); d_mis_L # name the column. See above comment about missing data. This is not needed here, but in the companion paper

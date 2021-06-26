@@ -18,46 +18,15 @@
 
 ### DGM
 #rm(list=ls())
+library(gmailr)
 library(MASS)
 library(nlme)
+library(lme4)
 library(survival)
 library(foreign)
 library(tidyverse)
 library(janitor)
-
-#install.packages('tinytex')
-library(tidyr)
-library(haven)
-library(Hmisc)
-library(lme4)
-library(car)
-library(ggplot2)
-library(predictmeans)
-library(tableone)
-library(lattice)
-library(mice)
-library(data.table)
-library(VIM)
-library(naniar)
-library(patchwork)
-library(dplyr)
-library(primes)
 library(gt)
-library(equatiomatic)
-library(gmailr)
-library(parallel)
-#install.packages("clubSandwich",repos="http://cran.r-project.org")
-library(gridExtra)
-library(metafolio)
-library(scales)
-library(lavaSearch2)
-library(lmerTest)
-library(parameters)
-library(sandwich)
-library(lmtest)
-#library(clubSandwich)
-
-
 
 
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
