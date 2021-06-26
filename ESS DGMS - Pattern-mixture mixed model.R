@@ -32,7 +32,7 @@
 
 
 ## load libraries ----
-#rm(list=ls()) #
+rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
@@ -42,7 +42,7 @@ library(lme4)
 library(Hmisc)
 library(janitor)
 library(gt)
-
+library(patchwork)
 
 
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
@@ -817,18 +817,7 @@ for (s in 1:length(scaling_factor)) {
     #describe(d_pmmm)
     
     #t.test(d_pmmm$MADRS10[d_pmmm$Treat==1 & d_pmmm$visit==42], d_pmmm$MADRS10[d_pmmm$Treat==0 & d_pmmm$visit==42])
-    #22.78871 - 26.51859 
-    #27.36382 -  29.79062 
-    #23.79239 -  26.35924 
-    #22.15974 -  26.35924 
-    #21.39779 - 26.55417 
-    #22.77710  - 26.56528 
-    #22.8449 -  26.51859
-    #22.84451  - 26.36479 
-    
-    #22.81197 - 26.33347 
-    
-    #21.50259  - 26.35924 
+
     
     #describe(d_pmmm)
     getVarCov(fit_pmmm, individual = 1)
