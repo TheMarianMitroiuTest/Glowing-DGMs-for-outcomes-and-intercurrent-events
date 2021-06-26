@@ -16,7 +16,7 @@
 # add the ceiling to make sure the time to event are at the next visit.
 # change 0 to Inf for those that do not experience the intercurrent event.
 ### DGM
-rm(list=ls())
+#rm(list=ls())
 library(MASS)
 library(nlme)
 library(survival)
@@ -806,36 +806,6 @@ end_time-start_time
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-# delete what is below
-# All patients with their trajectory 
-# LoE
-p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
-
-
-# AE
-p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
-p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-  scale_y_continuous(limits = c(-10, 60))
-
-
-#describe(d_united)
-#View(d_united)
-
-
-
 # compile to report
 
 # Table for the paper ----
@@ -947,16 +917,12 @@ gt(tab2_JM) %>%
   )
 
 
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
-
-
-## ONLY AFTER ALL four DGMs have been ran.
+#### PLOT EVERUTHING----
+#### ONLY AFTER ALL four DGMs have been ran
 #### Plots for the paper after running all DGMs
 ### LoE patterns side by side by each DGM
 (plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
@@ -971,8 +937,6 @@ gt(tab2_JM) %>%
 
 ### All patterns in a trial side by side by each DGM
 (plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
-
-
 
 
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes

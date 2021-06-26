@@ -17,7 +17,7 @@
 
 
 ### DGM
-rm(list=ls())
+#rm(list=ls())
 library(MASS)
 library(nlme)
 library(survival)
@@ -110,7 +110,6 @@ p_AE_Control_sample <- 0.05 # c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Contr
 
 overlap.adjust <- 1.16 # to adjust for AE overlap with LoE
 
-ljknlk
 
 
 visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	
@@ -390,7 +389,7 @@ for(m in 1:m.iterations) {
   #####################################################
   # Logit model and Probabilities for LoE at trial level
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
-  d$Pr_LoE <- plogis((det.intercept_LoE + d$bi_0/100 + d$bi_1/100) + c1 * d$Treat)
+  d$Pr_LoE <- plogis((det.intercept_LoE + d$bi_0/10 + d$bi_1/10) + c1 * d$Treat)
   
   describe(d$Pr_LoE[d$Treat==1])
   describe(d$Pr_LoE[d$Treat==0])

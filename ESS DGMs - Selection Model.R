@@ -19,7 +19,7 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 ## load libraries ----
-rm(list=ls()) #
+#rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
@@ -98,7 +98,7 @@ set.seed(2147483629) # set seed
 n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 10 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 382 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
