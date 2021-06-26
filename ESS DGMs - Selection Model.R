@@ -22,14 +22,14 @@
 rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
-library(MASS)
-library(tidyverse)
-library(nlme)
-library(lme4)
+library(MASS)#
+library(tidyverse)#
+library(nlme)#
+library(lme4)#
 library(Hmisc)
-library(janitor)
-library(gt)
-library(patchwork)
+library(janitor)#
+library(gt)#
+library(patchwork)#
 
 
 ## gmail setup----
