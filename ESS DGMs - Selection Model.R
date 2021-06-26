@@ -31,7 +31,6 @@ library(janitor)#
 library(gt)#
 library(patchwork)#
 
-
 ## gmail setup----
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
 # setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
@@ -58,10 +57,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 190 # number of patients to be simulated (sample size)
+n <- 2000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 382 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -960,7 +959,7 @@ logit_AE_exp <- glm(AE_Exp_Yes ~ CfW1,
                  data = trial_AE_exp,
                  family = "binomial")
 
-    #summary(logit_AE_exp)
+summary(logit_AE_exp)
 
 predicted_AE_exp <- predict(logit_AE_exp, type="response", newdata = trial_AE_exp)
 
@@ -1192,6 +1191,18 @@ summary(fit_glmm_AE_control)
 
  # most of the code below is very similar with the code above, in terms of scope and operational reasons, as well as meaning and interpretation
  # code for longitudinal outcomes generation is as above
+
+#rm(list=ls()) #
+# needed for the selection model method
+library(gmailr)
+library(MASS)#
+library(tidyverse)#
+library(nlme)#
+library(lme4)#
+library(Hmisc)
+library(janitor)#
+library(gt)#
+library(patchwork)#
 google_app <- httr::oauth_app(
   "appwhatever",
   key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
