@@ -95,10 +95,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 190 # number of patients to be simulated (sample size)
+n <- 2000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 382 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -1041,13 +1041,20 @@ SimTrial_sm_2000_1_5 <- SimTrial_sm_2000_1_1
 class(SimTrial_sm_2000_1_5$Visit)
 SimTrial_sm_2000_1_5$Visit <- as.numeric(SimTrial_sm_2000_1_5$Visit)-1
 
+SimTrial_sm_2000_1_5$MADRS10 <- ifelse(SimTrial_sm_2000_1_5$Visit>2 & SimTrial_sm_2000_1_5$Behavior== "AE", NA,
+                                       ifelse(SimTrial_sm_2000_1_5$Visit>3 & SimTrial_sm_2000_1_5$Behavior== "LoE", NA, SimTrial_sm_2000_1_5$MADRS10))
+
+
+
 fit_lmer <- lmer(MADRS10 ~ Visit + Visit : Treat + (1 + Visit|id), data = SimTrial_sm_2000_1_5, REML = T)
 summary(fit_lmer)
 
 fit_lme <- lme(fixed = MADRS10 ~ Visit + Visit : Treat, 
               random = ~ 1 + Visit| id,
               method ="REML", 
-               data = SimTrial_sm_2000_1_5)
+               data = SimTrial_sm_2000_1_5,
+              na.action = na.omit)
+#View(SimTrial_sm_2000_1_5)
 
 summary(fit_lme)
 
@@ -1060,28 +1067,49 @@ var(random.effects(fit_lme))
 # Fit the Survival model: time to LoE
 # but first, bring the dataset in the right format, namely all LoE at week 3 and all at week 2.
 SimTrial_sm_2000_1_5_surv <- SimTrial_sm_2000_1_5
+#View(SimTrial_sm_2000_1_5_surv)
 SimTrial_sm_2000_1_5_surv$LoE_yes_surv <- ifelse(SimTrial_sm_2000_1_5_surv$LoE_YES==1 & SimTrial_sm_2000_1_5_surv$Visit==3, 1, 0)
-View(SimTrial_sm_2000_1_5_surv)
+#View(SimTrial_sm_2000_1_5_surv)
 SimTrial_sm_2000_1_5_surv$AE_yes_surv <- ifelse(SimTrial_sm_2000_1_5_surv$AE_Yes==1 & SimTrial_sm_2000_1_5_surv$Visit==2, 1, 0)
+SimTrial_sm_2000_1_5_surv_cox_LoE <- SimTrial_sm_2000_1_5_surv[SimTrial_sm_2000_1_5_surv$Visit==3, ]
+SimTrial_sm_2000_1_5_surv_cox_LoE$Visit <- ifelse(SimTrial_sm_2000_1_5_surv_cox_LoE$LoE_yes_surv==1, 3, 6)
+#View(SimTrial_sm_2000_1_5_surv_cox_LoE)
 
+
+SimTrial_sm_2000_1_5_surv_cox_AE <- SimTrial_sm_2000_1_5_surv[SimTrial_sm_2000_1_5_surv$Visit==2, ]
+SimTrial_sm_2000_1_5_surv_cox_AE$Visit <- ifelse(SimTrial_sm_2000_1_5_surv_cox_AE$AE_yes_surv==1, 2, 6)
+#View(SimTrial_sm_2000_1_5_surv_cox_AE)
 
 # now fit the survival models on the source trials (own source trial)
-cox_fit_LoE <- coxph(Surv(Visit, LoE_yes_surv) ~ Treat, data = SimTrial_sm_2000_1_5_surv, x = TRUE)
+cox_fit_LoE <- coxph(Surv(Visit, LoE_yes_surv) ~ Treat, data = SimTrial_sm_2000_1_5_surv_cox_LoE, x = TRUE)
 summary(cox_fit_LoE)
 
 
-# jointModel() takes the above fitted models as arguments, and fits the
-# joint model; below we fit a joint model with a relative risk submodel
-# for the event time outcome, in which the baseline risk function is assumed
-# piecewise-constant
+
+SimTrial_sm_2000_1_5_surv_cox_AE_exp <-SimTrial_sm_2000_1_5_surv_cox_AE[SimTrial_sm_2000_1_5_surv_cox_AE$Treat==1,]
+SimTrial_sm_2000_1_5_surv_cox_AE_ctrl <-SimTrial_sm_2000_1_5_surv_cox_AE[SimTrial_sm_2000_1_5_surv_cox_AE$Treat==0,]
+
+
+cox_fit_AE <- coxph(Surv(Visit, AE_yes_surv) ~ Treat, data = SimTrial_sm_2000_1_5_surv_cox_AE, x = TRUE)
+summary(cox_fit_AE)
+
+
+
+
 jointFit.LoE <- jointModel(fit_lme, cox_fit_LoE, timeVar = "Visit", 
-                            method = "piecewise-PH-aGH")
+                           method = "weibull-AFT-aGH")
+
 
 summary(jointFit.LoE)
 
 
 
 
+jointFit.AE <- jointModel(fit_lme, cox_fit_AE, timeVar = "Visit", 
+                           method = "weibull-AFT-aGH")
+
+
+summary(jointFit.AE)
 
 
 
@@ -1527,8 +1555,7 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L <- d_mis_w %>% gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
-    
-    ??predict
+
     
     d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
         #describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
