@@ -57,8 +57,6 @@ library(sandwich)
 library(lmtest)
 #library(clubSandwich)
 
-sessionInfo()
-installed.packages()
 
 
 
@@ -822,26 +820,15 @@ gt(tab2_SPM) %>%
 
 
 
+## Session info---- 
+sessionInfo()
+installed.packages()
+
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# checks
-#View(SimTrial_spm_2000)
-
-#SimTrial_spm_2000$visit <- as.numeric(SimTrial_spm_2000$visit)-1
-# estimate the model and store results in m
-#fit_glmm_LoE <- glmer(LoE_yes ~ Treat +  
- #                       (1 | id), data = SimTrial_spm_2000, family = binomial, control = glmerControl(optimizer = "bobyqa"),
-  #                    nAGQ = 10)
-
-#summary(fit_glmm_LoE)
-#describe(d$bi_0)
-#hist(d$bi_0)
-#var(d$bi_0)
-#var(d$bi_1)
-
-
 
 
 

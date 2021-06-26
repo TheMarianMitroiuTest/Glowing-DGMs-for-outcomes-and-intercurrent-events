@@ -19,7 +19,7 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 ## load libraries ----
-#rm(list=ls()) #
+rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)
@@ -28,7 +28,7 @@ library(nlme)
 library(Hmisc)
 library(janitor)
 library(JM)
-library(JMbayes)
+
 
 # not needed here
 library(survival)
@@ -65,9 +65,7 @@ library(optimx)
 library(rsimsum)
 #library(clubSandwich)
 
-## Session info---- 
-sessionInfo()
-installed.packages()
+
 
 ## gmail setup----
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
@@ -838,7 +836,9 @@ tab_spanner(
 # verification of the longitudinal outcomes was successful
 
 
-
+## Session info---- 
+sessionInfo()
+installed.packages()
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

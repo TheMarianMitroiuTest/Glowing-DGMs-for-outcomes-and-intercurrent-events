@@ -80,9 +80,6 @@ library(lmtest)
 #library(clubSandwich)
 
 
-## Session info---- 
-sessionInfo()
-installed.packages()
 
 
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
@@ -1193,6 +1190,11 @@ max(all_delta_1)
 hist(all_delta_1)
 
 
+## Session info---- 
+sessionInfo()
+installed.packages()
+
+
 
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # Formula from Burton paper
@@ -1202,26 +1204,4 @@ hist(all_delta_1)
 #n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
 # 482 trials
 # verification of the longitudinal outcomes was successful
-
-
-
-
-
-
-
-#weighted.mean(c(-2.3, -8, -9.05), c(.14, .1, .25)) -
-#  weighted.mean(c(0, 0, -7), c(.21, .05, .25))
-
-
-
-
-#(-2.3*0.14-8*0.1-9.05*0.25)/(0.14+0.1+0.25)-
- #(0*0.21 + 0*0.05 + -7*0.25)/(0.21+0.05+0.25)
-
-
-
-
-
-
-
 
