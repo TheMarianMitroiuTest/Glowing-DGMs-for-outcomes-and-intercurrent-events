@@ -31,7 +31,7 @@ library(gt)#
 library(patchwork)#
 
 ## gmail setup----
-# Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
+# Selection model via marginal model for outcomes-generating model and deterministic/stochastic rules for generation of intercurrent events
 # setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
 # various tutorials can be found to set this up
 google_app <- httr::oauth_app(

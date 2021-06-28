@@ -29,7 +29,6 @@ library(janitor)
 library(gt)
 library(patchwork)
 
-# Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
 
 
 google_app <- httr::oauth_app(
