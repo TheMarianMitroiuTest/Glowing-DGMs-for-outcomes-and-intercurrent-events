@@ -16,7 +16,7 @@
 # add the ceiling to make sure the time to event are at the next visit.
 # change 0 to Inf for those that do not experience the intercurrent event.
 ### DGM
-rm(list=ls())
+#rm(list=ls())
 library(gmailr)
 library(MASS)
 library(tidyverse)
@@ -55,7 +55,7 @@ set.seed(2147483629) # set seed for reproducibility
 n <- 190# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 416 # 416 as per the LMM also used in the SPM DGM to verify the longitudinal outcomes
+m.iterations <- 1 # 416 as per the LMM also used in the SPM DGM to verify the longitudinal outcomes
 
 # proportions of Intercurrent events. These correspond to the qt values for the standardisation of time to IE
 # for 0.35 LoE
@@ -204,6 +204,13 @@ hist(d$bi_0)
 
 describe(d$bi_1)
 hist(d$bi_1)
+
+# Plot trajectories
+
+p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id)) 
+p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+  scale_y_continuous(limits = c(-10, 60))
+
 
 
 fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat, 

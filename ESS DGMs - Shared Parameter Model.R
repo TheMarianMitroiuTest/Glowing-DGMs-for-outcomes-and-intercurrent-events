@@ -65,7 +65,7 @@ n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
    
 
-m.iterations <- 416 #416 for the verification of the longitudinal outcomes # number of generated datasets 
+m.iterations <- 500 #416 for the verification of the longitudinal outcomes # number of generated datasets 
 
 
 # these will be used in the target proportions of intercurrent events used in the function to determine the intercept value in order to obtain the right percentage of intercurrent events
@@ -215,6 +215,7 @@ start_time <- Sys.time() # timestamp for the start time of the nested for loop b
 
 
 ## Begin for loop----
+set.seed(2147483629) # resetting the seed here to get exactly the same longitudinal outcomes in this DGM and in the JM DGM
 
 for(m in 1:m.iterations) {
   
@@ -266,6 +267,11 @@ for(m in 1:m.iterations) {
   describe(d$bi_1)
   hist(d$bi_1)
   
+  # Plot trajectories
+  
+  p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id)) 
+  p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+    scale_y_continuous(limits = c(-10, 60))
   
   
   # double check with lmer()
@@ -596,12 +602,7 @@ for(m in 1:m.iterations) {
   AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
   
   
-  # Plot trajectories
-  
-  p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id)) 
-  p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-    scale_y_continuous(limits = c(-10, 60))
-  
+
   
   
   

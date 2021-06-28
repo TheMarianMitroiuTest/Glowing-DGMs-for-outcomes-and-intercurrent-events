@@ -19,8 +19,7 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 ## load libraries ----
-rm(list=ls()) #
-# needed for the selection model method
+#rm(list=ls()) #
 library(gmailr)
 library(MASS)#
 library(tidyverse)#
@@ -57,10 +56,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 2000 # number of patients to be simulated (sample size)
+n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 500 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -612,7 +611,7 @@ for (s in 1:length(scaling_factor)) {
     # just No IE patients with their trajectory # 
     p<- ggplot(data = d_mis_L_NoIE, aes(x = Visit, y = MADRS10, group = id))
     plot_NoIE_SM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat) +
-     scale_y_continuous(limits = c(-10, 60)) + ggtitle("SM-No IEs pattern") +
+     scale_y_continuous(limits = c(-10, 60)) + ggtitle("SM-No IE pattern") +
       scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_NoIE_SM
     
     
@@ -1218,14 +1217,14 @@ Scenario <- c("A")
 # simulation
 set.seed(2147483629)
 #set.seed(2147483399)
-m.iterations <- 382# 382number of generated datasets # number of trials per scaling factor
+m.iterations <- 500# 382number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1)#c(0.5, 1.0, 1.5, 2.0, 2.5)
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
 #c(0.25, 0.5, 1, 2, 2.5) steps for scaling factor
 # to multiply for LoE, AE_control and AE_exp ### value 0.5 should yield around 13.5% IEs, 1 ~ %, 2 ~ %, 2.5 ~
 
-n <- 190# number of patients at trial level to be randomised 1:1, experimental and control arm
+n <- 190# number of patients at trial level to be randomised 1:1, experimental and control arm. 190 in total
 
 #CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
 #colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
@@ -1521,7 +1520,7 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L <- d_mis_w %>% gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
-    summary(logit_LoE)
+    #summary(logit_LoE)
     
     d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
         d#describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
@@ -1580,8 +1579,16 @@ for (s in 1:length(scaling_factor)) {
     d_mis_LL$LoE_YES <- as.factor(d_mis_LL$LoE_YES)
     d_mis_LL$AE_YES <- as.factor(d_mis_LL$AE_YES)
     
-    d_mis_LL$Behavior <- ifelse(d_mis_LL[,11]==1, "AE",
-                               ifelse(d_mis_LL[,12]==1, "LoE", "No IE"))
+    # Check for 
+    #View(d_mis_LL)
+    #d_mis_LL$compete <- ifelse(d_mis_LL$AE_yes==1 & d_mis_LL$LoE_yes==1, 1, 0)
+    #sum(as.numeric(d_mis_LL$AE_YES)-1)/length(visits)/n*100
+    #sum(as.numeric(d_mis_LL$LoE_YES)-1)/length(visits)/n*100
+    describe(d_mis_LL$Behavior)
+    
+    
+    d_mis_LL$Behavior <- ifelse(d_mis_LL[,"AE_YES"]==1, "AE",
+                               ifelse(d_mis_LL[,"LoE_YES"]==1, "LoE", "No IE"))
     
     d_mis_LL$Behavior <-factor(d_mis_LL$Behavior, levels = c("AE", "LoE", "No IE"))
     
@@ -1703,8 +1710,10 @@ for (s in 1:length(scaling_factor)) {
     # just LoE patients with their trajectory
     p<- ggplot(data = d_mis_LL_LoE, aes(x = Visit, y = MADRS10, group = id))
     #p + geom_line() + facet_grid(~ Treat) 
-    plot_LoE_SMs <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat)+ 
+    plot_LoE_SMs <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") +
+      facet_wrap(~ Treat)+ 
       ggtitle("SMs-LoE pattern") +
+      scale_y_continuous(limits = c(-10, 60))+
       scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_LoE_SMs
     
     #View(d_mis_L)
@@ -1719,7 +1728,8 @@ for (s in 1:length(scaling_factor)) {
     p<- ggplot(data = d_mis_LL_AE, aes(x = Visit, y = MADRS10, group = id))
     #p + geom_line() + facet_grid(~ Treat) 
     plot_AE_SMs <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + 
-      facet_wrap(~ Treat)+ ggtitle("SPM-AE pattern")  +
+      facet_wrap(~ Treat)+ ggtitle("SMs-AE pattern")  +
+      scale_y_continuous(limits = c(-10, 60))+
       scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_AE_SMs
     
     
@@ -1738,6 +1748,8 @@ for (s in 1:length(scaling_factor)) {
       scale_y_continuous(limits = c(-10, 60))+ ggtitle("SMs-All patterns")+
       scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_all_SMs
     
+    
+    (plot_all_SMs + plot_AE_SMs)/(plot_LoE_SMs+plot_NoIE_SMs)
     
 
     setTxtProgressBar(pb1, m)
