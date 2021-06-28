@@ -336,7 +336,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 
 
 
-#Cox model for Adverse events in both arms. standardisation after generating the survival times.
+#Weibull model for Adverse events in both arms. standardisation after generating the survival times.
 
 
 intercept_AE <- 4.0580
