@@ -1041,7 +1041,7 @@ tab2_PMMM <- tab_PMMM %>% group_by(`Intercurrent event`) %>%
 
 
 gt(tab2_PMMM) %>% 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Pattern-mixture mixed model DGM")) %>%
+  tab_header(title = md("Table 8b. Descriptive statistics intercurrent events"), subtitle = md("Pattern-mixture mixed model DGM")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations*length(scaling_factor),  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
     label = md("**Control**"),

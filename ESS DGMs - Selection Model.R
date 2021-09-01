@@ -735,7 +735,7 @@ tab2_SMd<- tab_SMd %>% group_by(`Intercurrent event`) %>%
 
   
 gt(tab2_SMd) %>% 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - deterministic rule")) %>%
+  tab_header(title = md("Table 8a. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - deterministic rule")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
 tab_spanner(
   label = md("**Control**"),

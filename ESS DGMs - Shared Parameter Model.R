@@ -743,7 +743,7 @@ tab2_SPM <- tab_SPM %>% group_by(`Intercurrent event`) %>%
 
 
 gt(tab2_SPM) %>% 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Shared parameter model DGM")) %>%
+  tab_header(title = md("Table 8c. Descriptive statistics intercurrent events"), subtitle = md("Shared parameter model DGM")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
     label = md("**Control**"),

@@ -637,7 +637,7 @@ tab2_JM <- tab_JM %>% group_by(`Intercurrent event`) %>%
 
 
 gt(tab2_JM) %>% 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Joint Model DGM")) %>%
+  tab_header(title = md("Table 8d. Descriptive statistics intercurrent events"), subtitle = md("Joint Model DGM")) %>%
   tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
   tab_spanner(
     label = md("**Control**"),
