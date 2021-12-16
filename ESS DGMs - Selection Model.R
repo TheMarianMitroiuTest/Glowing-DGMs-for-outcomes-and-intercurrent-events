@@ -59,7 +59,7 @@ set.seed(2147483629) # set seed
 n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 500 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 10 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -377,7 +377,7 @@ for (s in 1:length(scaling_factor)) {
     ## take over the original/raw dataset to use for IEGM
     d_mis <-d_orig
     
-    d_mis_w <- d_mis %>% spread(visit, MADRS10) # reshape to wide in order to create the CfB variable
+    d_mis_w <- d_mis |> spread(visit, MADRS10) # reshape to wide in order to create the CfB variable
         #View(d_mis_w)
     
     colnames(d_mis_w)[3:9] <- c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6"); head(d_mis_w) # name the columns for the wide format dataframe
@@ -423,11 +423,11 @@ for (s in 1:length(scaling_factor)) {
 
     sum(d_mis_w$LoE_Yes)
     
-    describe(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW1< (-2), 1, 0))
+   #describe(ifelse(d_mis_w$Treat==0 & d_mis_w$CfW1< (-2), 1, 0))
     
     #
     
-    d_mis_L <- d_mis_w %>% gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
+    d_mis_L <- d_mis_w |> gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
   
@@ -472,7 +472,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     d_mis_L$LoE_YES <- ifelse(d_mis_L$LoE_Yes==1 & d_mis_L$AE_Yes==0, 1, 0)
-    describe(d_mis_L$LoE_YES)
+    #describe(d_mis_L$LoE_YES)
     
     d_mis_L <- d_mis_L[order(d_mis_L$id),]; #d # order by subject id and Visit
         #colnames(d_mis_L)[10] <- c("MADRS10_mis"); d_mis_L # name the column. See above comment about missing data. This is not needed here, but in the companion paper
@@ -676,7 +676,7 @@ the_plot_SM <- (plot_all_SM / plot_LoE_SM) | (plot_AE_SM / plot_NoIE_SM); the_pl
 table_AE_SMd <- data.frame(
 # descriptives AE  
 n_AE_Control,
-n_AE_Exp); table_AE_SM
+n_AE_Exp); table_AE_SMd
 
 mean(n_AE_Control)
 mean(n_AE_Exp)
@@ -696,79 +696,79 @@ mean(n_LoE_Exp)
 #describe(table_IE_SM)
 
 
-table_AE_SMd %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "AE") %>% 
-  rename(N_C_arm=N.AE.Control) %>% 
+table_AE_SMd |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "AE") |> 
+  rename(N_C_arm=N.AE.Control) |> 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_SMd %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "LoE") %>% 
-  rename(N_C_arm=N.LoE.Control) %>% 
+table_LoE_SMd |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "LoE") |> 
+  rename(N_C_arm=N.LoE.Control) |> 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_SMd <- tibble(bind_rows(table_AE_SMd %>% 
-            as.data.frame() %>% 
-            mutate("Intercurrent event" = "AE") %>% 
-            rename(N_C_arm=N.AE.Control) %>% 
+tab_SMd <- tibble(bind_rows(table_AE_SMd |> 
+            as.data.frame() |> 
+            mutate("Intercurrent event" = "AE") |> 
+            rename(N_C_arm=N.AE.Control) |> 
             rename(N_E_arm=N.AE.Exp), 
-          table_LoE_SMd %>% 
-            as.data.frame() %>% 
-            mutate("Intercurrent event" = "LoE") %>% 
-            rename(N_C_arm=N.LoE.Control) %>% 
+          table_LoE_SMd |> 
+            as.data.frame() |> 
+            mutate("Intercurrent event" = "LoE") |> 
+            rename(N_C_arm=N.LoE.Control) |> 
             rename(N_E_arm=N.LoE.Exp))); tab_SMd
 
   
 
-tab2_SMd<- tab_SMd %>% group_by(`Intercurrent event`) %>%
+tab2_SMd<- tab_SMd |> group_by(`Intercurrent event`) |>
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
-            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
+            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) |> 
   adorn_totals("row"); tab2_SMd
 
 
 
   
-gt(tab2_SMd) %>% 
-  tab_header(title = md("Table 8a. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - deterministic rule")) %>%
-  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
+gt(tab2_SMd) |> 
+  tab_header(title = md("Table 8a. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - deterministic rule")) |>
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) |> 
 tab_spanner(
   label = md("**Control**"),
-  columns = c("N", "%")) %>% 
+  columns = c("N", "%")) |> 
   cols_align(
     align = "center",
     columns =  c("N", "%")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Treatment**"),
-    columns = c("N ", "% ")) %>% 
+    columns = c("N ", "% ")) |> 
   cols_align(
     align = "center",
     columns =  c("N ", "% ")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Total**"),
-    columns = c(" N ", " % ")) %>% 
+    columns = c(" N ", " % ")) |> 
   cols_align(
     align = "center",
     columns =  c(" N ", " % ")
-  ) %>% 
+  ) |> 
   data_color(
     columns = c("%", "% ", " % "),
     colors = scales::col_numeric(
       palette = c(
-      "light blue"),
+      "#add8e6"),
       domain = NULL)
-  ) %>% 
+  ) |> 
   cols_align(
     align = "center",
     columns =  "Intercurrent event"
-  ) %>% 
+  ) |> 
   tab_style(
     style = list(
       cell_fill(color = "white"),
@@ -820,7 +820,7 @@ installed.packages()
 
     #View(SimTrial_sm_2000_1_5)
 SimTrial_sm_2000_1_5 <-SimTrial_sm_2000_1_1
-describe(SimTrial_sm_2000_1_5)
+#describe(SimTrial_sm_2000_1_5)
 
 # prepare the dataset for reparameterisation to not have any treatment coefficient at baseline
 # as per the formulated model (see above)
@@ -1506,7 +1506,7 @@ for (s in 1:length(scaling_factor)) {
     ## take over the original/raw dataset to use for IEGM/MDGM
     d_mis <-d_orig
     
-    d_mis_w <- d_mis %>% spread(visit, MADRS10) # reshape to wide in order to create the CfB variable
+    d_mis_w <- d_mis |> spread(visit, MADRS10) # reshape to wide in order to create the CfB variable
          #View(d_mis_w)
     
     colnames(d_mis_w)[3:9] <- c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6"); head(d_mis_w)
@@ -1517,13 +1517,13 @@ for (s in 1:length(scaling_factor)) {
     
     d_mis_w$CfW1 <- d_mis_w[,"Baseline"] - d_mis_w[,"Week1"]; d_mis_w # create the CfW1 variable
     
-    d_mis_L <- d_mis_w %>% gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
+    d_mis_L <- d_mis_w |> gather(Visit, MADRS10, Baseline:Week6) # reshape to long format
     
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
     #summary(logit_LoE)
     
     d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
-        d#describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
+        #d#describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
     #View(d_mis_L)
     
     d_mis_L$LoE_yes <- rep(rbinom(length(unique(d_mis_L$id)), 1, unique(d_mis_L$predicted_LoE)), each = length(visits)) 
@@ -1584,7 +1584,7 @@ for (s in 1:length(scaling_factor)) {
     #d_mis_LL$compete <- ifelse(d_mis_LL$AE_yes==1 & d_mis_LL$LoE_yes==1, 1, 0)
     #sum(as.numeric(d_mis_LL$AE_YES)-1)/length(visits)/n*100
     #sum(as.numeric(d_mis_LL$LoE_YES)-1)/length(visits)/n*100
-    describe(d_mis_LL$Behavior)
+    #describe(d_mis_LL$Behavior)
     
     
     d_mis_LL$Behavior <- ifelse(d_mis_LL[,"AE_YES"]==1, "AE",
@@ -1600,24 +1600,24 @@ for (s in 1:length(scaling_factor)) {
         #range(d_mis_LL$MADRS10[d_mis_LL$Treat==1], na.rm = T)
         #range(d_mis_LL$MADRS10[d_mis_LL$Treat==0], na.rm = T)
     
-    describe(d_mis_LL$AE_YES[d_mis_LL$Treat==0])
-    describe(d_mis_LL$AE_YES[d_mis_LL$Treat==1])
-    describe(d_mis_LL$AE_YES)
+    #describe(d_mis_LL$AE_YES[d_mis_LL$Treat==0])
+    #describe(d_mis_LL$AE_YES[d_mis_LL$Treat==1])
+    #describe(d_mis_LL$AE_YES)
     
-    describe(d_mis_LL$Behavior[d_mis_LL$Treat==0])
-    describe(d_mis_LL$Behavior[d_mis_LL$Treat==1])
-    describe(d_mis_LL$Behavior)
+    #describe(d_mis_LL$Behavior[d_mis_LL$Treat==0])
+    #describe(d_mis_LL$Behavior[d_mis_LL$Treat==1])
+    #describe(d_mis_LL$Behavior)
     
-    describe(d_mis_LL$LoE_YES[d_mis_LL$Treat==0])
-    describe(d_mis_LL$LoE_YES[d_mis_LL$Treat==1])
-    describe(d_mis_LL$LoE_YES)
+    #describe(d_mis_LL$LoE_YES[d_mis_LL$Treat==0])
+    #describe(d_mis_LL$LoE_YES[d_mis_LL$Treat==1])
+    #describe(d_mis_LL$LoE_YES)
         #View(d_mis_LL)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #### Intercurrent events descriptives needed for the verification step ----
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    describe(d_mis_LL)
+    #describe(d_mis_LL)
     LoE_Y <- d_mis_LL[ ,c("Treat", "LoE_YES")]
     head(LoE_Y)
     
@@ -1819,79 +1819,79 @@ mean(n_LoE_Exp)
 #describe(table_IE_SMs)
 
 
-table_AE_SMs %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "AE") %>% 
-  rename(N_C_arm=N.AE.Control) %>% 
+table_AE_SMs |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "AE") |> 
+  rename(N_C_arm=N.AE.Control) |> 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_SMs %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "LoE") %>% 
-  rename(N_C_arm=N.LoE.Control) %>% 
+table_LoE_SMs |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "LoE") |> 
+  rename(N_C_arm=N.LoE.Control) |> 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_SMs <- tibble(bind_rows(table_AE_SMs %>% 
-                               as.data.frame() %>% 
-                               mutate("Intercurrent event" = "AE") %>% 
-                               rename(N_C_arm=N.AE.Control) %>% 
+tab_SMs <- tibble(bind_rows(table_AE_SMs |> 
+                               as.data.frame() |> 
+                               mutate("Intercurrent event" = "AE") |> 
+                               rename(N_C_arm=N.AE.Control) |> 
                                rename(N_E_arm=N.AE.Exp), 
-                             table_LoE_SMs %>% 
-                               as.data.frame() %>% 
-                               mutate("Intercurrent event" = "LoE") %>% 
-                               rename(N_C_arm=N.LoE.Control) %>% 
+                             table_LoE_SMs |> 
+                               as.data.frame() |> 
+                               mutate("Intercurrent event" = "LoE") |> 
+                               rename(N_C_arm=N.LoE.Control) |> 
                                rename(N_E_arm=N.LoE.Exp))); tab_SMs
 
 
 
-tab2_SMs <- tab_SMs %>% group_by(`Intercurrent event`) %>%
+tab2_SMs <- tab_SMs |> group_by(`Intercurrent event`) |>
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
-            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
+            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) |> 
   adorn_totals("row"); tab2_SMs
 
 
 
 
-gt(tab2_SMs) %>% 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - stochastic")) %>%
-  tab_source_note(md(paste0("Averaged over", " ", m.iterations*length(scaling_factor),  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
+gt(tab2_SMs) |> 
+  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - stochastic")) |>
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations*length(scaling_factor),  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) |> 
   tab_spanner(
     label = md("**Control**"),
-    columns = c("N", "%")) %>% 
+    columns = c("N", "%")) |> 
   cols_align(
     align = "center",
     columns =  c("N", "%")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Treatment**"),
-    columns = c("N ", "% ")) %>% 
+    columns = c("N ", "% ")) |> 
   cols_align(
     align = "center",
     columns =  c("N ", "% ")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Total**"),
-    columns = c(" N ", " % ")) %>% 
+    columns = c(" N ", " % ")) |> 
   cols_align(
     align = "center",
     columns =  c(" N ", " % ")
-  ) %>% 
+  ) |> 
   data_color(
     columns = c("%", "% ", " % "),
     colors = scales::col_numeric(
       palette = c(
         "light blue"),
       domain = NULL)
-  ) %>% 
+  ) |> 
   cols_align(
     align = "center",
     columns =  "Intercurrent event"
-  ) %>% 
+  ) |> 
   tab_style(
     style = list(
       cell_fill(color = "white"),

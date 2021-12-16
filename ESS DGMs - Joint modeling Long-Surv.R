@@ -22,13 +22,12 @@ library(MASS)
 library(tidyverse)
 library(nlme)
 library(lme4)
-library(Hmisc)
+library(Hmisc) #install.packages("xfun", type="binary")
 library(janitor)
 library(JM)
 library(survival)
 library(gt)
 library(patchwork)
-
 
 # Setup to receive e-mails with results of simulations, very useful when running multiple simulations in parallel.
 
@@ -201,7 +200,7 @@ d$MADRS10_collected <- d$MADRS10.true + rnorm(nrow(d), 0, eps.sd)
 describe(d$bi_0)
 hist(d$bi_0)
 
-describe(d$bi_1)
+#describe(d$bi_1)
 hist(d$bi_1)
 
 # Plot trajectories
@@ -272,7 +271,7 @@ t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lam
 # the intercurrent event during the trial (e.g., standardise it to fit to longer than end of trial (week 6), or it can be standardised to week 6 and then use a Binomial distribution to
 # achieve a certain percentage, as we illustrate and use below).
 
-describe(t.event_LoE)
+#describe(t.event_LoE)
 d$time.LoE <- t.event_LoE
 #hist(d$t.LoE)
 
@@ -283,7 +282,7 @@ d$t.LoE[d$Treat==1] <- ceiling(d$time.LoE[d$Treat==1]*(5/quantile(d$time.LoE[d$T
 # the probabilities are multiplied by 2 to adjust for the trial size and trial level statistics, the trial is double in size than each arm
 # the probabilities are multiplied by the adjustment factor to account for patients that experience also AE and AE have priority vs LoE.
 
-describe(d$t.LoE)
+#describe(d$t.LoE)
 hist(d$t.LoE)
 hist(d$t.LoE[d$Treat==0])
 hist(d$t.LoE[d$Treat==1])
@@ -302,11 +301,11 @@ hist(d$t.LoE[d$Treat==1])
 d$LoE_yes <- ifelse(d$t.LoE <=6 & d$t.LoE!=0, 1, 0)
 
 #d$LoE_yes <-factor(ifelse(d$t.LoE !=0, 1, 0))
-describe(d$LoE_yes)
+#describe(d$LoE_yes)
 
 #d$t.LoE[d$t.LoE==0] <- c("No LoE")
 
-describe(d$t.LoE)
+#describe(d$t.LoE)
 
 #cbind(d$Treat,d$bi_0, d$bi_1, t.event_LoE, d$t.LoE)
 
@@ -314,8 +313,8 @@ describe(d$t.LoE)
     #View(d)
 
 
-describe(t.event_LoE[d$Treat==1])
-describe(t.event_LoE[d$Treat==0])
+#describe(t.event_LoE[d$Treat==1])
+#describe(t.event_LoE[d$Treat==0])
 #View(d)
 head(d)
 
@@ -360,14 +359,14 @@ t.event_AE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lamb
 #hist(t.event_AE)
 #describe(t.event_AE)
 
-describe(t.event_AE)
+#describe(t.event_AE)
 d$time.AE <- t.event_AE
 
 d$t.AE[d$Treat==0] <- ceiling(d$time.AE[d$Treat==0]*(5/quantile(d$time.AE[d$Treat==0], probs = p_AE_Control_sample*2)[[1]]) + 1) # standardize the time to event (to fit with the trial duration)
 d$t.AE[d$Treat==1] <- ceiling(d$time.AE[d$Treat==1]*(5/quantile(d$time.AE[d$Treat==1], probs = p_AE_Exp_sample*2)[[1]]) + 1) # standardize the time to event (to fit with the trial duration)
 # the probabilities are multiplied by 2 to adjust for the trial size and trial level statistics, the trial is double in size than each arm
 
-describe(d$t.AE)
+#describe(d$t.AE)
 hist(d$t.AE)
 hist(d$t.AE[d$Treat==0])
 hist(d$t.AE[d$Treat==1])
@@ -380,16 +379,16 @@ hist(d$t.AE[d$Treat==1])
 d$AE_yes <- ifelse(d$t.AE <=6 & d$t.AE!=0, 1, 0)
 
 #d$AE_yes <-factor(ifelse(d$t.AE !=0, 1, 0))
-describe(d$AE_yes)
+#describe(d$AE_yes)
 
 #d$t.AE[d$t.AE==0] <- c("No AE")
 
-describe(d$t.AE)
+#describe(d$t.AE)
 
 
 
-describe(t.event_AE[d$Treat==1])
-describe(t.event_AE[d$Treat==0])
+#describe(t.event_AE[d$Treat==1])
+#describe(t.event_AE[d$Treat==0])
 #View(d)
 head(d)
 
@@ -420,7 +419,7 @@ d_united$Treat <- factor(d_united$Treat)
 d_united$LoE_yes <- factor(d_united$LoE_yes)
 d_united$AE_yes <- factor(d_united$AE_yes)
 
-describe(d_united$AE_yes)
+#describe(d_united$AE_yes)
 d_united$AE_YES <- ifelse(d_united$AE_yes==1, 1, 0)
 d_united$LoE_YES <- ifelse(d_united$AE_yes==0 & d_united$LoE_yes==1, 1, 0)
 
@@ -430,7 +429,7 @@ d_united$Behavior <- ifelse(d_united$AE_YES==1, "AE",
 
 #View(d_united)
 
-describe(d_united$Behavior)
+#describe(d_united$Behavior)
 
 
 
@@ -520,7 +519,7 @@ p<- ggplot(data = d_united[d_united$LoE_YES==1,], aes(x = visit, y = MADRS10_col
 plot_LoE_JM <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60)) + ggtitle("JM - LoE pattern"); plot_LoE_JM
 
-describe(d_united[d_united$LoE_YES==1,])
+#describe(d_united[d_united$LoE_YES==1,])
 
 #just AE
 # AE
@@ -536,7 +535,7 @@ plot_NoIE_JM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(grou
 
 #View(d_united[d_united$LoE_YES==1,])
 
-describe(d_united$Behavior)
+#describe(d_united$Behavior)
 
 # All behaviors
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id, color=Behavior)) 
@@ -598,79 +597,79 @@ mean(n_LoE_Exp)
 #describe(table_IE_JM)
 
 
-table_AE_JM %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "AE") %>% 
-  rename(N_C_arm=N.AE.Control) %>% 
+table_AE_JM |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "AE") |> 
+  rename(N_C_arm=N.AE.Control) |> 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_JM %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "LoE") %>% 
-  rename(N_C_arm=N.LoE.Control) %>% 
+table_LoE_JM |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "LoE") |> 
+  rename(N_C_arm=N.LoE.Control) |> 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_JM <- tibble(bind_rows(table_AE_JM %>% 
-                             as.data.frame() %>% 
-                             mutate("Intercurrent event" = "AE") %>% 
-                             rename(N_C_arm=N.AE.Control) %>% 
+tab_JM <- tibble(bind_rows(table_AE_JM |> 
+                             as.data.frame() |> 
+                             mutate("Intercurrent event" = "AE") |> 
+                             rename(N_C_arm=N.AE.Control) |> 
                              rename(N_E_arm=N.AE.Exp), 
-                           table_LoE_JM %>% 
-                             as.data.frame() %>% 
-                             mutate("Intercurrent event" = "LoE") %>% 
-                             rename(N_C_arm=N.LoE.Control) %>% 
+                           table_LoE_JM |> 
+                             as.data.frame() |> 
+                             mutate("Intercurrent event" = "LoE") |> 
+                             rename(N_C_arm=N.LoE.Control) |> 
                              rename(N_E_arm=N.LoE.Exp))); tab_JM
 
 
 
-tab2_JM <- tab_JM %>% group_by(`Intercurrent event`) %>%
+tab2_JM <- tab_JM |> group_by(`Intercurrent event`) |>
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
-            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
+            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) |> 
   adorn_totals("row"); tab2_JM
 
 
 
 
-gt(tab2_JM) %>% 
-  tab_header(title = md("Table 8d. Descriptive statistics intercurrent events"), subtitle = md("Joint Model DGM")) %>%
-  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
+gt(tab2_JM) |> 
+  tab_header(title = md("Table 8d. Descriptive statistics intercurrent events"), subtitle = md("Joint Model DGM")) |>
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) |> 
   tab_spanner(
     label = md("**Control**"),
-    columns = c("N", "%")) %>% 
+    columns = c("N", "%")) |> 
   cols_align(
     align = "center",
     columns =  c("N", "%")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Treatment**"),
-    columns = c("N ", "% ")) %>% 
+    columns = c("N ", "% ")) |> 
   cols_align(
     align = "center",
     columns =  c("N ", "% ")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Total**"),
-    columns = c(" N ", " % ")) %>% 
+    columns = c(" N ", " % ")) |> 
   cols_align(
     align = "center",
     columns =  c(" N ", " % ")
-  ) %>% 
+  ) |> 
   data_color(
     columns = c("%", "% ", " % "),
     colors = scales::col_numeric(
       palette = c(
-        "light blue"),
+        "#add8e6"),
       domain = NULL)
-  ) %>% 
+  ) |> 
   cols_align(
     align = "center",
     columns =  "Intercurrent event"
-  ) %>% 
+  ) |> 
   tab_style(
     style = list(
       cell_fill(color = "white"),

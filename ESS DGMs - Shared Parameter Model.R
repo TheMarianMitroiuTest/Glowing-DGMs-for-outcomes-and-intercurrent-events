@@ -64,7 +64,7 @@ n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
    
 
-m.iterations <- 500 #416 for the verification of the longitudinal outcomes # number of generated datasets 
+m.iterations <- 10 #416 for the verification of the longitudinal outcomes # number of generated datasets 
 
 
 # these will be used in the target proportions of intercurrent events used in the function to determine the intercept value in order to obtain the right percentage of intercurrent events
@@ -260,10 +260,10 @@ for(m in 1:m.iterations) {
   
   
   
-  describe(d$bi_0)
+  #describe(d$bi_0)
   hist(d$bi_0)
   
-  describe(d$bi_1)
+  #describe(d$bi_1)
   hist(d$bi_1)
   
   # Plot trajectories
@@ -363,9 +363,9 @@ for(m in 1:m.iterations) {
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
   d$Pr_LoE <- plogis((det.intercept_LoE + d$bi_0/10 + d$bi_1/10) + c1 * d$Treat)
   
-  describe(d$Pr_LoE[d$Treat==1])
-  describe(d$Pr_LoE[d$Treat==0])
-  describe(d$Pr_LoE)
+  #describe(d$Pr_LoE[d$Treat==1])
+  #describe(d$Pr_LoE[d$Treat==0])
+  #describe(d$Pr_LoE)
   
   
   #View(d)
@@ -378,7 +378,7 @@ for(m in 1:m.iterations) {
   
   d$LoE_yes <- rep(rbinom(length(unique(d$id)), 1, unique(d$Pr_LoE)), each = length(visits)) 
   
-  describe(d$LoE_yes)
+  #describe(d$LoE_yes)
   
   #reshape to wide
   
@@ -397,10 +397,10 @@ for(m in 1:m.iterations) {
   
   #unique(d$Pr_LoE)
   
-  describe(d$LoE_yes[d$Treat==0])
-  describe(d$LoE_yes[d$Treat==1])
+  #describe(d$LoE_yes[d$Treat==0])
+  #describe(d$LoE_yes[d$Treat==1])
   
-  describe(d$LoE_yes)
+  #describe(d$LoE_yes)
   
   #View(d)
   
@@ -409,14 +409,14 @@ for(m in 1:m.iterations) {
   # Logit model and Probabilities for AE in experimental arm
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
   d$Pr_AE[d$Treat==1] <- plogis((det.intercept_AE_exp + d$bi_0[d$Treat==1]/100 +  d$bi_1[d$Treat==1]/100))
-  describe(d$Pr_AE[d$Treat==1])
+  #describe(d$Pr_AE[d$Treat==1])
   
   
   d$AE_yes[d$Treat==1] <- rep(rbinom(length(unique(d$id[d$Treat==1])), 1, unique(d$Pr_AE[d$Treat==1])), each = length(visits)) 
   
   d$AE_yes[d$Treat==1]
   
-  describe(d$AE_yes[d$Treat==1])
+  #describe(d$AE_yes[d$Treat==1])
   
   
   
@@ -425,17 +425,17 @@ for(m in 1:m.iterations) {
   # Logit model and Probabilities for AE in control arm
   # using the intercept value determined above and other model terms from the logit models fitted on the actual trial data
   d$Pr_AE[d$Treat==0] <- plogis((det.intercept_AE_control + d$bi_0[d$Treat==0]/100 + d$bi_1[d$Treat==0]/100))
-  describe(d$Pr_AE[d$Treat==0])
+  #describe(d$Pr_AE[d$Treat==0])
   
   
   d$AE_yes[d$Treat==0] <- rep(rbinom(length(unique(d$id[d$Treat==0])), 1, unique(d$Pr_AE[d$Treat==0])), each = length(visits)) 
   
   d$AE_yes[d$Treat==0]
   
-  describe(d$AE_yes[d$Treat==0])
+  #describe(d$AE_yes[d$Treat==0])
   
   
-  describe(d$AE_yes)
+  #describe(d$AE_yes)
   
   #View(d)
   
@@ -443,7 +443,7 @@ for(m in 1:m.iterations) {
   #View(d)
   #d <-d[,-6]
   
-  #d_w <- d %>% spread(visit, MADRS10_collected) # reshape to wide in order to create the CfB variable
+  #d_w <- d |> spread(visit, MADRS10_collected) # reshape to wide in order to create the CfB variable
   #View(d_w)
   
   
@@ -485,7 +485,7 @@ for(m in 1:m.iterations) {
   #d_w$AE_YES <- ifelse((d_w$AE_yes==1 & d_w$LoE_yes==1)==T, 1-d_w$LoE_YES, d_w$AE_yes)
   
   
-  #d_L <- d_w %>% gather(visit, MADRS10_collected, 10:16) # reshape to long format
+  #d_L <- d_w |> gather(visit, MADRS10_collected, 10:16) # reshape to long format
   #View(d_L)
   
   
@@ -705,78 +705,78 @@ mean(n_LoE_Exp)
 #describe(table_IE_SM)
 
 
-table_AE_SPM %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "AE") %>% 
-  rename(N_C_arm=N.AE.Control) %>% 
+table_AE_SPM |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "AE") |> 
+  rename(N_C_arm=N.AE.Control) |> 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_SPM %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "LoE") %>% 
-  rename(N_C_arm=N.LoE.Control) %>% 
+table_LoE_SPM |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "LoE") |> 
+  rename(N_C_arm=N.LoE.Control) |> 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_SPM <- tibble(bind_rows(table_AE_SPM %>% 
-                             as.data.frame() %>% 
-                             mutate("Intercurrent event" = "AE") %>% 
-                             rename(N_C_arm=N.AE.Control) %>% 
+tab_SPM <- tibble(bind_rows(table_AE_SPM |> 
+                             as.data.frame() |> 
+                             mutate("Intercurrent event" = "AE") |> 
+                             rename(N_C_arm=N.AE.Control) |> 
                              rename(N_E_arm=N.AE.Exp), 
-                           table_LoE_SPM %>% 
-                             as.data.frame() %>% 
-                             mutate("Intercurrent event" = "LoE") %>% 
-                             rename(N_C_arm=N.LoE.Control) %>% 
+                           table_LoE_SPM |> 
+                             as.data.frame() |> 
+                             mutate("Intercurrent event" = "LoE") |> 
+                             rename(N_C_arm=N.LoE.Control) |> 
                              rename(N_E_arm=N.LoE.Exp))); tab_SPM
 
 
-tab2_SPM <- tab_SPM %>% group_by(`Intercurrent event`) %>%
+tab2_SPM <- tab_SPM |> group_by(`Intercurrent event`) |>
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
-            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
+            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) |> 
   adorn_totals("row"); tab2_SPM
 
 
 
 
-gt(tab2_SPM) %>% 
-  tab_header(title = md("Table 8c. Descriptive statistics intercurrent events"), subtitle = md("Shared parameter model DGM")) %>%
-  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
+gt(tab2_SPM) |> 
+  tab_header(title = md("Table 8c. Descriptive statistics intercurrent events"), subtitle = md("Shared parameter model DGM")) |>
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations,  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) |> 
   tab_spanner(
     label = md("**Control**"),
-    columns = c("N", "%")) %>% 
+    columns = c("N", "%")) |> 
   cols_align(
     align = "center",
     columns =  c("N", "%")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Treatment**"),
-    columns = c("N ", "% ")) %>% 
+    columns = c("N ", "% ")) |> 
   cols_align(
     align = "center",
     columns =  c("N ", "% ")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Total**"),
-    columns = c(" N ", " % ")) %>% 
+    columns = c(" N ", " % ")) |> 
   cols_align(
     align = "center",
     columns =  c(" N ", " % ")
-  ) %>% 
+  ) |> 
   data_color(
     columns = c("%", "% ", " % "),
     colors = scales::col_numeric(
       palette = c(
-        "light blue"),
+        "#add8e6"),
       domain = NULL)
-  ) %>% 
+  ) |> 
   cols_align(
     align = "center",
     columns =  "Intercurrent event"
-  ) %>% 
+  ) |> 
   tab_style(
     style = list(
       cell_fill(color = "white"),

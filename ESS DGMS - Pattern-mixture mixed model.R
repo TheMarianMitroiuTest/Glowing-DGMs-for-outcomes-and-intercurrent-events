@@ -43,8 +43,6 @@ library(janitor)
 library(gt)
 library(patchwork)
 
-
-
 ## gmail setup----
 # Selection model via marginal model for outcomes-generating model and deterministic rules for generation of intercurrent events
 # setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
@@ -69,7 +67,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 500 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 10 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -233,7 +231,7 @@ for (s in 1:length(scaling_factor)) {
         Treat = rep(sample(c(rep(1, n_LoE_exp), rep(0, n_LoE_control)), n_LoE_all, replace = F), each = length(visits)),
         MADRS10 = rep(NA, n_LoE_all)); d_LoE_all # mean(Treat)
      
-       describe(d_LoE_all)
+       #describe(d_LoE_all)
       
       #describe(sample(c(rep(1, n_LoE_exp), rep(0, n_LoE_control)), n_LoE_all, replace =F))
       #describe(rep(c(rep(1, n_LoE_exp), rep(0, n_LoE_control)), each = length(visits)))
@@ -737,7 +735,7 @@ for (s in 1:length(scaling_factor)) {
                       #d_AE_control,
                       d_No_IE)
       
-      describe(d_pmmm)
+      #describe(d_pmmm)
       
       head(d_LoE_all)
       head(d_AE_all)
@@ -746,7 +744,7 @@ for (s in 1:length(scaling_factor)) {
       head(d_No_IE)
       #View(d_pmmm)
       
-      describe(d_pmmm)
+      #describe(d_pmmm)
       head(d_pmmm)
       d_pmmm$Pattern <- as.factor(d_pmmm$Pattern)
       
@@ -971,7 +969,6 @@ min(all_betas_1)
 max(all_betas_1)
 
 
-
 # Table for the paper ----
 
 n_AE_exp
@@ -1002,79 +999,79 @@ mean(n_LoE_Exp)
 #describe(table_IE_PMMM)
 
 
-table_AE_PMMM %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "AE") %>% 
-  rename(N_C_arm=N.AE.Control) %>% 
+table_AE_PMMM |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "AE") |> 
+  rename(N_C_arm=N.AE.Control) |> 
   rename(N_E_arm=N.AE.Exp)
 
-table_LoE_PMMM %>% 
-  as.data.frame() %>% 
-  mutate("Intercurrent event" = "LoE") %>% 
-  rename(N_C_arm=N.LoE.Control) %>% 
+table_LoE_PMMM |> 
+  as.data.frame() |> 
+  mutate("Intercurrent event" = "LoE") |> 
+  rename(N_C_arm=N.LoE.Control) |> 
   rename(N_E_arm=N.LoE.Exp)
 
 
-tab_PMMM <- tibble(bind_rows(table_AE_PMMM %>% 
-                          as.data.frame() %>% 
-                          mutate("Intercurrent event" = "AE") %>% 
-                          rename(N_C_arm=N.AE.Control) %>% 
+tab_PMMM <- tibble(bind_rows(table_AE_PMMM |> 
+                          as.data.frame() |> 
+                          mutate("Intercurrent event" = "AE") |> 
+                          rename(N_C_arm=N.AE.Control) |> 
                           rename(N_E_arm=N.AE.Exp), 
-                        table_LoE_PMMM %>% 
-                          as.data.frame() %>% 
-                          mutate("Intercurrent event" = "LoE") %>% 
-                          rename(N_C_arm=N.LoE.Control) %>% 
+                        table_LoE_PMMM |> 
+                          as.data.frame() |> 
+                          mutate("Intercurrent event" = "LoE") |> 
+                          rename(N_C_arm=N.LoE.Control) |> 
                           rename(N_E_arm=N.LoE.Exp))); tab_PMMM
 
 
 
-tab2_PMMM <- tab_PMMM %>% group_by(`Intercurrent event`) %>%
+tab2_PMMM <- tab_PMMM |> group_by(`Intercurrent event`) |>
   summarise("N" = round(mean(N_C_arm), digits=1), 
             "%" = round(mean(N_C_arm/n*100), digits=1),
             "N " = round(mean(N_E_arm), digits=1), 
             "% " = round(mean(N_E_arm/n*100), digits=1),
             " N " = round(mean(N_C_arm + N_E_arm), digits=1),
-            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) %>% 
+            " % " = round(mean(N_C_arm + N_E_arm)/n*100, digits = 1)) |> 
   adorn_totals("row"); tab2_PMMM
 
 
 
 
-gt(tab2_PMMM) %>% 
-  tab_header(title = md("Table 8b. Descriptive statistics intercurrent events"), subtitle = md("Pattern-mixture mixed model DGM")) %>%
-  tab_source_note(md(paste0("Averaged over", " ", m.iterations*length(scaling_factor),  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) %>% 
+gt(tab2_PMMM) |> 
+  tab_header(title = md("Table 8b. Descriptive statistics intercurrent events"), subtitle = md("Pattern-mixture mixed model DGM")) |>
+  tab_source_note(md(paste0("Averaged over", " ", m.iterations*length(scaling_factor),  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) |> 
   tab_spanner(
     label = md("**Control**"),
-    columns = c("N", "%")) %>% 
+    columns = c("N", "%")) |> 
   cols_align(
     align = "center",
     columns =  c("N", "%")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Treatment**"),
-    columns = c("N ", "% ")) %>% 
+    columns = c("N ", "% ")) |> 
   cols_align(
     align = "center",
     columns =  c("N ", "% ")
-  ) %>% 
+  ) |> 
   tab_spanner(
     label = md("**Total**"),
-    columns = c(" N ", " % ")) %>% 
+    columns = c(" N ", " % ")) |> 
   cols_align(
     align = "center",
     columns =  c(" N ", " % ")
-  ) %>% 
+  ) |> 
   data_color(
     columns = c("%", "% ", " % "),
     colors = scales::col_numeric(
       palette = c(
-        "light blue"),
+        "#add8e6"),
       domain = NULL)
-  ) %>% 
+  ) |> 
   cols_align(
     align = "center",
     columns =  "Intercurrent event"
-  ) %>% 
+  ) |> 
   tab_style(
     style = list(
       cell_fill(color = "white"),
