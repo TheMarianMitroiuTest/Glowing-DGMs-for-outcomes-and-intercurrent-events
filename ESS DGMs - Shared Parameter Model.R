@@ -64,7 +64,7 @@ n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
    
 
-m.iterations <- 10 #416 for the verification of the longitudinal outcomes # number of generated datasets 
+m.iterations <- 500 #416 for the verification of the longitudinal outcomes # number of generated datasets 
 
 
 # these will be used in the target proportions of intercurrent events used in the function to determine the intercept value in order to obtain the right percentage of intercurrent events
