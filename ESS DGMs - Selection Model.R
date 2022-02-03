@@ -18,8 +18,22 @@
 # assign and save generated datasets
 # visualisation of longitudinal outcomes and intercurrent events
 
+
+install.packages("remotes")
+library(remotes)
+install_version("MASS", "7.3.54")
+
+install_version("tidyverse", "7.3.54")
+install_version("nlme", "7.3.54")
+install_version("lme4", "7.3.54")
+install_version("Hmisc", "7.3.54")
+install_version("janitor", "7.3.54")
+install_version("gt", "7.3.54")
+install_version("patchwork", "7.3.54")
+
+
 ## load libraries ----
-#rm(list=ls()) #
+rm(list=ls()) #
 library(gmailr)
 library(MASS)#
 library(tidyverse)#
@@ -56,10 +70,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 190 # number of patients to be simulated (sample size)
+n <- 2000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 10 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -893,7 +907,7 @@ getVarCov(fit_AE_exp, individual = '2')
 
 ## Pattern for AE in control arm----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-fit_AE_control<-gls(MADRS10 ~ MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
+fit_AE_control<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                       Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
                     data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,] ,
                 correlation = corSymm(form=~1 | id),
