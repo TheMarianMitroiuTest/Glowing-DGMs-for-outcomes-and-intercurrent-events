@@ -19,17 +19,25 @@
 # visualisation of longitudinal outcomes and intercurrent events
 
 
-install.packages("remotes")
-library(remotes)
-install_version("MASS", "7.3.54")
+#install.packages("remotes")
+#library(remotes)
+#install_version("MASS", "7.3.54")
 
-install_version("tidyverse", "7.3.54")
-install_version("nlme", "7.3.54")
-install_version("lme4", "7.3.54")
-install_version("Hmisc", "7.3.54")
-install_version("janitor", "7.3.54")
-install_version("gt", "7.3.54")
-install_version("patchwork", "7.3.54")
+#install.packages("devtools")
+#library(devtools)
+
+#devtools::install_version("tidyverse", version = "1.3.0") 
+#devtools::install_version("nlme", version = "3.1.50") 
+
+
+
+
+
+#install_version("lme4", "1.1.27")
+#install_version("Hmisc", "4.5.0")
+#install_version("janitor", "2.0.1")
+#install_version("gt", "0.3.0")
+#install_version("patchwork", "1.1.0")
 
 
 ## load libraries ----
@@ -39,7 +47,7 @@ library(MASS)#
 library(tidyverse)#
 library(nlme)#
 library(lme4)#
-library(Hmisc)
+#library(Hmisc)
 library(janitor)#
 library(gt)#
 library(patchwork)#
@@ -70,7 +78,7 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 2000 # number of patients to be simulated (sample size)
+n <- 4000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
@@ -198,17 +206,17 @@ for (s in 1:length(scaling_factor)) {
     #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
     # covariance matrix with 0 off-diagonal and small variances. This is useful for initial/later checks to see if the simulated data corresponds to target data to be simulated
-    #re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
-     #                   0, 0.00001, 0, 0, 0, 0, 0,
-      #                  0, 0, 0.00001, 0, 0, 0, 0,
-       #                 0, 0, 0, 0.00001, 0, 0, 0,
-        #                0, 0, 0, 0, 0.00001, 0, 0,
-         #               0, 0, 0, 0, 0, 0.00001, 0,
-          #              0, 0, 0, 0, 0, 0, 0.00001), nrow = 7)
+    re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
+                        0, 0.00001, 0, 0, 0, 0, 0,
+                        0, 0, 0.00001, 0, 0, 0, 0,
+                        0, 0, 0, 0.00001, 0, 0, 0,
+                        0, 0, 0, 0, 0.00001, 0, 0,
+                        0, 0, 0, 0, 0, 0.00001, 0,
+                        0, 0, 0, 0, 0, 0, 0.00001), nrow = 7)
     
     re_covm3 <-re_covm/2 # we scaled the covariance matrix as we observed the trajectories were not similar with the targeted trajectories. This is up to user's decision
     
-    re <- mvrnorm(n, re_means, re_covm3)	; re # generate correlated residuals and check them
+    re <- mvrnorm(n, re_means, re_covm2)	; re # generate correlated residuals and check them
     #View(re)
     re <- as.matrix(re)
     colnames(re) <-c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6") ; re
@@ -336,7 +344,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     # fit a model to check if the estimated parameters are similar/close to the true parameters
-    fit <- gls(MADRS10 ~ visit * Treat + Baseline, 
+    fit <- gls(MADRS10 ~ visit * Treat, 
              data=d,
              correlation = corSymm(form=~1 | id),
              #weights = varIdent(form = ~ 1 | visit),
@@ -349,19 +357,21 @@ for (s in 1:length(scaling_factor)) {
         #re_covm2
         #fit$coefficients[c(7,13)]
         #sum(fit$coefficients[c(7,13)]); treatmenteffect
-        #d$visit <- as.numeric(d$visit)-1
+        d$visit <- as.numeric(d$visit)-1
     
         # check the same with another package and models
-        #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
-        #          random=~1 + visit | id,
-        #        method="REML", 
-        #      correlation = corSymm(form=~1|id),
-        #    data=d)
+        fit_lme <- lme(fixed=MADRS10 ~ visit + visit:Treat, 
+                  random=~1 + visit | id,
+                method="REML", 
+              #correlation = corSymm(form=~1|id),
+            data=d)
+        summary(fit_lme)
+        
+        
+        fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
     
-        #fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
-    
-        #summary(fit_lmer)
-        #summary(fit_lme)
+        summary(fit_lmer)
+      
         #model_parameters(fit_lme)
     #### store estimated parameters----
     betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
@@ -811,7 +821,38 @@ tab_spanner(
 
 ## Session info---- 
 sessionInfo()
-installed.packages()
+
+# 5 February 2022
+#> sessionInfo()
+#R version 4.1.2 (2021-11-01)
+#Platform: x86_64-apple-darwin17.0 (64-bit)
+#Running under: macOS Monterey 12.1
+
+#Matrix products: default
+#LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+#Random number generation:
+#  RNG:     Mersenne-Twister 
+#Normal:  Inversion 
+#Sample:  Rounding 
+
+#locale:
+#  [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+#
+#attached base packages:
+#  [1] stats     graphics  grDevices utils     datasets 
+#[6] methods   base     
+
+#other attached packages:
+#  [1] patchwork_1.1.1 gt_0.3.1        janitor_2.1.0  
+#[4] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.7    
+#[7] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0    
+#[10] tibble_3.1.6    ggplot2_3.3.5   tidyverse_1.3.1
+#[13] foreign_0.8-82  survival_3.2-13 lme4_1.1-28    
+#[16] Matrix_1.4-0    nlme_3.1-155    MASS_7.3-55    
+#[19] gmailr_1.0.1   
+
+#installed.packages()
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -907,8 +948,7 @@ getVarCov(fit_AE_exp, individual = '2')
 
 ## Pattern for AE in control arm----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-fit_AE_control<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
-                      Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+fit_AE_control<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42,
                     data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,] ,
                 correlation = corSymm(form=~1 | id),
                 weights = varIdent(form = ~ 1 | Visit),
@@ -933,7 +973,7 @@ summary(fit_no_IE)
     #getVarCov(fit_no_IE, individual = 3)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+# FOR SM Stochastic implementation
 #  The code used to extract the logit models for LoE at trial level, AE in experimental arm and AE in control arm----
 ## obtain the logistic regression models for LoE at trial level, AE in experimental arm and AE in control arm ##
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -1007,10 +1047,12 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # The code for SPM method. On the same trial generated with the selection model (above), we fitted a mixed-effects model with random intercept and random slope # 
-# fit LMM model on the simulated trial
+# fit LMM model on the simulated trial (n=2000, re_covm3)
 # fit the glm to get the intercurrent events models with random effects in the linear predictor
 
-SimTrial_sm_2000_1_5 <- SimTrial_sm_2000_1_1
+SimTrial_sm_2000_1_5 <- SimTrial_sm_1000_1_1 # check again to make sure it is the same number of patients
+# write down here the number of patients used above in the SM model to generate the SOURCE TRIAL so N=?
+
 class(SimTrial_sm_2000_1_5$Visit)
 SimTrial_sm_2000_1_5$Visit <- as.numeric(SimTrial_sm_2000_1_5$Visit)-1
 
@@ -1030,11 +1072,56 @@ fit_lme <- lme(fixed = MADRS10 ~ Visit + Visit : Treat,
 #View(SimTrial_sm_2000_1_5)
 
 summary(fit_lme)
+# you should get:
+#> summary(fit_lme)
+#Linear mixed-effects model fit by REML
+#Data: SimTrial_sm_2000_1_5 
+#AIC      BIC    logLik
+#62297.98 62348.92 -31141.99
+
+#Random effects:
+#  Formula: ~1 + Visit | id
+#Structure: General positive-definite, Log-Cholesky parametrization
+#StdDev   Corr  
+#(Intercept) 4.450225 (Intr)
+#Visit       1.285742 0.406 
+#Residual    3.146991       
+
+#Fixed effects:  MADRS10 ~ Visit + Visit:Treat 
+#Value  Std.Error   DF   t-value
+#(Intercept)  29.431012 0.11225159 8702 262.18792
+#Visit        -0.778194 0.05138492 8702 -15.14440
+#Visit:Treat1 -0.680775 0.07275641 8702  -9.35691
+#p-value
+#(Intercept)        0
+#Visit              0
+#Visit:Treat1       0
+#Correlation: 
+#  (Intr) Visit 
+#Visit         0.049       
+#Visit:Treat1  0.002 -0.704
+
+#Standardized Within-Group Residuals:
+#  Min           Q1          Med           Q3 
+#-3.728498689 -0.555451594  0.003379324  0.559799434 
+#Max 
+#3.437608725 
+
+#Number of Observations: 10704
+#Number of Groups: 2000 
+
 
 vcov(fit_lme)
 VarCorr(fit_lme)
 random.effects(fit_lme)[,1]
 var(random.effects(fit_lme))
+# you should get:
+#> var(random.effects(fit_lme))
+#(Intercept)    Visit
+#(Intercept)   16.872774 2.948891
+#Visit          2.948891 1.179599
+
+
 
 #View(SimTrial_sm_2000_1_5)
 # Fit the Survival model: time to LoE
@@ -1093,7 +1180,8 @@ d_re <- d_mis_w
     #View(d_re)
 
 
-# add back the Baseline and CfB and CfW2 in the model specifications
+## these logistic regression models are run to inform the parameters used in the SPM DGM for intercurrent events
+# fit_LoE_spm is used in order to determine the treatment parameter and to have an idea for the general intercept
 
 fit_LoE_spm <- glm(LoE_Yes ~ Treat,
                    data = d_re, 
@@ -1136,6 +1224,7 @@ fit_AE_control_spm <- glm(AE_Control_Yes ~ 1,
                       family = "binomial")
 
 summary(fit_AE_control_spm)
+#length(d_re$id) # = 2000
 #Call:
 #glm(formula = AE_Control_Yes ~ 1, family = "binomial", data = d_re[d_re$Treat == 
 #                                                                     0, ])
@@ -1156,7 +1245,7 @@ summary(fit_AE_control_spm)
 
 
 ######### The code for SPM and glmm for logit models for LoE  at trial level, AE in experimental arm and AE in control arm
-
+# revisit as these were not used I think
 #View(SimTrial_sm_2000_1_5)
 # estimate the model LoE
 fit_glmm_LoE <- glmer(LoE_YES ~ Visit + Treat +  
@@ -1176,7 +1265,7 @@ fit_glmm_AE_exp <- glmer(AE_Exp_Yes ~ 1 +
 summary(fit_glmm_AE_exp)
 
 
-# estimate the model AE exp arm
+# estimate the model AE control arm
 fit_glmm_AE_control <- glmer(AE_Control_Yes ~ 1 +  
                            (1 | id), data = SimTrial_sm_2000_1_5[d$Treat==0,], family = binomial, control = glmerControl(optimizer = "bobyqa"),
                          nAGQ = 10)
@@ -1212,7 +1301,7 @@ library(MASS)#
 library(tidyverse)#
 library(nlme)#
 library(lme4)#
-library(Hmisc)
+#library(Hmisc)
 library(janitor)#
 library(gt)#
 library(patchwork)#
@@ -1352,7 +1441,7 @@ for (s in 1:length(scaling_factor)) {
     
     re_covm3 <-re_covm/2
     
-    re <- mvrnorm(n, re_means, re_covm3)	; re
+    re <- mvrnorm(n, re_means, re_covm3)	; re # the re covm used is re_covm3
       #View(re)
     
     re <- as.matrix(re)
@@ -1872,7 +1961,7 @@ tab2_SMs <- tab_SMs |> group_by(`Intercurrent event`) |>
 
 
 gt(tab2_SMs) |> 
-  tab_header(title = md("Table 4. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - stochastic")) |>
+  tab_header(title = md("Table 8e. Descriptive statistics intercurrent events"), subtitle = md("Selection model DGM - stochastic")) |>
   tab_source_note(md(paste0("Averaged over", " ", m.iterations*length(scaling_factor),  " ",  "simulated trials.", " ", "Trial sample size = ", " ", n ))) |> 
   tab_spanner(
     label = md("**Control**"),

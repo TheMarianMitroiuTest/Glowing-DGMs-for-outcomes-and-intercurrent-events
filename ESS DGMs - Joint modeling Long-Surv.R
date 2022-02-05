@@ -171,14 +171,63 @@ for (m in 1:m.iterations) {
   
   #### model parameters----
   
-# linear mixed effects model parameters to generate the longitudinal outcomes
-b0 <- 29.79
-b1 <- -0.55
-b2 <- -0.583
-bi_means <- c(0, 0)
-bi_covm <- matrix(c(24.611, 0.5869809, 0.5869809, 1.157), nrow = 2)
-bi <- mvrnorm(n, bi_means, bi_covm)	
-eps.sd <-3.247 
+  b0 <-  29.79 # intercept
+  b1 <-  -0.55 # slope
+  b2 <-  -0.583 # treatment effect 
+  # b0, b1 and b2 are taken from a SOURCE TRIAL simulated with n=1000 patients and re_covm2 (0 off diagonal and very small diagonal terms)
+  # these parameters correspond to the true treatment effect assumed at week 6, e.g., -0.583*6=-3.498, intercept = 29.79
+  
+  # based on these, errors (eps.sd) are added and the covariance matrix (bi_covm) below is used for the random effects in order to simulate trials.
+  
+  # the bi_covm and eps.sd are taken from a model fitted on a SOURCE TRIAL with n=4000 patients and re_covm3
+  bi_means <- c(0, 0)
+  bi_covm <- matrix(c(16.872774, 2.948891, 2.948891, 1.179599), nrow = 2)
+  
+  #bi_covm <- matrix(c(24.611, 0.5869809, 0.5869809, 1.157), nrow = 2) original
+  bi <- mvrnorm(n, bi_means, bi_covm)	# generate random effects for n patients, with bi_means and covariance bi_covm
+  eps.sd <-3.146991 # 3.247  # residual error
+  
+  
+  # summary(fit_lme)
+  # you should get:
+  #> summary(fit_lme)
+  #Linear mixed-effects model fit by REML
+  #Data: SimTrial_sm_2000_1_5 
+  #AIC      BIC    logLik
+  #62297.98 62348.92 -31141.99
+  
+  #Random effects:
+  #  Formula: ~1 + Visit | id
+  #Structure: General positive-definite, Log-Cholesky parametrization
+  #StdDev   Corr  
+  #(Intercept) 4.450225 (Intr)
+  #Visit       1.285742 0.406 
+  #Residual    3.146991       
+  
+  #Fixed effects:  MADRS10 ~ Visit + Visit:Treat 
+  #Value  Std.Error   DF   t-value
+  #(Intercept)  29.431012 0.11225159 8702 262.18792
+  #Visit        -0.778194 0.05138492 8702 -15.14440
+  #Visit:Treat1 -0.680775 0.07275641 8702  -9.35691
+  #p-value
+  #(Intercept)        0
+  #Visit              0
+  #Visit:Treat1       0
+  #Correlation: 
+  #  (Intr) Visit 
+  #Visit         0.049       
+  #Visit:Treat1  0.002 -0.704
+  
+  #Standardized Within-Group Residuals:
+  #  Min           Q1          Med           Q3 
+  #-3.728498689 -0.555451594  0.003379324  0.559799434 
+  #Max 
+  #3.437608725 
+  
+  #Number of Observations: 10704
+  #Number of Groups: 2000 
+  
+  
 
 
 d <- data.frame(
