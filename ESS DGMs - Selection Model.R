@@ -78,7 +78,7 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 4000 # number of patients to be simulated (sample size)
+n <- 1000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
@@ -206,13 +206,14 @@ for (s in 1:length(scaling_factor)) {
     #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
     # covariance matrix with 0 off-diagonal and small variances. This is useful for initial/later checks to see if the simulated data corresponds to target data to be simulated
-    re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
-                        0, 0.00001, 0, 0, 0, 0, 0,
-                        0, 0, 0.00001, 0, 0, 0, 0,
-                        0, 0, 0, 0.00001, 0, 0, 0,
-                        0, 0, 0, 0, 0.00001, 0, 0,
-                        0, 0, 0, 0, 0, 0.00001, 0,
-                        0, 0, 0, 0, 0, 0, 0.00001), nrow = 7)
+    size_diagonal <- 0.000001
+    re_covm2 <-matrix(c(size_diagonal, 0, 0, 0, 0, 0, 0,
+                        0, size_diagonal, 0, 0, 0, 0, 0,
+                        0, 0, size_diagonal, 0, 0, 0, 0,
+                        0, 0, 0, size_diagonal, 0, 0, 0,
+                        0, 0, 0, 0, size_diagonal, 0, 0,
+                        0, 0, 0, 0, 0, size_diagonal, 0,
+                        0, 0, 0, 0, 0, 0, size_diagonal), nrow = 7)
     
     re_covm3 <-re_covm/2 # we scaled the covariance matrix as we observed the trajectories were not similar with the targeted trajectories. This is up to user's decision
     
@@ -362,15 +363,15 @@ for (s in 1:length(scaling_factor)) {
         # check the same with another package and models
         fit_lme <- lme(fixed=MADRS10 ~ visit + visit:Treat, 
                   random=~1 + visit | id,
-                method="REML", 
+                 method="REML", 
               #correlation = corSymm(form=~1|id),
             data=d)
         summary(fit_lme)
         
         
-        fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
+        #fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
     
-        summary(fit_lmer)
+        #summary(fit_lmer)
       
         #model_parameters(fit_lme)
     #### store estimated parameters----
@@ -1050,7 +1051,7 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 # fit LMM model on the simulated trial (n=2000, re_covm3)
 # fit the glm to get the intercurrent events models with random effects in the linear predictor
 
-SimTrial_sm_2000_1_5 <- SimTrial_sm_1000_1_1 # check again to make sure it is the same number of patients
+SimTrial_sm_2000_1_5 <- SimTrial_sm_2000_1_1 # check again to make sure it is the same number of patients
 # write down here the number of patients used above in the SM model to generate the SOURCE TRIAL so N=?
 
 class(SimTrial_sm_2000_1_5$Visit)
