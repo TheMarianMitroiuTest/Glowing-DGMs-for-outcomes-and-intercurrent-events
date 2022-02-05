@@ -231,20 +231,32 @@ for(m in 1:m.iterations) {
   #### Generate correlated (random) intercepts and slopes for each individual patient----
   
   # We used as inspiration the trial 003-021 (ref data analysis paper). Here we used a simplified scenario with linear group trajectories.
-  # These model parameters are from a model fitted on a SOURCE TRIAL generated from the SM 
-  # with N= ?? number of patients and from a nlme fit...
-  # copy-paste here:...
+
   
   #### model parameters----
   
-  b0 <-  29.79 # intercept
-  b1 <-  -0.55 # slope
-  b2 <-  -0.583 # treatment effect 
-  # b0, b1 and b2 are taken from a SOURCE TRIAL simulated with n=1000 patients and re_covm2 (0 off diagonal and very small diagonal terms)
+  
+  
+  # n=1000
+  # size_diagonal <- 0.0000001
+  #  Fixed effects:  MADRS10 ~ visit + visit:Treat 
+  #Value   Std.Error   DF  t-value p-value
+  #(Intercept) 29.382612 0.005033309 5998 5837.633       0
+  #visit       -0.521374 0.001612758 5998 -323.281       0
+  #visit:Treat -0.615376 0.001550078 5998 -396.997       0
+  
+  b0 <-  29.38 #29.79 # intercept
+  b1 <-  -0.521374 # -0.55   #slope
+  b2 <-  -0.615376 # -0.583  #treatment effect 
+  # b0, b1 and b2 are taken from a SOURCE TRIAL simulated with SMd DGM with n=1000 patients and re_covm2 (0 off diagonal and very small diagonal terms)
   # these parameters correspond to the true treatment effect assumed at week 6, e.g., -0.583*6=-3.498, intercept = 29.79
 
   # based on these, errors (eps.sd) are added and the covariance matrix (bi_covm) below is used for the random effects in order to simulate trials.
 
+  
+  
+  
+  
   # the bi_covm and eps.sd are taken from a model fitted on a SOURCE TRIAL with n=4000 patients and re_covm3
   bi_means <- c(0, 0)
   bi_covm <- matrix(c(16.872774, 2.948891, 2.948891, 1.179599), nrow = 2)

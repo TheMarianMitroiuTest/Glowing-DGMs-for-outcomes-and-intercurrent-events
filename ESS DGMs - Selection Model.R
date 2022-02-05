@@ -78,7 +78,7 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 1000 # number of patients to be simulated (sample size)
+n <- 190 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
 m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
@@ -206,7 +206,7 @@ for (s in 1:length(scaling_factor)) {
     #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
     # covariance matrix with 0 off-diagonal and small variances. This is useful for initial/later checks to see if the simulated data corresponds to target data to be simulated
-    size_diagonal <- 0.000001
+    size_diagonal <- 0.00001
     re_covm2 <-matrix(c(size_diagonal, 0, 0, 0, 0, 0, 0,
                         0, size_diagonal, 0, 0, 0, 0, 0,
                         0, 0, size_diagonal, 0, 0, 0, 0,
@@ -309,7 +309,7 @@ for (s in 1:length(scaling_factor)) {
     BaselineMADRS10 <-  rep(d$MADRS10[d$visit == 0], tmp)
     length(BaselineMADRS10)
     d$Baseline <- BaselineMADRS10
-        #d
+        #View(d)
     
         #d<-d[d$visit!=0,]
     
@@ -345,7 +345,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     # fit a model to check if the estimated parameters are similar/close to the true parameters
-    fit <- gls(MADRS10 ~ visit * Treat, 
+    fit <- gls(MADRS10 ~ visit + visit * Treat, 
              data=d,
              correlation = corSymm(form=~1 | id),
              #weights = varIdent(form = ~ 1 | visit),
@@ -361,17 +361,19 @@ for (s in 1:length(scaling_factor)) {
         d$visit <- as.numeric(d$visit)-1
     
         # check the same with another package and models
-        fit_lme <- lme(fixed=MADRS10 ~ visit + visit:Treat, 
+        fit_lme <- lme(fixed=MADRS10 ~ 1 + visit + visit:Treat, 
                   random=~1 + visit | id,
                  method="REML", 
               #correlation = corSymm(form=~1|id),
             data=d)
         summary(fit_lme)
+        View(d)
+        #mean(d$Baseline)
         
         
-        #fit_lmer <- lmer(MADRS10 ~ visit + visit:Treat + (1 |id), data = d, REML = T)
+        fit_lmer <- lmer(MADRS10 ~1 + visit + visit:Treat + (1 + visit |id), data = d, REML = T)
     
-        #summary(fit_lmer)
+        summary(fit_lmer)
       
         #model_parameters(fit_lme)
     #### store estimated parameters----
