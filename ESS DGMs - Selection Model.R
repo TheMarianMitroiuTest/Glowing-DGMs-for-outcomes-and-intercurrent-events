@@ -41,7 +41,7 @@
 
 
 ## load libraries ----
-rm(list=ls()) #
+#rm(list=ls()) #
 library(gmailr)
 library(MASS)#
 library(tidyverse)#
@@ -78,10 +78,10 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
 
-n <- 190 # number of patients to be simulated (sample size)
+n <- 190#8000 # number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
 
-m.iterations <- 1 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 500 # 382 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <- c(1) # c(0.5, 1.0, 1.5, 2.0, 2.5) # scaling factor used to vary the percentages of intercurrent events at trial/iteration level
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # other ranges can be used to ensure variability between simulated trials, as long as they are as envisaged over all simulated trials (e.g., mean percentages)
@@ -206,7 +206,7 @@ for (s in 1:length(scaling_factor)) {
     #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
     # covariance matrix with 0 off-diagonal and small variances. This is useful for initial/later checks to see if the simulated data corresponds to target data to be simulated
-    size_diagonal <- 0.00001
+    size_diagonal <- 0.0000001
     re_covm2 <-matrix(c(size_diagonal, 0, 0, 0, 0, 0, 0,
                         0, size_diagonal, 0, 0, 0, 0, 0,
                         0, 0, size_diagonal, 0, 0, 0, 0,
@@ -217,7 +217,7 @@ for (s in 1:length(scaling_factor)) {
     
     re_covm3 <-re_covm/2 # we scaled the covariance matrix as we observed the trajectories were not similar with the targeted trajectories. This is up to user's decision
     
-    re <- mvrnorm(n, re_means, re_covm2)	; re # generate correlated residuals and check them
+    re <- mvrnorm(n, re_means, re_covm3)	; re # generate correlated residuals and check them
     #View(re)
     re <- as.matrix(re)
     colnames(re) <-c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6") ; re
@@ -345,7 +345,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     # fit a model to check if the estimated parameters are similar/close to the true parameters
-    fit <- gls(MADRS10 ~ visit + visit * Treat, 
+    fit <- gls(MADRS10 ~ visit*Treat, 
              data=d,
              correlation = corSymm(form=~1 | id),
              #weights = varIdent(form = ~ 1 | visit),
@@ -361,25 +361,32 @@ for (s in 1:length(scaling_factor)) {
         d$visit <- as.numeric(d$visit)-1
     
         # check the same with another package and models
-        fit_lme <- lme(fixed=MADRS10 ~ 1 + visit + visit:Treat, 
+        fit_lme <- lme(fixed=MADRS10 ~ visit + visit:Treat, 
                   random=~1 + visit | id,
                  method="REML", 
               #correlation = corSymm(form=~1|id),
             data=d)
         summary(fit_lme)
-        View(d)
+        #View(d)
         #mean(d$Baseline)
+        vcov(fit_lme)
+        VarCorr(fit_lme)
+        var(random.effects(fit_lme))
+        #            (Intercept)    visit
+        #(Intercept)   21.140783 1.307053
+        #visit          1.307053 1.044141
         
         
-        fit_lmer <- lmer(MADRS10 ~1 + visit + visit:Treat + (1 + visit |id), data = d, REML = T)
+        fit_lmer <- lmer(MADRS10 ~visit + visit:Treat + (1 + visit |id), data = d, REML = T)
     
         summary(fit_lmer)
       
         #model_parameters(fit_lme)
     #### store estimated parameters----
-    betas[m, ] <- fit$coefficients[c(8,15)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
+        summary(fit)
+    betas[m, ] <- fit$coefficients[c(8,14)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
     
-    delta[m, ] <- sum(fit$coefficients[c(8,15)]) # store the treatment effect at the end of the trial, at week 6
+    delta[m, ] <- sum(fit$coefficients[c(8,14)]) # store the treatment effect at the end of the trial, at week 6
     
         #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
         #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
@@ -676,10 +683,11 @@ end_time-start_time # total time to complete the simulation
 
 
 betas; 
-colMeans(delta); treatmenteffect
+colMeans(delta); treatmenteffect# change the name of delta_SMd
 
 tolerance_margin <- 0.1 
-difference_Verification <- abs(treatmenteffect - colMeans(delta))
+difference_Verification <- abs(treatmenteffect - colMeans(delta))# check parameterisation gls()
+#rename each to avoid duplication of verification conclusion due to the same name.
 
 # check if the result satisfies the inequality
 ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
@@ -865,7 +873,7 @@ sessionInfo()
 # The code used to extract the MMRM (longitudinal) models for each pattern in preparation for PMMMM method----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# Source trial with 1000 patients per arm
+# Source trial with 1000 patients per arm (total sample size = 2000 patients )
 # Pattern for LoE at trial level (as per rule above)
 # Pattern for AE in experimental arm (as per rule above)
 # Pattern for AE in control arm (as per rule above)
@@ -877,7 +885,7 @@ sessionInfo()
 # e.g., to have more patients in each pattern such that models fit
 
     #View(SimTrial_sm_2000_1_5)
-SimTrial_sm_2000_1_5 <-SimTrial_sm_2000_1_1
+SimTrial_sm_2000_1_5 <-SimTrial_sm_20000_1_1
 #describe(SimTrial_sm_2000_1_5)
 
 # prepare the dataset for reparameterisation to not have any treatment coefficient at baseline
@@ -934,17 +942,161 @@ fit_LoE_trial<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
 
 summary(fit_LoE_trial)
 getVarCov(fit_LoE_trial, individual = 8)
+# you should get
+#> summary(fit_LoE_trial)
+#Generalized least squares fit by REML
+#Model: MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 + Treat:V7 + Treat:V14 +      Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42 
+#Data: SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$LoE_YES == 1, ] 
+#AIC      BIC    logLik
+#26597.48 26824.18 -13263.74
+
+#Correlation Structure: General
+#Formula: ~1 | id 
+#Parameter estimate(s):
+#  Correlation: 
+#  1     2     3     4     5     6    
+#2 0.669                              
+#3 0.499 0.765                        
+#4 0.463 0.642 0.772                  
+#5 0.440 0.497 0.696 0.772            
+#6 0.540 0.533 0.632 0.665 0.785      
+#7 0.641 0.541 0.586 0.574 0.688 0.850
+
+#Coefficients:
+#  Value Std.Error   t-value p-value
+#(Intercept) 29.877763 0.2226789 134.17420  0.0000
+#V7          -1.266730 0.2260979  -5.60257  0.0000
+#V14         -0.387887 0.2731455  -1.42008  0.1557
+#V21         -0.835799 0.2816776  -2.96722  0.0030
+#V28          0.507517 0.2870108   1.76829  0.0771
+#V35          0.879907 0.2630121   3.34550  0.0008
+#V42          0.952685 0.2349301   4.05518  0.0001
+#V7:Treat1    2.190204 0.3375204   6.48910  0.0000
+#V14:Treat1   1.863464 0.3936713   4.73355  0.0000
+#V21:Treat1   0.924152 0.4026746   2.29503  0.0218
+#V28:Treat1   0.139989 0.4080712   0.34305  0.7316
+#V35:Treat1   0.685633 0.3824412   1.79278  0.0731
+#V42:Treat1  -0.337289 0.3487655  -0.96710  0.3335
+
+#Correlation: 
+#  (Intr) V7     V14    V21    V28    V35   
+#V7         -0.326                                   
+#V14        -0.408  0.711                            
+#V21        -0.424  0.569  0.756                     
+#V28        -0.435  0.401  0.680  0.767              
+#V35        -0.390  0.366  0.577  0.629  0.770       
+#V42        -0.340  0.285  0.482  0.491  0.647  0.807
+#V7:Treat1   0.000 -0.599 -0.387 -0.289 -0.173 -0.160
+#V14:Treat1  0.000 -0.401 -0.578 -0.404 -0.349 -0.290
+#V21:Treat1  0.000 -0.302 -0.407 -0.573 -0.407 -0.324
+#V28:Treat1  0.000 -0.182 -0.354 -0.410 -0.570 -0.423
+#V35:Treat1  0.000 -0.165 -0.287 -0.319 -0.413 -0.583
+#V42:Treat1  0.000 -0.118 -0.231 -0.234 -0.336 -0.455
+#V42    V7:Tr1 V14:T1 V21:T1 V28:T1 V35:T1
+#V7                                                  
+#V14                                                 
+#V21                                                 
+#V28                                                 
+#V35                                                 
+#V42                                                 
+#V7:Treat1  -0.117                                   
+#V14:Treat1 -0.238  0.669                            
+#V21:Treat1 -0.243  0.503  0.704                     
+#V28:Treat1 -0.351  0.304  0.612  0.714              
+#V35:Treat1 -0.464  0.275  0.497  0.556  0.725       
+#V42:Treat1 -0.596  0.196  0.399  0.407  0.589  0.779
+
+#Standardized residuals:
+#  Min          Q1         Med          Q3 
+#-3.83413438 -0.66126098 -0.04652564  0.58405776 
+#Max 
+#5.58338731 
+
+#Residual standard error: 5.840813 
+#Degrees of freedom: 4816 total; 4803 residual
+
+
 
 ## Pattern for AE in experimental arm----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
-                    data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes==1,] ,
+                    data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes==1,],
                     correlation = corSymm(form=~1 | id),
                     weights = varIdent(form = ~ 1 | Visit),
                     method="REML")
 
 summary(fit_AE_exp)
-getVarCov(fit_AE_exp, individual = '2')
+# you should get:
+#> summary(fit_AE_exp)
+#Generalized least squares fit by REML
+#Model: MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 
+#Data: SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes == 1, ] 
+#AIC      BIC    logLik
+#7507.055 7690.951 -3718.528
+
+#Correlation Structure: General
+#Formula: ~1 | id 
+#Parameter estimate(s):
+#  Correlation: 
+#  1     2     3     4     5     6    
+#2 0.821                              
+#3 0.610 0.737                        
+#4 0.532 0.622 0.821                  
+#5 0.437 0.512 0.797 0.828            
+#6 0.452 0.528 0.755 0.759 0.851      
+#7 0.371 0.460 0.726 0.688 0.793 0.922
+#Variance function:
+#  Structure: Different standard deviations per stratum
+#Formula: ~1 | Visit 
+#Parameter estimates:
+#  Baseline    Week1    Week2    Week3    Week4    Week5 
+#1.000000 1.666501 2.214874 2.368853 2.690007 2.978884 
+#Week6 
+#2.762692 
+
+#Coefficients:
+#  Value Std.Error   t-value p-value
+#(Intercept) 28.331376 0.1902819 148.89160       0
+#V7          -6.214209 0.1942037 -31.99840       0
+#V14         -6.660956 0.3405761 -19.55791       0
+#V21         -6.939396 0.3848165 -18.03300       0
+#V28         -7.295292 0.4616679 -15.80204       0
+#V35         -8.574455 0.5099839 -16.81319       0
+#V42         -8.977298 0.4881855 -18.38911       0
+
+#Correlation: 
+#  (Intr) V7    V14   V21   V28   V35  
+#V7  0.360                               
+#V14 0.196  0.548                        
+#V21 0.129  0.400 0.745                  
+#V28 0.072  0.304 0.742 0.783            
+#V35 0.129  0.331 0.685 0.692 0.815      
+#V42 0.010  0.277 0.667 0.620 0.754 0.904
+
+#Standardized residuals:
+#  Min           Q1          Med           Q3 
+#-3.649298026 -0.696550156  0.006950347  0.710778566 
+#Max 
+#2.633296856 
+
+#Residual standard error: 2.7111 
+#Degrees of freedom: 1421 total; 1414 residual
+
+getVarCov(fit_AE_exp, individual = '6')
+#you should get:
+#> getVarCov(fit_AE_exp, individual = '6')
+#Marginal variance covariance matrix
+#[,1]   [,2]    [,3]    [,4]    [,5]    [,6]    [,7]
+#[1,]  7.3501 10.053  9.9303  9.2668  8.6346  9.8879  7.5346
+#[2,] 10.0530 20.413 19.9910 18.0370 16.8690 19.2500 15.5700
+#[3,]  9.9303 19.991 36.0570 31.6680 34.9120 36.6240 32.6440
+#[4,]  9.2668 18.037 31.6680 41.2450 38.8030 39.3700 33.1060
+#[5,]  8.6346 16.869 34.9120 38.8030 53.1860 50.1170 43.3090
+#[6,]  9.8879 19.250 36.6240 39.3700 50.1170 65.2230 55.7720
+#[7,]  7.5346 15.570 32.6440 33.1060 43.3090 55.7720 56.0990
+#Standard Deviations: 2.7111 4.5181 6.0047 6.4222 7.2929 8.0761 7.4899 
+
+
 
     #View(SimTrial_1_5[SimTrial_1_5$AE_Exp_Yes==1,])
     #corMatrix(fit_AE_exp$modelStruct$corStruct)[[1]]  
@@ -973,7 +1125,96 @@ fit_no_IE<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
                     method="REML")
 
 summary(fit_no_IE)
-    #getVarCov(fit_no_IE, individual = 3)
+#you should get:
+#> summary(fit_no_IE)
+#Generalized least squares fit by REML
+#Model: MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 + Treat:V7 + Treat:V14 +      Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42 
+#Data: SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$Behavior == "No IE",      ] 
+#AIC      BIC    logLik
+#37858.53 38139.61 -18888.26
+
+#Correlation Structure: General
+#Formula: ~1 | id 
+#Parameter estimate(s):
+#  Correlation: 
+#  1     2     3     4     5     6    
+#2 0.822                              
+#3 0.707 0.820                        
+#4 0.684 0.728 0.846                  
+#5 0.559 0.582 0.784 0.826            
+#6 0.565 0.598 0.750 0.756 0.877      
+#7 0.498 0.555 0.705 0.678 0.812 0.927
+#Variance function:
+#  Structure: Different standard deviations per stratum
+#Formula: ~1 | Visit 
+#Parameter estimates:
+#  Baseline    Week1    Week2    Week3    Week4    Week5    Week6 
+#1.000000 2.180655 2.312579 2.300759 2.388043 2.577183 2.335500 
+
+#Coefficients:
+#  Value Std.Error   t-value p-value
+#(Intercept) 29.514812 0.0983291 300.16353  0.0000
+#V7          -2.529964 0.1923158 -13.15525  0.0000
+#V14         -4.052008 0.2398648 -16.89288  0.0000
+#V21         -4.431931 0.2442224 -18.14711  0.0000
+#V28         -6.018855 0.2823669 -21.31572  0.0000
+#V35         -7.601607 0.3044194 -24.97084  0.0000
+#V42         -8.457351 0.2871898 -29.44865  0.0000
+#V7:Treat1    0.397323 0.2442874   1.62646  0.1039
+#V14:Treat1  -0.309205 0.3217999  -0.96086  0.3367
+#V21:Treat1  -0.902596 0.3301530  -2.73387  0.0063
+#V28:Treat1  -1.183286 0.3896808  -3.03655  0.0024
+#V35:Treat1  -1.083183 0.4183702  -2.58905  0.0096
+#V42:Treat1  -1.424697 0.3984256  -3.57582  0.0004
+
+#Correlation: 
+#  (Intr) V7     V14    V21    V28    V35    V42    V7:Tr1
+#V7          0.405                                                 
+#V14         0.260  0.628                                          
+#V21         0.231  0.449  0.721                                   
+#V28         0.117  0.282  0.666  0.736                            
+#V35         0.148  0.316  0.612  0.625  0.824                     
+#V42         0.056  0.291  0.570  0.531  0.742  0.899              
+#V7:Treat1   0.000 -0.658 -0.411 -0.280 -0.185 -0.202 -0.211       
+#V14:Treat1  0.000 -0.389 -0.695 -0.492 -0.474 -0.428 -0.414  0.592
+#V21:Treat1  0.000 -0.263 -0.489 -0.700 -0.524 -0.437 -0.383  0.399
+#V28:Treat1  0.000 -0.170 -0.460 -0.514 -0.715 -0.584 -0.533  0.259
+#V35:Treat1  0.000 -0.186 -0.418 -0.430 -0.587 -0.712 -0.648  0.283
+#V42:Treat1  0.000 -0.193 -0.400 -0.373 -0.530 -0.642 -0.719  0.294
+#V14:T1 V21:T1 V28:T1 V35:T1
+#V7                                    
+#V14                                   
+#V21                                   
+#V28                                   
+#V35                                   
+#V42                                   
+#V7:Treat1                             
+#V14:Treat1                            
+#V21:Treat1  0.703                     
+#V28:Treat1  0.663  0.734              
+#V35:Treat1  0.601  0.614  0.821       
+#V42:Treat1  0.576  0.533  0.741  0.902
+
+#Standardized residuals:
+#  Min          Q1         Med          Q3         Max 
+#-4.10416049 -0.65565895 -0.02936365  0.63449169  4.18037828 
+
+#Residual standard error: 3.115652 
+#Degrees of freedom: 7028 total; 7015 residual
+
+getVarCov(fit_no_IE, individual = 3)
+#you should get:
+#> getVarCov(fit_no_IE, individual = 3)
+#Marginal variance covariance matrix
+#[,1]   [,2]   [,3]   [,4]   [,5]   [,6]   [,7]
+#[1,]  9.7073 17.403 15.873 15.283 12.956 14.140 11.301
+#[2,] 17.4030 46.161 40.123 35.473 29.397 32.609 27.429
+#[3,] 15.8730 40.123 51.915 43.718 42.015 43.401 36.981
+#[4,] 15.2830 35.473 43.718 51.385 44.059 43.510 35.372
+#[5,] 12.9560 29.397 42.015 44.059 55.358 52.421 43.936
+#[6,] 14.1400 32.609 43.401 43.510 52.421 64.475 54.154
+#[7,] 11.3010 27.429 36.981 35.372 43.936 54.154 52.949
+#Standard Deviations: 3.1157 6.7942 7.2052 7.1684 7.4403 8.0296 7.2766 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FOR SM Stochastic implementation
@@ -1053,7 +1294,7 @@ low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_bound
 # fit LMM model on the simulated trial (n=2000, re_covm3)
 # fit the glm to get the intercurrent events models with random effects in the linear predictor
 
-SimTrial_sm_2000_1_5 <- SimTrial_sm_2000_1_1 # check again to make sure it is the same number of patients
+SimTrial_sm_2000_1_5 <- SimTrial_sm_30000_1_1 # check again to make sure it is the same number of patients
 # write down here the number of patients used above in the SM model to generate the SOURCE TRIAL so N=?
 
 class(SimTrial_sm_2000_1_5$Visit)
@@ -1074,7 +1315,7 @@ fit_lme <- lme(fixed = MADRS10 ~ Visit + Visit : Treat,
               na.action = na.omit)
 #View(SimTrial_sm_2000_1_5)
 
-summary(fit_lme)
+summary(fit_lme) #refit with 8000 patients
 # you should get:
 #> summary(fit_lme)
 #Linear mixed-effects model fit by REML

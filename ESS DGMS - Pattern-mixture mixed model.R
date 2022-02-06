@@ -67,7 +67,7 @@ Scenario <- c("A")
 
 set.seed(2147483629) # set seed
 #set.seed(2147483399)
-m.iterations <- 10 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
+m.iterations <- 500 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
 # Could be used however to vary difference scenarios,e.g. a range of ratios for the AE:LoE at trial and arm level.
@@ -169,7 +169,7 @@ start_time <- Sys.time() # timestamp for the start time of the nested for loop b
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
   
-      
+      #s<-1
       ### percentages of intercurrent events to be filled in from the SM tables ----
       sampled_prop_LoE <- sample(prop_LoE, 1)
       #n_LoE_all <- round(sampled_prop_LoE*n * scaling_factor[s], digits = 0) ; n_LoE_all
@@ -209,14 +209,37 @@ for (s in 1:length(scaling_factor)) {
           0, 0, 0, 0, 0, size_diag, 0,
           0, 0, 0, 0, 0, 0, size_diag), nrow = 7)
       
+      
+# from a SM model as source trial with n=2000 and re_covm= re_covm3
+#[1,] 34.115 22.836 17.029 15.798 14.997 18.416 21.863
+#[2,] 22.836 34.115 26.096 21.885 16.963 18.191 18.452
+#[3,] 17.029 26.096 34.115 26.343 23.728 21.558 19.976
+#[4,] 15.798 21.885 26.343 34.115 26.342 22.680 19.576
+#[5,] 14.997 16.963 23.728 26.342 34.115 26.788 23.461
+#[6,] 18.416 18.191 21.558 22.680 26.788 34.115 28.982
+#[7,] 21.863 18.452 19.976 19.576 23.461 28.982 34.115
+      
+      
       re_covm_LoE_all <- matrix(
-        c(10.029, 18.475, 16.469, 15.586, 12.817, 13.824, 11.079,
-          18.475, 49.857, 40.987, 36.110, 26.753, 29.219, 23.940,
-          16.469, 40.987, 48.772, 41.651, 35.042, 33.685, 26.541,
-          15.586, 36.110, 41.651, 48.975, 37.920, 34.765, 25.684,
-          12.817, 26.753, 35.042, 37.920, 44.017, 36.730, 27.583,
-          13.824, 29.219, 33.685, 34.765, 36.730, 44.046, 32.626,
-          11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
+        c(34.115, 22.836, 17.029, 15.798, 14.997, 18.416, 21.863,
+          22.836, 34.115, 26.096, 21.885, 16.963, 18.191, 18.452,
+          17.029, 26.096, 34.115, 26.343, 23.728, 21.558, 19.976,
+          15.798, 21.885, 26.343, 34.115, 26.342, 22.680, 19.576,
+          14.997, 16.963, 23.728, 26.342, 34.115, 26.788, 23.461,
+          18.416, 18.191, 21.558, 22.680, 26.788, 34.115, 28.982,
+          21.863, 18.452, 19.976, 19.576, 23.461, 28.982, 34.115), nrow = 7)
+  
+      
+# before 5-Feb-2022      
+#      re_covm_LoE_all <- matrix(
+#        c(10.029, 18.475, 16.469, 15.586, 12.817, 13.824, 11.079,
+#          18.475, 49.857, 40.987, 36.110, 26.753, 29.219, 23.940,
+#          16.469, 40.987, 48.772, 41.651, 35.042, 33.685, 26.541,
+#          15.586, 36.110, 41.651, 48.975, 37.920, 34.765, 25.684,
+#          12.817, 26.753, 35.042, 37.920, 44.017, 36.730, 27.583,
+#          13.824, 29.219, 33.685, 34.765, 36.730, 44.046, 32.626,
+#          11.079, 23.940, 26.541, 25.684, 27.583, 32.626, 31.158), nrow = 7)
+      
       
       
       re_LoE_all <- mvrnorm(n_LoE_all, re_means, re_covm_LoE_all)	; re_LoE_all
@@ -378,20 +401,41 @@ for (s in 1:length(scaling_factor)) {
       d_LoE_all$No_IE <- 0
       d_LoE_all$AE_Yes <- 0
       
-      ### PATTERN OF LoE IN BOTH EXPERIMENTAL AND CONTROL ARMS----
-      #### Generate pattern for LoE, both experimental and control arm
+      ### PATTERN OF AE IN BOTH EXPERIMENTAL AND CONTROL ARMS----
+      #### Generate pattern for AE, both experimental and control arm
       #### Generate correlated errors----
       re_means <- c(0, 0, 0, 0, 0, 0, 0)
       
+#new covariance matrix  
+      #[,1]   [,2]    [,3]    [,4]    [,5]    [,6]    [,7]
+      #[1,]  7.3501 10.053  9.9303  9.2668  8.6346  9.8879  7.5346
+      #[2,] 10.0530 20.413 19.9910 18.0370 16.8690 19.2500 15.5700
+      #[3,]  9.9303 19.991 36.0570 31.6680 34.9120 36.6240 32.6440
+      #[4,]  9.2668 18.037 31.6680 41.2450 38.8030 39.3700 33.1060
+      #[5,]  8.6346 16.869 34.9120 38.8030 53.1860 50.1170 43.3090
+      #[6,]  9.8879 19.250 36.6240 39.3700 50.1170 65.2230 55.7720
+      #[7,]  7.5346 15.570 32.6440 33.1060 43.3090 55.7720 56.0990
+
       
       re_covm_AE_all <- matrix(
-        c( 6.9032, 10.336,  8.0566,  7.7261,  5.4332,  6.7676,  6.2245,
-           10.3360, 27.081, 16.1550, 16.0000, 11.5500, 16.2050, 15.5570,
-           8.0566, 16.155, 16.4560, 15.4320, 14.2650, 15.2550, 13.9950,
-           7.7261, 16.000, 15.4320, 27.8230, 22.2510, 21.2790, 17.8320,
-           5.4332, 11.550, 14.2650, 22.2510, 34.3770, 28.9640, 25.4320,
-           6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
-           6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
+        c( 7.3501, 10.053,  9.9303,  9.2668,  8.6346,  9.8879,  7.5346,
+          10.0530, 20.413, 19.9910, 18.0370, 16.8690, 19.2500, 15.5700,
+           9.9303, 19.991, 36.0570, 31.6680, 34.9120, 36.6240, 32.6440,
+           9.2668, 18.037, 31.6680, 41.2450, 38.8030, 39.3700, 33.1060,
+           8.6346, 16.869, 34.9120, 38.8030, 53.1860, 50.1170, 43.3090,
+           9.8879, 19.250, 36.6240, 39.3700, 50.1170, 65.2230, 55.7720,
+           7.5346, 15.570, 32.6440, 33.1060, 43.3090, 55.7720, 56.0990), nrow = 7)
+      
+      
+#covariance matrix used before 5-Feb-2022
+#      re_covm_AE_all <- matrix(
+#        c( 6.9032, 10.336,  8.0566,  7.7261,  5.4332,  6.7676,  6.2245,
+#           10.3360, 27.081, 16.1550, 16.0000, 11.5500, 16.2050, 15.5570,
+#           8.0566, 16.155, 16.4560, 15.4320, 14.2650, 15.2550, 13.9950,
+#           7.7261, 16.000, 15.4320, 27.8230, 22.2510, 21.2790, 17.8320,
+#           5.4332, 11.550, 14.2650, 22.2510, 34.3770, 28.9640, 25.4320,
+#           6.7676, 16.205, 15.2550, 21.2790, 28.9640, 39.7950, 34.7130,
+#           6.2245, 15.557, 13.9950, 17.8320, 25.4320, 34.7130, 37.7120), nrow = 7)
       
       re_AE_all <- mvrnorm(n_AE_all, re_means, re_covm_AE_all)	; re_AE_all
       #View(re_AE_all)
@@ -559,15 +603,35 @@ for (s in 1:length(scaling_factor)) {
       #### Generate pattern for No IE, both experimental and control arm
       #### Generate correlated errors----
       re_means <- c(0, 0, 0, 0, 0, 0, 0)
+#Covariance matrix used 5-February-2022      
+##[,1]   [,2]   [,3]   [,4]   [,5]   [,6]   [,7]
+#[1,]  9.7073 17.403 15.873 15.283 12.956 14.140 11.301
+#[2,] 17.4030 46.161 40.123 35.473 29.397 32.609 27.429
+#[3,] 15.8730 40.123 51.915 43.718 42.015 43.401 36.981
+#[4,] 15.2830 35.473 43.718 51.385 44.059 43.510 35.372
+#[5,] 12.9560 29.397 42.015 44.059 55.358 52.421 43.936
+#[6,] 14.1400 32.609 43.401 43.510 52.421 64.475 54.154
+#[7,] 11.3010 27.429 36.981 35.372 43.936 54.154 52.949      
       
       re_covm_No_IE <- matrix(
-        c(10.040, 18.135, 16.595, 15.814, 13.524, 14.740, 11.582,
-          18.135, 48.213, 42.211, 37.687, 30.909, 34.285, 28.580,
-          16.595, 42.211, 54.236, 46.775, 44.082, 44.487, 37.226,
-          15.814, 37.687, 46.775, 54.825, 46.690, 44.923, 35.807,
-          13.524, 30.909, 44.082, 46.690, 56.719, 51.932, 43.362,
-          14.740, 34.285, 44.487, 44.923, 51.932, 62.843, 52.026,
-          11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
+              c( 9.7073, 17.403, 15.873, 15.283, 12.956, 14.140, 11.301,
+                17.4030, 46.161, 40.123, 35.473, 29.397, 32.609, 27.429,
+                15.8730, 40.123, 51.915, 43.718, 42.015, 43.401, 36.981,
+                15.2830, 35.473, 43.718, 51.385, 44.059, 43.510, 35.372,
+                12.9560, 29.397, 42.015, 44.059, 55.358, 52.421, 43.936,
+                14.1400, 32.609, 43.401, 43.510, 52.421, 64.475, 54.154,
+                11.3010, 27.429, 36.981, 35.372, 43.936, 54.154, 52.949), nrow = 7)
+      
+      
+  # Covariance matrix used before 5-February-2022    
+#      re_covm_No_IE <- matrix(
+#        c(10.040, 18.135, 16.595, 15.814, 13.524, 14.740, 11.582,
+#          18.135, 48.213, 42.211, 37.687, 30.909, 34.285, 28.580,
+#          16.595, 42.211, 54.236, 46.775, 44.082, 44.487, 37.226,
+#          15.814, 37.687, 46.775, 54.825, 46.690, 44.923, 35.807,
+#          13.524, 30.909, 44.082, 46.690, 56.719, 51.932, 43.362,
+#          14.740, 34.285, 44.487, 44.923, 51.932, 62.843, 52.026,
+#          11.582, 28.580, 37.226, 35.807, 43.362, 52.026, 51.272), nrow = 7)
       
       
       re_No_IE <- mvrnorm(n_No_IE, re_means, re_covm_No_IE)	; re_No_IE
@@ -828,6 +892,7 @@ for (s in 1:length(scaling_factor)) {
     
     sum(fit_pmmm$coefficients[c(13)]); treatmenteffect_pmmm
     # store parameters from model fit on each dataset
+    #summary(fit_pmmm)
     betas[m, ] <- fit_pmmm$coefficients[c(13)]
     
     delta[m, ] <- sum(fit_pmmm$coefficients[c(13)])
@@ -1092,6 +1157,33 @@ hist(all_delta_1)
 
 ## Session info---- 
 sessionInfo()
+# 6 February 2022
+#> sessionInfo()
+#R version 4.1.2 (2021-11-01)
+#Platform: x86_64-apple-darwin17.0 (64-bit)
+#Running under: macOS Monterey 12.1
+
+#Matrix products: default
+#LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+#Random number generation:
+#  RNG:     Mersenne-Twister 
+#Normal:  Inversion 
+#Sample:  Rounding 
+
+#locale:
+#  [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+#attached base packages:
+#  [1] splines   stats     graphics  grDevices utils     datasets 
+#[7] methods   base     
+
+#other attached packages:
+#  [1] JM_1.4-8        foreign_0.8-82  survival_3.2-13 patchwork_1.1.1
+#[5] gt_0.3.1        janitor_2.1.0   lme4_1.1-28     Matrix_1.4-0   
+#[9] nlme_3.1-155    forcats_0.5.1   stringr_1.4.0   dplyr_1.0.7    
+#[13] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0     tibble_3.1.6   
+#[17] ggplot2_3.3.5   tidyverse_1.3.1 MASS_7.3-55     gmailr_1.0.1  
 installed.packages()
 
 

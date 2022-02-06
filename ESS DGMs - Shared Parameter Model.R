@@ -235,35 +235,27 @@ for(m in 1:m.iterations) {
   
   #### model parameters----
   
-  
-  
-  # n=1000
-  # size_diagonal <- 0.0000001
-  #  Fixed effects:  MADRS10 ~ visit + visit:Treat 
-  #Value   Std.Error   DF  t-value p-value
-  #(Intercept) 29.382612 0.005033309 5998 5837.633       0
-  #visit       -0.521374 0.001612758 5998 -323.281       0
-  #visit:Treat -0.615376 0.001550078 5998 -396.997       0
-  
-  b0 <-  29.38 #29.79 # intercept
-  b1 <-  -0.521374 # -0.55   #slope
-  b2 <-  -0.615376 # -0.583  #treatment effect 
-  # b0, b1 and b2 are taken from a SOURCE TRIAL simulated with SMd DGM with n=1000 patients and re_covm2 (0 off diagonal and very small diagonal terms)
-  # these parameters correspond to the true treatment effect assumed at week 6, e.g., -0.583*6=-3.498, intercept = 29.79
-
+  b0 <-  29.374914 #29.79 # intercept
+  b1 <-  -0.529752 # -0.55  #slope
+  b2 <-  -0.577650 # -0.583 treatment effect 
+  # b0, b1 and b2 are taken from a SOURCE TRIAL simulated with SMd DGM with n=8000 patients and re_covm3
   # based on these, errors (eps.sd) are added and the covariance matrix (bi_covm) below is used for the random effects in order to simulate trials.
 
   
-  
+  #Fixed effects:  MADRS10 ~ visit + visit:Treat 
+  #Value  Std.Error    DF  t-value p-value
+  #(Intercept) 29.374914 0.06088202 47998 482.4892       0
+  #visit       -0.529752 0.02041562 47998 -25.9484       0
+  #visit:Treat -0.577650 0.02898964 47998 -19.9261       0
   
   
   # the bi_covm and eps.sd are taken from a model fitted on a SOURCE TRIAL with n=4000 patients and re_covm3
   bi_means <- c(0, 0)
-  bi_covm <- matrix(c(16.872774, 2.948891, 2.948891, 1.179599), nrow = 2)
+  bi_covm <- matrix(c(21.140783, 1.307053, 1.307053, 1.044141), nrow = 2)
   
   #bi_covm <- matrix(c(24.611, 0.5869809, 0.5869809, 1.157), nrow = 2) original
   bi <- mvrnorm(n, bi_means, bi_covm)	# generate random effects for n patients, with bi_means and covariance bi_covm
-  eps.sd <-3.146991 # 3.247  # residual error
+  eps.sd <-3.285955 # 3.247  # residual error
   
   
   # summary(fit_lme)
@@ -856,6 +848,34 @@ gt(tab2_SPM) |>
 
 ## Session info---- 
 sessionInfo()
+
+# build 6 February 2022
+#> sessionInfo()
+#R version 4.1.2 (2021-11-01)
+#Platform: x86_64-apple-darwin17.0 (64-bit)
+#Running under: macOS Monterey 12.1
+
+#Matrix products: default
+#LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+#Random number generation:
+#  RNG:     Mersenne-Twister 
+#Normal:  Inversion 
+#Sample:  Rounding 
+
+#locale:
+#  [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+#attached base packages:
+#  [1] splines   stats     graphics  grDevices utils     datasets 
+#[7] methods   base     
+
+#other attached packages:
+#  [1] JM_1.4-8        foreign_0.8-82  survival_3.2-13 patchwork_1.1.1
+#[5] gt_0.3.1        janitor_2.1.0   lme4_1.1-28     Matrix_1.4-0   
+#[9] nlme_3.1-155    forcats_0.5.1   stringr_1.4.0   dplyr_1.0.7    
+#[13] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0     tibble_3.1.6   
+#[17] ggplot2_3.3.5   tidyverse_1.3.1 MASS_7.3-55     gmailr_1.0.1  
 installed.packages()
 
 
