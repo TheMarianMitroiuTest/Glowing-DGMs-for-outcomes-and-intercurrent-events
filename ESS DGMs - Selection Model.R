@@ -41,7 +41,7 @@
 
 
 ## load libraries ----
-#rm(list=ls()) #
+rm(list=ls()) #
 library(gmailr)
 library(MASS)#
 library(tidyverse)#
@@ -51,6 +51,7 @@ library(lme4)#
 library(janitor)#
 library(gt)#
 library(patchwork)#
+library(JM)
 
 ## gmail setup----
 # Selection model via marginal model for outcomes-generating model and deterministic/stochastic rules for generation of intercurrent events
@@ -75,7 +76,7 @@ Scenario <- c("A")
 
 ## simulation parameters #----
 
-set.seed(2147483629) # set seed
+
 #set.seed(2147483399)
 
 n <- 190#8000 # number of patients to be simulated (sample size)
@@ -102,17 +103,17 @@ p_AE_Exp_sample <- 0.45 #c(0.055, 0.065, 0.075, 0.085, 0.095)*2; mean(p_AE_Exp_s
 p_AE_Control_sample <- 0.4 #c(0.05, 0.10, 0.15, 0.20, 0.25)/2; mean(p_AE_Control_sample) # proportion of e.g.,  treatment discontinuation due to lack of efficacy in the control arm
 
 visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline (day 0) + follow-up measurements at day 7, 14, ..., 42
-delta <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
-colnames(delta) <-c("TreatmentEffect")
-betas <- matrix(ncol=2,nrow=m.iterations) # object to store parameters for the treatment effect at week 6 based on the MMRM model fitted on each generated dataset
-colnames(betas) <-c("Treat", "visit42:Treat")
+delta_SMd <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
+colnames(delta_SMd) <-c("TreatmentEffect")
+betas_SMd <- matrix(ncol=2,nrow=m.iterations) # object to store parameters for the treatment effect at week 6 based on the MMRM model fitted on each generated dataset
+colnames(betas_SMd) <-c("Treat", "visit42:Treat")
 
 pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
 
 confint_fit <- matrix(ncol=2,nrow=m.iterations) # object to store the 95% confidence interval bounds for the estimated treatment effect
 colnames(confint_fit) <-c("Lower boundary 95% CI", "Upper boundary 95% CI")
-delta_errorz <- matrix(ncol=1,nrow=m.iterations) # standard error of the estimated treatment effect
-colnames(delta_errorz) <- c("SE")
+delta_SMd_errorz <- matrix(ncol=1,nrow=m.iterations) # standard error of the estimated treatment effect
+colnames(delta_SMd_errorz) <- c("SE")
 
 bias_f <- matrix(ncol=1,nrow=m.iterations) # object to store the bias (estimated treatment effect - true treatment effect)
 colnames(bias_f) <- c("bias_f")
@@ -185,7 +186,7 @@ pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3) # # progres
     
 start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
 # it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
-
+set.seed(2147483629) # set seed
 ## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
@@ -195,6 +196,7 @@ for (s in 1:length(scaling_factor)) {
     re_means <- c(0, 0, 0, 0, 0, 0, 0) # means of residuals at each timepoint
     
     # covariance matrix extracted from trial 003-002 (see reference to the data analysis paper in PST)
+    # this dataset is not available to share. A MMRM model was fitted and this is the corresponding covariance matrix
     re_covm <- matrix(c(20.2190, 17.149, 14.721, 13.087,  8.4329,  10.854,   4.6417, 
                         17.1490, 48.536, 41.161, 32.151, 24.8400,  30.528,  26.0170,
                         14.7210, 41.161, 72.569, 57.866, 60.2200,  61.974,  54.5400,
@@ -298,7 +300,7 @@ for (s in 1:length(scaling_factor)) {
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     # this is the raw dataset used to check the model fit
-    d <-d[,-5] # remove re (residuals) column from the dataset, they have been added to betas
+    d <-d[,-5] # remove re (residuals) column from the dataset, they have been added to betas_SMd
     
     # assign this to another object to make sure each time for each analysis the dataset used is the same
     d_orig<-d # full outcome data
@@ -358,15 +360,55 @@ for (s in 1:length(scaling_factor)) {
         #re_covm2
         #fit$coefficients[c(7,13)]
         #sum(fit$coefficients[c(7,13)]); treatmenteffect
+    #~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #### The code for SPM DGM
+    #~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # On a trial generated with the selection model (in this for loop with 8000 patients and 1 iteration), we fitted a mixed-effects model with random intercept and random slope # 
+    # fit LMM model on the simulated trial (n=8000, re_covm3), to get good estimates for the outcomes model
+    # fit the glm models to get the intercurrent events models. On these, random effects will be added in the linear predictor
+    
         d$visit <- as.numeric(d$visit)-1
     
-        # check the same with another package and models
         fit_lme <- lme(fixed=MADRS10 ~ visit + visit:Treat, 
                   random=~1 + visit | id,
                  method="REML", 
               #correlation = corSymm(form=~1|id),
             data=d)
         summary(fit_lme)
+        # you should get:
+        #>         summary(fit_lme)
+        #Linear mixed-effects model fit by REML
+        #Data: d 
+        #AIC      BIC    logLik
+        #327614.9 327677.4 -163800.4
+        
+        #Random effects:
+        #  Formula: ~1 + visit | id
+        #Structure: General positive-definite, Log-Cholesky parametrization
+        #StdDev   Corr  
+        #(Intercept) 4.963853 (Intr)
+        #visit       1.142975 0.101 
+        #Residual    3.285955       
+        
+        #Fixed effects:  MADRS10 ~ visit + visit:Treat 
+        #Value  Std.Error    DF  t-value p-value
+        #(Intercept) 29.374914 0.06088202 47998 482.4892       0
+        #visit       -0.529752 0.02041562 47998 -25.9484       0
+        #visit:Treat -0.577650 0.02898964 47998 -19.9261       0
+        #Correlation: 
+        #  (Intr) visit 
+        #visit       -0.059       
+        #visit:Treat  0.000 -0.702
+        
+        #Standardized Within-Group Residuals:
+        #  Min            Q1           Med            Q3 
+        #-3.6560020890 -0.5761900126 -0.0005035796  0.5794871856 
+        #Max 
+        #3.9895106728 
+        
+        #Number of Observations: 56000
+        #Number of Groups: 8000 
+        
         #View(d)
         #mean(d$Baseline)
         vcov(fit_lme)
@@ -377,22 +419,22 @@ for (s in 1:length(scaling_factor)) {
         #visit          1.307053 1.044141
         
         
-        fit_lmer <- lmer(MADRS10 ~visit + visit:Treat + (1 + visit |id), data = d, REML = T)
+        #fit_lmer <- lmer(MADRS10 ~visit + visit:Treat + (1 + visit |id), data = d, REML = T)
     
-        summary(fit_lmer)
+        #summary(fit_lmer)
       
         #model_parameters(fit_lme)
     #### store estimated parameters----
         summary(fit)
-    betas[m, ] <- fit$coefficients[c(8,14)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
+    betas_SMd[m, ] <- fit$coefficients[c(8,14)] # store the parameters corresponding to the treatment effect at the end of the trial, at week 6
     
-    delta[m, ] <- sum(fit$coefficients[c(8,14)]) # store the treatment effect at the end of the trial, at week 6
+    delta_SMd[m, ] <- sum(fit$coefficients[c(8,14)]) # store the treatment effect at the end of the trial, at week 6
     
         #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
-        #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
-        #delta_errorz[m, ] <- delta_error 
-        #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
-        #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
+        #delta_SMd_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
+        #delta_SMd_errorz[m, ] <- delta_SMd_error 
+        #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_SMd_error
+        #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_SMd_error
     
     # store the number of patients in the objects defined a priori
     Randomised_Exp <- sum(d[,3])/7 #number of patients in the experimental arm # make sure it is divided by the number of visits (6/7), without or with the baseline included as response
@@ -618,9 +660,9 @@ for (s in 1:length(scaling_factor)) {
     # All behaviors #
     p<- ggplot(data = d_mis_L, aes(x = Visit, y = MADRS10, group = id, color=Behavior)) 
     #p + geom_line() + facet_grid(~ Treat) 
-    plot_all_SM <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60)) + ggtitle("SM-All patterns") +
-      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_all_SM
+    plot_all_SMd <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="black") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("SMd-All patterns") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_all_SMd
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ##### Plots by subsets/patterns of patients that experienced a certain intercurrent event----
@@ -631,22 +673,22 @@ for (s in 1:length(scaling_factor)) {
     
     # just (subset) LoE patients with their trajectory #
     p<- ggplot(data = d_mis_L_LoE, aes(x = Visit, y = MADRS10, group = id))
-    plot_LoE_SM <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60)) + ggtitle("SM-LoE pattern") +
-      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_LoE_SM
+    plot_LoE_SMd <- p + geom_line(size=0.5, color='#00BA38') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="dark green") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("SMd-LoE pattern") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_LoE_SMd
 
     
     # just AE patients with their trajectory #
     p<- ggplot(data = d_mis_L_AE, aes(x = Visit, y = MADRS10, group = id))
-    plot_AE_SM <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
-      scale_y_continuous(limits = c(-10, 60)) + ggtitle("SM-AE pattern") +
-      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_AE_SM
+    plot_AE_SMd <- p + geom_line(size=0.5, color='#F8766D') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
+      scale_y_continuous(limits = c(-10, 60)) + ggtitle("SMd-AE pattern") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_AE_SMd
     
     # just No IE patients with their trajectory # 
     p<- ggplot(data = d_mis_L_NoIE, aes(x = Visit, y = MADRS10, group = id))
-    plot_NoIE_SM <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat) +
-     scale_y_continuous(limits = c(-10, 60)) + ggtitle("SM-No IE pattern") +
-      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_NoIE_SM
+    plot_NoIE_SMd <- p + geom_line(size=0.5, color='#619CFF') + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="blue") + facet_wrap(~ Treat) +
+     scale_y_continuous(limits = c(-10, 60)) + ggtitle("SMd-No IE pattern") +
+      scale_x_discrete(labels=c("0", "1", "2", "3", "4", "5", "6")); plot_NoIE_SMd
     
     
     
@@ -655,16 +697,16 @@ for (s in 1:length(scaling_factor)) {
   }
 
   # parameters extracted for MMRM fitted models on full outcome data
-  colMeans(betas) # average of treatment effect parameters estimated from the model
-  colMeans(delta) ; treatmenteffect # average treatment effect estimated from the model
+  colMeans(betas_SMd) # average of treatment effect parameters estimated from the model
+  colMeans(delta_SMd) ; treatmenteffect # average treatment effect estimated from the model
   
   # assign and save all parameters----
   # pertaining to the treatment effect, the estimated treatment effect, the standard errors, 95% CI and intercurrent event descriptives
-  assign(paste('all_betas', s, sep="_"), betas)
+  assign(paste('all_betas_SMd', s, sep="_"), betas_SMd)
   
-  assign(paste('all_delta', s, sep="_"), delta)
+  assign(paste('all_delta_SMd', s, sep="_"), delta_SMd)
   
-  #assign(paste('all_delta_errorz', s, sep="_"), delta_errorz)
+  #assign(paste('all_delta_SMd_errorz', s, sep="_"), delta_SMd_errorz)
   
   #assign(paste('all_confint_fit', s, sep="_"), confint_fit)
   
@@ -682,15 +724,15 @@ end_time-start_time # total time to complete the simulation
 
 
 
-betas; 
-colMeans(delta); treatmenteffect# change the name of delta_SMd
+betas_SMd; 
+colMeans(delta_SMd); treatmenteffect# change the name of delta_SMd_SMd
 
 tolerance_margin <- 0.1 
-difference_Verification <- abs(treatmenteffect - colMeans(delta))# check parameterisation gls()
+difference_Verification_SMd <- abs(treatmenteffect - colMeans(delta_SMd))# check parameterisation gls()
 #rename each to avoid duplication of verification conclusion due to the same name.
 
 # check if the result satisfies the inequality
-ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
+ifelse(isTRUE(paste(difference_Verification_SMd) < tolerance_margin), "Verification SMd *SUCCESSFUL*", "Verification SMd NOT successful :(") 
 
 
 
@@ -817,19 +859,6 @@ tab_spanner(
 
 
 
-
-
-
-# determine the number of trials needed to simulate for the verification of the longitudinal outcomes
-# Formula from Burton paper
-#tolerance_margin <- 0.1 # bias allowed
-#std.e <- 0.997 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
-
-#n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
-# 382 trials
-# verification of the longitudinal outcomes was successful
-
-
 ## Session info---- 
 sessionInfo()
 
@@ -866,6 +895,20 @@ sessionInfo()
 #installed.packages()
 
 
+
+
+
+
+# Determine the number of trials needed to simulate for the verification of the longitudinal outcomes
+# Formula from Burton paper
+#tolerance_margin <- 0.1 # bias allowed
+#std.e <- 0.997 # model-based standard error of the treatment effect estimate from a fitted model on 1 trial
+
+#n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
+# 382 trials
+# verification of the longitudinal outcomes was successful
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -873,19 +916,16 @@ sessionInfo()
 # The code used to extract the MMRM (longitudinal) models for each pattern in preparation for PMMMM method----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# Source trial with 1000 patients per arm (total sample size = 2000 patients )
+# Source trial with 1000 patients per arm (total sample size = 2000 patients, re_covm3)
 # Pattern for LoE at trial level (as per rule above)
-# Pattern for AE in experimental arm (as per rule above)
-# Pattern for AE in control arm (as per rule above)
+# Pattern for AE in experimental and control arms (as per rules above in SMd)
 # Pattern for No intercurrent event at trial level (remaining patients)
 
-# 50% and then use scaling factors to get to 5% the entire range of IE percentages
-
-# Use simulated trial with highest percentage of IE. Any other trial or parameters can be used. We chose it for operational reasons and model-fitting optimisation
-# e.g., to have more patients in each pattern such that models fit
 
     #View(SimTrial_sm_2000_1_5)
-SimTrial_sm_2000_1_5 <-SimTrial_sm_20000_1_1
+SimTrial_sm_2000_1_5 <-SimTrial_sm_2000_1_1 #
+#This is 2000 for most of the models, for SPM DGM for the linear mixed effects model n=8000 (see above in the for loop)
+# to avoid duplicating the code, which is already lengthy
 #describe(SimTrial_sm_2000_1_5)
 
 # prepare the dataset for reparameterisation to not have any treatment coefficient at baseline
@@ -1019,101 +1059,110 @@ getVarCov(fit_LoE_trial, individual = 8)
 
 ## Pattern for AE in experimental arm----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-fit_AE_exp<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42, 
-                    data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes==1,],
+fit_AE_all<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 +
+                  Treat:V7 + Treat:V14 + Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42, 
+                    data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Yes==1,],
                     correlation = corSymm(form=~1 | id),
                     weights = varIdent(form = ~ 1 | Visit),
                     method="REML")
 
-summary(fit_AE_exp)
+
+summary(fit_AE_all)
 # you should get:
-#> summary(fit_AE_exp)
+#> summary(fit_AE_all)
 #Generalized least squares fit by REML
-#Model: MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 
-#Data: SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Exp_Yes == 1, ] 
+#Model: MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42 + Treat:V7 + Treat:V14 +      Treat:V21 + Treat:V28 + Treat:V35 + Treat:V42 
+#Data: SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Yes == 1, ] 
 #AIC      BIC    logLik
-#7507.055 7690.951 -3718.528
+#11498.99 11731.46 -5708.495
 
 #Correlation Structure: General
 #Formula: ~1 | id 
 #Parameter estimate(s):
 #  Correlation: 
 #  1     2     3     4     5     6    
-#2 0.821                              
-#3 0.610 0.737                        
-#4 0.532 0.622 0.821                  
-#5 0.437 0.512 0.797 0.828            
-#6 0.452 0.528 0.755 0.759 0.851      
-#7 0.371 0.460 0.726 0.688 0.793 0.922
+#2 0.864                              
+#3 0.679 0.759                        
+#4 0.594 0.641 0.833                  
+#5 0.467 0.493 0.768 0.829            
+#6 0.467 0.498 0.730 0.754 0.872      
+#7 0.358 0.415 0.675 0.665 0.801 0.923
 #Variance function:
 #  Structure: Different standard deviations per stratum
 #Formula: ~1 | Visit 
 #Parameter estimates:
 #  Baseline    Week1    Week2    Week3    Week4    Week5 
-#1.000000 1.666501 2.214874 2.368853 2.690007 2.978884 
+#1.000000 1.527025 1.972734 2.114375 2.381852 2.612523 
 #Week6 
-#2.762692 
+#2.408459 
 
 #Coefficients:
 #  Value Std.Error   t-value p-value
-#(Intercept) 28.331376 0.1902819 148.89160       0
-#V7          -6.214209 0.1942037 -31.99840       0
-#V14         -6.660956 0.3405761 -19.55791       0
-#V21         -6.939396 0.3848165 -18.03300       0
-#V28         -7.295292 0.4616679 -15.80204       0
-#V35         -8.574455 0.5099839 -16.81319       0
-#V42         -8.977298 0.4881855 -18.38911       0
+#(Intercept) 29.580079 0.1825747 162.01628  0.0000
+#V7           4.028240 0.2472695  16.29089  0.0000
+#V14          2.739713 0.4570672   5.99411  0.0000
+#V21          1.577882 0.5340134   2.95476  0.0032
+#V28         -0.384598 0.6589913  -0.58362  0.5595
+#V35         -0.307635 0.7234364  -0.42524  0.6707
+#V42         -0.352707 0.7034991  -0.50136  0.6162
+#V7:Treat1   -9.843380 0.2959763 -33.25733  0.0000
+#V14:Treat1  -8.976663 0.5577959 -16.09310  0.0000
+#V21:Treat1  -8.198202 0.6552633 -12.51131  0.0000
+#V28:Treat1  -6.771080 0.8113319  -8.34564  0.0000
+#V35:Treat1  -7.991637 0.8897234  -8.98216  0.0000
+#V42:Treat1  -8.795151 0.8659999 -10.15606  0.0000
 
 #Correlation: 
-#  (Intr) V7    V14   V21   V28   V35  
-#V7  0.360                               
-#V14 0.196  0.548                        
-#V21 0.129  0.400 0.745                  
-#V28 0.072  0.304 0.742 0.783            
-#V35 0.129  0.331 0.685 0.692 0.815      
-#V42 0.010  0.277 0.667 0.620 0.754 0.904
+#  (Intr) V7     V14    V21    V28    V35    V42   
+#V7          0.236                                          
+#V14         0.136  0.482                                   
+#V21         0.087  0.326  0.730                            
+#V28         0.031  0.203  0.693  0.774                     
+#V35         0.056  0.219  0.637  0.672  0.837              
+#V42        -0.035  0.208  0.619  0.597  0.766  0.912       
+#V7:Treat1   0.000 -0.789 -0.376 -0.255 -0.163 -0.172 -0.181
+#V14:Treat1  0.000 -0.368 -0.804 -0.588 -0.564 -0.516 -0.511
+#V21:Treat1  0.000 -0.249 -0.585 -0.809 -0.629 -0.543 -0.489
+#V28:Treat1  0.000 -0.159 -0.559 -0.627 -0.811 -0.678 -0.623
+#V35:Treat1  0.000 -0.168 -0.512 -0.542 -0.679 -0.811 -0.743
+#V42:Treat1  0.000 -0.176 -0.506 -0.487 -0.623 -0.742 -0.811
+#V7:Tr1 V14:T1 V21:T1 V28:T1 V35:T1
+#V7                                           
+#V14                                          
+#V21                                          
+#V28                                          
+#V35                                          
+#V42                                          
+#V7:Treat1                                    
+#V14:Treat1  0.467                            
+#V21:Treat1  0.315  0.728                     
+#V28:Treat1  0.201  0.695  0.775              
+#V35:Treat1  0.212  0.637  0.670  0.837       
+#V42:Treat1  0.223  0.630  0.602  0.768  0.916
 
 #Standardized residuals:
-#  Min           Q1          Med           Q3 
-#-3.649298026 -0.696550156  0.006950347  0.710778566 
-#Max 
-#2.633296856 
+#  Min          Q1         Med          Q3         Max 
+#-3.70652558 -0.69297245  0.00234884  0.67972462  3.52416401 
 
-#Residual standard error: 2.7111 
-#Degrees of freedom: 1421 total; 1414 residual
+#Residual standard error: 3.204173 
+#Degrees of freedom: 2156 total; 2143 residual
 
-getVarCov(fit_AE_exp, individual = '6')
+getVarCov(fit_AE_all, individual = '6')
 #you should get:
-#> getVarCov(fit_AE_exp, individual = '6')
+#> getVarCov(fit_AE_all, individual = '6')
 #Marginal variance covariance matrix
-#[,1]   [,2]    [,3]    [,4]    [,5]    [,6]    [,7]
-#[1,]  7.3501 10.053  9.9303  9.2668  8.6346  9.8879  7.5346
-#[2,] 10.0530 20.413 19.9910 18.0370 16.8690 19.2500 15.5700
-#[3,]  9.9303 19.991 36.0570 31.6680 34.9120 36.6240 32.6440
-#[4,]  9.2668 18.037 31.6680 41.2450 38.8030 39.3700 33.1060
-#[5,]  8.6346 16.869 34.9120 38.8030 53.1860 50.1170 43.3090
-#[6,]  9.8879 19.250 36.6240 39.3700 50.1170 65.2230 55.7720
-#[7,]  7.5346 15.570 32.6440 33.1060 43.3090 55.7720 56.0990
-#Standard Deviations: 2.7111 4.5181 6.0047 6.4222 7.2929 8.0761 7.4899 
+#[,1]   [,2]   [,3]   [,4]   [,5]   [,6]    [,7]
+#[1,] 10.2670 13.548 13.753 12.890 11.415 12.529  8.8644
+#[2,] 13.5480 23.940 23.483 21.243 18.407 20.406 15.6570
+#[3,] 13.7530 23.483 39.955 35.670 37.071 38.650 32.9240
+#[4,] 12.8900 21.243 35.670 45.898 42.849 42.779 34.7890
+#[5,] 11.4150 18.407 37.071 42.849 58.245 55.731 47.1980
+#[6,] 12.5290 20.406 38.650 42.779 55.731 70.073 59.6430
+#[7,]  8.8644 15.657 32.924 34.789 47.198 59.643 59.5540
+#Standard Deviations: 3.2042 4.8929 6.321 6.7748 7.6319 8.371 7.7171 
 
 
 
-    #View(SimTrial_1_5[SimTrial_1_5$AE_Exp_Yes==1,])
-    #corMatrix(fit_AE_exp$modelStruct$corStruct)[[1]]  
-
-## Pattern for AE in control arm----
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-fit_AE_control<-gls(MADRS10 ~ V7 + V14 + V21 + V28 + V35 + V42,
-                    data = SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,] ,
-                correlation = corSymm(form=~1 | id),
-                weights = varIdent(form = ~ 1 | Visit),
-                method="REML")
-
-summary(fit_AE_control)
-getVarCov(fit_AE_control, individual = '28')
-
-    #describe(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
-    #View(SimTrial_sm_2000_1_5[SimTrial_sm_2000_1_5$AE_Control_Yes==1,])
 
 ## Pattern for no intercurrent events at trial level----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -1221,6 +1270,8 @@ getVarCov(fit_no_IE, individual = 3)
 #  The code used to extract the logit models for LoE at trial level, AE in experimental arm and AE in control arm----
 ## obtain the logistic regression models for LoE at trial level, AE in experimental arm and AE in control arm ##
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# n= 2000 patients, re_covm3
+
 class(SimTrial_sm_2000_1_5$AE_Control_Yes)
 SimTrial_sm_2000_1_5$AE_Control_Yes <- factor(SimTrial_sm_2000_1_5$AE_Control_Yes)
 
@@ -1238,7 +1289,37 @@ logit_LoE <- glm(LoE_Yes ~ CfB,
                  family = "binomial")
 
 summary(logit_LoE)
+#you should get
+#> summary(logit_LoE)
+
+#Call:
+#  glm(formula = LoE_Yes ~ CfB, family = "binomial", data = SimTrial_sm_2000_1_5)
+
+#Deviance Residuals: 
+#  Min       1Q   Median       3Q      Max  
+#-3.9859  -0.5398  -0.1679   0.6016   1.4843  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#  (Intercept)  1.077405   0.033011   32.64   <2e-16 ***
+#  CfB         -0.355617   0.006021  -59.07   <2e-16 ***
+#  ---
+#  Signif. codes:  
+#  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#(Dispersion parameter for binomial family taken to be 1)
+
+#Null deviance: 18839  on 13999  degrees of freedom
+#Residual deviance: 10473  on 13998  degrees of freedom
+#AIC: 10477
+
+#Number of Fisher Scoring iterations: 6
+
+
 #View(SimTrial_sm_2000_1_5)
+
+
+
 
 predicted_LoE <- predict(logit_LoE, type="response", newdata=SimTrial_sm_2000_1_5)
 
@@ -1246,9 +1327,9 @@ SimTrial_sm_2000_1_5$predicted_LoE <- predicted_LoE
     #View(SimTrial_sm_2000_1_5[,c(5, 20)])
 
 
-probz_predicted_LoE_Yes <- SimTrial_sm_2000_1_5$predicted_LoE[SimTrial_sm_2000_1_5$LoE_Yes==1]
-up_boundary_prob_LoE <- max(probz_predicted_LoE_Yes)  ; up_boundary_prob_LoE
-low_boundary_prob_LoE <- min(probz_predicted_LoE_Yes) ; low_boundary_prob_LoE
+#probz_predicted_LoE_Yes <- SimTrial_sm_2000_1_5$predicted_LoE[SimTrial_sm_2000_1_5$LoE_Yes==1]
+#up_boundary_prob_LoE <- max(probz_predicted_LoE_Yes)  ; up_boundary_prob_LoE
+#low_boundary_prob_LoE <- min(probz_predicted_LoE_Yes) ; low_boundary_prob_LoE
 
 ## AE experimental arm----
 #logit(Pr(AE_exp))= fi_AE_exp * (Y_i0 - Y_i2)
@@ -1257,17 +1338,43 @@ logit_AE_exp <- glm(AE_Exp_Yes ~ CfW1,
                  family = "binomial")
 
 summary(logit_AE_exp)
+#you should get
+#> summary(logit_AE_exp)
 
-predicted_AE_exp <- predict(logit_AE_exp, type="response", newdata = trial_AE_exp)
+#Call:
+#  glm(formula = AE_Exp_Yes ~ CfW1, family = "binomial", data = trial_AE_exp)
 
-trial_AE_exp$predicted_AE_exp <- predicted_AE_exp
+#Deviance Residuals: 
+#  Min       1Q   Median       3Q      Max  
+#-1.9455  -0.6155  -0.3926  -0.1830   1.8673  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#(Intercept) -2.370965   0.053292  -44.49   <2e-16 ***
+#  CfW1         0.272188   0.008634   31.53   <2e-16 ***
+#  ---
+#  Signif. codes:  
+#  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#(Dispersion parameter for binomial family taken to be 1)
+
+#Null deviance: 7060.3  on 6992  degrees of freedom
+#Residual deviance: 5654.8  on 6991  degrees of freedom
+#AIC: 5658.8
+
+#Number of Fisher Scoring iterations: 5
+
+
+#predicted_AE_exp <- predict(logit_AE_exp, type="response", newdata = trial_AE_exp)
+
+#trial_AE_exp$predicted_AE_exp <- predicted_AE_exp
 
     #View(trial_AE_exp[,c(6, 20)])
     #View(trial_AE_exp)
 
-probz_predicted_AE_exp_Yes <- trial_AE_exp$predicted_AE_exp[trial_AE_exp$AE_Exp_Yes==1]
-up_boundary_prob_AE_exp <- max(probz_predicted_AE_exp_Yes)  ; up_boundary_prob_AE_exp
-low_boundary_prob_AE_exp <- min(probz_predicted_AE_exp_Yes)  ;  low_boundary_prob_AE_exp
+#probz_predicted_AE_exp_Yes <- trial_AE_exp$predicted_AE_exp[trial_AE_exp$AE_Exp_Yes==1]
+#up_boundary_prob_AE_exp <- max(probz_predicted_AE_exp_Yes)  ; up_boundary_prob_AE_exp
+#low_boundary_prob_AE_exp <- min(probz_predicted_AE_exp_Yes)  ;  low_boundary_prob_AE_exp
 
 ## AE  control arm----
 #logit(Pr(AE_control))= fi_AE_control * (Y_i0 - Y_i2)
@@ -1276,101 +1383,182 @@ logit_AE_control <- glm(AE_Control_Yes ~ CfW1,
                     family = "binomial")
 
 summary(logit_AE_control)
+#you should get:
+#> summary(logit_AE_control)
 
-predicted_AE_control <- predict(logit_AE_control, type="response", newdata = trial_AE_control)
+#Call:
+#  glm(formula = AE_Control_Yes ~ CfW1, family = "binomial", data = trial_AE_control)
 
-trial_AE_control$predicted_AE_control <- predicted_AE_control
+#Deviance Residuals: 
+#  Min        1Q    Median        3Q       Max  
+#-2.40987  -0.38049  -0.21449  -0.09241   2.04156  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#  (Intercept) -2.78108    0.06472  -42.97   <2e-16 ***
+#  CfW1        -0.39944    0.01364  -29.28   <2e-16 ***
+#  ---
+#  Signif. codes:  
+#  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#(Dispersion parameter for binomial family taken to be 1)
+#
+#Null deviance: 4704.6  on 7006  degrees of freedom
+#Residual deviance: 3233.2  on 7005  degrees of freedom
+#AIC: 3237.2
+
+#Number of Fisher Scoring iterations: 6
+
+
+
+#predicted_AE_control <- predict(logit_AE_control, type="response", newdata = trial_AE_control)
+
+#trial_AE_control$predicted_AE_control <- predicted_AE_control
     #View(trial_AE_control[,c(7, 20)])
 
-probz_predicted_AE_control_Yes <- trial_AE_control$predicted_AE_control[trial_AE_control$AE_Control_Yes==1]
-up_boundary_prob_AE_control <- max(probz_predicted_AE_control_Yes)  ; up_boundary_prob_AE_control
-low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_boundary_prob_AE_control
+#probz_predicted_AE_control_Yes <- trial_AE_control$predicted_AE_control[trial_AE_control$AE_Control_Yes==1]
+#up_boundary_prob_AE_control <- max(probz_predicted_AE_control_Yes)  ; up_boundary_prob_AE_control
+#low_boundary_prob_AE_control <- min(probz_predicted_AE_control_Yes)  ; low_boundary_prob_AE_control
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# The code for SPM method. On the same trial generated with the selection model (above), we fitted a mixed-effects model with random intercept and random slope # 
-# fit LMM model on the simulated trial (n=2000, re_covm3)
-# fit the glm to get the intercurrent events models with random effects in the linear predictor
-
-SimTrial_sm_2000_1_5 <- SimTrial_sm_30000_1_1 # check again to make sure it is the same number of patients
-# write down here the number of patients used above in the SM model to generate the SOURCE TRIAL so N=?
-
-class(SimTrial_sm_2000_1_5$Visit)
-SimTrial_sm_2000_1_5$Visit <- as.numeric(SimTrial_sm_2000_1_5$Visit)-1
-
-SimTrial_sm_2000_1_5$MADRS10 <- ifelse(SimTrial_sm_2000_1_5$Visit>2 & SimTrial_sm_2000_1_5$Behavior== "AE", NA,
-                                       ifelse(SimTrial_sm_2000_1_5$Visit>3 & SimTrial_sm_2000_1_5$Behavior== "LoE", NA, SimTrial_sm_2000_1_5$MADRS10))
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+## Logit models for SPM DGM     ##
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-fit_lmer <- lmer(MADRS10 ~ Visit + Visit : Treat + (1 + Visit|id), data = SimTrial_sm_2000_1_5, REML = T)
-summary(fit_lmer)
+# logit(Pr(IE_ij)) = (beta_0 + b0_ij) [aka baseline MADRS] + beta_1 * Treat
+# baseline MADRS10 is made of the general intercept + each individual random intercept
 
-fit_lme <- lme(fixed = MADRS10 ~ Visit + Visit : Treat, 
-              random = ~ 1 + Visit| id,
-              method ="REML", 
-               data = SimTrial_sm_2000_1_5,
-              na.action = na.omit)
-#View(SimTrial_sm_2000_1_5)
+## these logistic regression models are run to inform the parameters (e.g., parameter for Treatment) used in the SPM DGM for intercurrent events
+# fit_LoE_spm is used in order to determine the treatment parameter and to have an idea for the general intercept
+# dataset with n=2000 and re_covm3
 
-summary(fit_lme) #refit with 8000 patients
+d_re <- d_mis_w
+    #View(d_re)
+
+fit_LoE_spm <- glm(LoE_Yes ~ Treat,
+                   data = d_re, 
+                   family = "binomial")
+
+summary(fit_LoE_spm)
+#you should get:
+#summary(fit_LoE_spm)
+
+#Call:
+#  glm(formula = LoE_Yes ~ Treat, family = "binomial", data = d_re)
+
+#Deviance Residuals: 
+#  Min       1Q   Median       3Q      Max  
+#-1.1294  -1.1294  -0.8905   1.2262   1.4945  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#(Intercept) -0.11401    0.06332  -1.801   0.0718 .  
+#Treat       -0.60629    0.09249  -6.555 5.57e-11 ***
+#  ---
+#  Signif. codes:  
+#  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#(Dispersion parameter for binomial family taken to be 1)
+
+#Null deviance: 2691.2  on 1999  degrees of freedom
+#Residual deviance: 2647.7  on 1998  degrees of freedom
+#AIC: 2651.7
+
+#Number of Fisher Scoring iterations: 4
+
+fit_AE_exp_spm <- glm(AE_Exp_Yes ~ 1,
+                   data = d_re[d_re$Treat==1,], 
+                   family = "binomial")
+
+summary(fit_AE_exp_spm)
 # you should get:
-#> summary(fit_lme)
-#Linear mixed-effects model fit by REML
-#Data: SimTrial_sm_2000_1_5 
-#AIC      BIC    logLik
-#62297.98 62348.92 -31141.99
+#> summary(fit_AE_exp_spm)
+#Call:
+#  glm(formula = AE_Exp_Yes ~ 1, family = "binomial", data = d_re[d_re$Treat == 
+    #                                                               1, ])
 
-#Random effects:
-#  Formula: ~1 + Visit | id
-#Structure: General positive-definite, Log-Cholesky parametrization
-#StdDev   Corr  
-#(Intercept) 4.450225 (Intr)
-#Visit       1.285742 0.406 
-#Residual    3.146991       
+#Deviance Residuals: 
+#  Min      1Q  Median      3Q     Max  
+#-0.674  -0.674  -0.674  -0.674   1.785  
 
-#Fixed effects:  MADRS10 ~ Visit + Visit:Treat 
-#Value  Std.Error   DF   t-value
-#(Intercept)  29.431012 0.11225159 8702 262.18792
-#Visit        -0.778194 0.05138492 8702 -15.14440
-#Visit:Treat1 -0.680775 0.07275641 8702  -9.35691
-#p-value
-#(Intercept)        0
-#Visit              0
-#Visit:Treat1       0
-#Correlation: 
-#  (Intr) Visit 
-#Visit         0.049       
-#Visit:Treat1  0.002 -0.704
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#(Intercept) -1.36639    0.07863  -17.38   <2e-16 ***
+#  ---
+#  Signif. codes:  
+#  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-#Standardized Within-Group Residuals:
-#  Min           Q1          Med           Q3 
-#-3.728498689 -0.555451594  0.003379324  0.559799434 
-#Max 
-#3.437608725 
+#(Dispersion parameter for binomial family taken to be 1)
 
-#Number of Observations: 10704
-#Number of Groups: 2000 
+#Null deviance: 1008.6  on 998  degrees of freedom
+#Residual deviance: 1008.6  on 998  degrees of freedom
+#AIC: 1010.6
+
+#Number of Fisher Scoring iterations: 4
 
 
-vcov(fit_lme)
-VarCorr(fit_lme)
-random.effects(fit_lme)[,1]
-var(random.effects(fit_lme))
-# you should get:
-#> var(random.effects(fit_lme))
-#(Intercept)    Visit
-#(Intercept)   16.872774 2.948891
-#Visit          2.948891 1.179599
+fit_AE_control_spm <- glm(AE_Control_Yes ~ 1,
+                      data = d_re[d_re$Treat==0,], 
+                      family = "binomial")
 
+summary(fit_AE_control_spm)
+#length(d_re$id) # = 2000
+#you should get:
+#> summary(fit_AE_control_spm)
+#Call:
+#  glm(formula = AE_Control_Yes ~ 1, family = "binomial", data = d_re[d_re$Treat == 
+#                                                                       0, ])
+
+#Deviance Residuals: 
+#  Min       1Q   Median       3Q      Max  
+#-0.4708  -0.4708  -0.4708  -0.4708   2.1236  
+
+#Coefficients:
+#  Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)  -2.1440     0.1031  -20.79   <2e-16 ***
+#  ---
+#  Signif. codes:  
+#  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#(Dispersion parameter for binomial family taken to be 1)
+
+#Null deviance: 672.09  on 1000  degrees of freedom
+#Residual deviance: 672.09  on 1000  degrees of freedom
+#AIC: 674.09
+
+#Number of Fisher Scoring iterations: 4
+# These coefficients were used in the logit models in the SPM DGM.
+
+# the parameters from these 3 models were used against the tweak.intercept function in the SPM DGM code, they are very close
+# we did this in order to check and make sure the intercepts are close to the model-derived parameter estimates
+# tweak.intercept can be used for any percentage of intercurrent events. The logit models for SPM were fitted on the SMd source trial with specific percentages of intercurrent events.
+# tweak.intercep function is versatile
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##### the code for Survival models fitted on the large trial
 
 
 #View(SimTrial_sm_2000_1_5)
 # Fit the Survival model: time to LoE
-# but first, bring the dataset in the right format, namely all LoE at week 3 and all at week 2.
-SimTrial_sm_2000_1_5_surv <- SimTrial_sm_2000_1_5
+# but first, bring the dataset in the right format, namely all LoE at week 3 and all AE at week 2.
+#3 n= 8000, Source trial via SMd, re_covm3
+# reformat the dataset
+# fit lme models corresponding to each intercurrent event.
+SimTrial_sm_2000_1_5_surv <- SimTrial_sm_8000_1_1
+class(SimTrial_sm_2000_1_5_surv$Visit)
+SimTrial_sm_2000_1_5_surv$Visit <- as.numeric(SimTrial_sm_2000_1_5_surv$Visit)-1
 #View(SimTrial_sm_2000_1_5_surv)
 SimTrial_sm_2000_1_5_surv$LoE_yes_surv <- ifelse(SimTrial_sm_2000_1_5_surv$LoE_YES==1 & SimTrial_sm_2000_1_5_surv$Visit==3, 1, 0)
 #View(SimTrial_sm_2000_1_5_surv)
@@ -1384,148 +1572,146 @@ SimTrial_sm_2000_1_5_surv_cox_AE <- SimTrial_sm_2000_1_5_surv[SimTrial_sm_2000_1
 SimTrial_sm_2000_1_5_surv_cox_AE$Visit <- ifelse(SimTrial_sm_2000_1_5_surv_cox_AE$AE_yes_surv==1, 2, 6)
 #View(SimTrial_sm_2000_1_5_surv_cox_AE)
 
-# now fit the survival models on the source trials (own source trial)
+
+
+# Now fit the survival models on the source trials (own source trial)
+##### LoE joint model ##
+
 cox_fit_LoE <- coxph(Surv(Visit, LoE_yes_surv) ~ Treat, data = SimTrial_sm_2000_1_5_surv_cox_LoE, x = TRUE)
 summary(cox_fit_LoE)
 
+fit_lme_LoE <- lme(fixed=MADRS10 ~ Visit * Treat, 
+               random=~1 | id,
+               method="REML", 
+               data=SimTrial_sm_2000_1_5_surv_cox_LoE)
+
+summary(fit_lme_LoE)
+
+jointFit.LoE <- jointModel(fit_lme_LoE, cox_fit_LoE, timeVar = "Visit", 
+                           method = "weibull-AFT-aGH")
+
+summary(jointFit.LoE)
+# you should get:
+#> summary(jointFit.LoE)
+
+#Call:
+#  jointModel(lmeObject = fit_lme_LoE, survObject = cox_fit_LoE, 
+#             timeVar = "Visit", method = "weibull-AFT-aGH")
+
+#Data Descriptives:
+#  Longitudinal Process		Event Process
+#Number of Observations: 8000	Number of Events: 2850 (35.6%)
+#Number of Groups: 8000
+
+#Joint Model Summary:
+#  Longitudinal Process: Linear mixed-effects model
+#Event Process: Weibull accelerated failure time model
+#Parameterization: Time-dependent 
+
+#log.Lik     AIC      BIC
+#-37166.6 74353.2 74423.07
+
+#Variance Components:
+#  StdDev
+#(Intercept) 7.054264
+#Residual    2.495667
+
+#Coefficients:
+#  Longitudinal Process
+#Value Std.Err z-value p-value
+#(Intercept)  28.6515  0.7659 37.4110 <0.0001
+#Visit        -0.1646  0.1608 -1.0237  0.3060
+#Treat1        2.8411  0.5716  4.9704 <0.0001
+#Visit:Treat1 -0.9399  0.1151 -8.1647 <0.0001
+
+#Event Process
+#Value Std.Err z-value p-value
+#(Intercept)  2.8789  0.0971 29.6500 <0.0001
+#Treat1       0.3111  0.0239 13.0051 <0.0001
+#Assoct      -0.0279  0.0035 -7.9562 <0.0001
+#log(shape)   0.5663  0.0170 33.3322 <0.0001
+
+#Scale: 1.7618 
+
+#Integration:
+#  method: (pseudo) adaptive Gauss-Hermite
+#quadrature points: 3 
+
+#Optimization:
+#  Convergence: 0 
 
 
-SimTrial_sm_2000_1_5_surv_cox_AE_exp <-SimTrial_sm_2000_1_5_surv_cox_AE[SimTrial_sm_2000_1_5_surv_cox_AE$Treat==1,]
-SimTrial_sm_2000_1_5_surv_cox_AE_ctrl <-SimTrial_sm_2000_1_5_surv_cox_AE[SimTrial_sm_2000_1_5_surv_cox_AE$Treat==0,]
+
+
+
+
+
+##### AE joint model ##
 
 
 cox_fit_AE <- coxph(Surv(Visit, AE_yes_surv) ~ Treat, data = SimTrial_sm_2000_1_5_surv_cox_AE, x = TRUE)
 summary(cox_fit_AE)
 
+fit_lme_AE <- lme(fixed=MADRS10 ~ Visit * Treat, 
+                   random=~1 | id,
+                   method="REML", 
+                   data=SimTrial_sm_2000_1_5_surv_cox_AE)
+
+summary(fit_lme_AE)
 
 
-
-jointFit.LoE <- jointModel(fit_lme, cox_fit_LoE, timeVar = "Visit", 
-                           method = "weibull-AFT-aGH")
-
-
-summary(jointFit.LoE)
-
-
-
-
-jointFit.AE <- jointModel(fit_lme, cox_fit_AE, timeVar = "Visit", 
-                           method = "weibull-AFT-aGH")
-
+jointFit.AE <- jointModel(fit_lme_AE, cox_fit_AE, timeVar = "Visit", 
+                          method = "weibull-AFT-aGH")
 
 summary(jointFit.AE)
-
-
-
-    # logit(Pr(IE_ij)) = (beta_0 + b0_ij) [aka baseline MADRS] + beta_1 * Treat
-    # baseline MADRS10 is made of the general intercept + each individual random intercept
-
-d_re <- d_mis_w
-    #View(d_re)
-
-
-## these logistic regression models are run to inform the parameters used in the SPM DGM for intercurrent events
-# fit_LoE_spm is used in order to determine the treatment parameter and to have an idea for the general intercept
-
-fit_LoE_spm <- glm(LoE_Yes ~ Treat,
-                   data = d_re, 
-                   family = "binomial")
-
-summary(fit_LoE_spm)
-#Call:
-#glm(formula = LoE_Yes ~ Treat, family = "binomial", data = d_re)
-
-#Deviance Residuals: 
-#  Min      1Q  Median      3Q     Max  
-#-1.200  -0.956  -0.956   1.155   1.416  
-
-#Coefficients:
-#  Estimate Std. Error z value Pr(>|z|)    
-#(Intercept)  0.05233    0.06346   0.825     0.41    
-#Treat       -0.59830    0.09114  -6.565 5.22e-11 ***
-
-fit_AE_exp_spm <- glm(AE_Exp_Yes ~ 1,
-                   data = d_re[d_re$Treat==1,], 
-                   family = "binomial")
-
-summary(fit_AE_exp_spm)
+# you should get:
+#> summary(jointFit.AE)
 
 #Call:
-#glm(formula = AE_Exp_Yes ~ 1, family = "binomial", data = d_re[d_re$Treat == 
-#                                                                 1, ])
+#  jointModel(lmeObject = fit_lme_AE, survObject = cox_fit_AE, timeVar = "Visit", 
+#             method = "weibull-AFT-aGH")
 
-#Deviance Residuals: 
-#  Min       1Q   Median       3Q      Max  
-#-0.4527  -0.4527  -0.4527  -0.4527   2.1581  
+#Data Descriptives:
+#  Longitudinal Process		Event Process
+#Number of Observations: 8000	Number of Events: 1171 (14.6%)
+#Number of Groups: 8000
 
-#Coefficients:
-#  Estimate Std. Error z value Pr(>|z|)    
-#(Intercept)  -2.2263     0.1063  -20.94   <2e-16 ***
+#Joint Model Summary:
+#  Longitudinal Process: Linear mixed-effects model
+#Event Process: Weibull accelerated failure time model
+#Parameterization: Time-dependent 
 
+#log.Lik      AIC      BIC
+#-32675.62 65371.24 65441.11
 
-fit_AE_control_spm <- glm(AE_Control_Yes ~ 1,
-                      data = d_re[d_re$Treat==0,], 
-                      family = "binomial")
-
-summary(fit_AE_control_spm)
-#length(d_re$id) # = 2000
-#Call:
-#glm(formula = AE_Control_Yes ~ 1, family = "binomial", data = d_re[d_re$Treat == 
-#                                                                     0, ])
-
-#Deviance Residuals: 
-#  Min       1Q   Median       3Q      Max  
-#-0.2517  -0.2517  -0.2517  -0.2517   2.6335  
+#Variance Components:
+#  StdDev
+#(Intercept) 6.898532
+#Residual    2.592738
 
 #Coefficients:
-#  Estimate Std. Error z value Pr(>|z|)    
-#(Intercept)  -3.4361     0.1825  -18.83   <2e-16 ***
+#  Longitudinal Process
+#Value Std.Err  z-value p-value
+#(Intercept)   39.2867  0.6016  65.3010 <0.0001
+#Visit         -1.9818  0.1060 -18.6942 <0.0001
+#Treat1       -20.9535  0.6742 -31.0790 <0.0001
+#Visit:Treat1   3.5870  0.1201  29.8554 <0.0001
 
-# These coefficients were used in the shared-parameter model (SPM) method
+#Event Process
+#Value Std.Err z-value p-value
+#(Intercept)  3.7550  0.2074 18.1051 <0.0001
+#Treat1      -0.5394  0.0881 -6.1195 <0.0001
+#Assoct       0.0076  0.0057  1.3465  0.1782
+#log(shape)  -0.0285  0.0283 -1.0054  0.3147
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Scale: 0.9719 
 
+#Integration:
+#  method: (pseudo) adaptive Gauss-Hermite
+#quadrature points: 3 
 
-######### The code for SPM and glmm for logit models for LoE  at trial level, AE in experimental arm and AE in control arm
-# revisit as these were not used I think
-#View(SimTrial_sm_2000_1_5)
-# estimate the model LoE
-fit_glmm_LoE <- glmer(LoE_YES ~ Visit + Treat +  
-                        (1 | id), data = SimTrial_sm_2000_1_5, family = binomial, control = glmerControl(optimizer = "bobyqa"),
-                      nAGQ = 10)
-
-summary(fit_glmm_LoE)
-
-
-
-
-# estimate the model AE exp arm
-fit_glmm_AE_exp <- glmer(AE_Exp_Yes ~ 1 +  
-                        (1 | id), data = SimTrial_sm_2000_1_5[d$Treat==1,], family = binomial, control = glmerControl(optimizer = "bobyqa"),
-                      nAGQ = 10)
-
-summary(fit_glmm_AE_exp)
-
-
-# estimate the model AE control arm
-fit_glmm_AE_control <- glmer(AE_Control_Yes ~ 1 +  
-                           (1 | id), data = SimTrial_sm_2000_1_5[d$Treat==0,], family = binomial, control = glmerControl(optimizer = "bobyqa"),
-                         nAGQ = 10)
-
-summary(fit_glmm_AE_control)
-
-# difficult to use due to overdispersion
-
-
-
-#### the code for Survival models fitted on the large trial
-
-
-
-
-
+#Optimization:
+# Convergence: 0 
 
 
 
@@ -1538,7 +1724,7 @@ summary(fit_glmm_AE_control)
  # most of the code below is very similar with the code above, in terms of scope and operational reasons, as well as meaning and interpretation
  # code for longitudinal outcomes generation is as above
 
-#rm(list=ls()) #
+rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)#
@@ -1549,6 +1735,7 @@ library(lme4)#
 library(janitor)#
 library(gt)#
 library(patchwork)#
+
 google_app <- httr::oauth_app(
   "appwhatever",
   key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
@@ -1562,32 +1749,31 @@ options(mc.cores = parallel::detectCores()) # M1 with parallel, Old1 without par
 Scenario <- c("A")
 
 # simulation
-set.seed(2147483629)
+
 #set.seed(2147483399)
-m.iterations <- 500# 382number of generated datasets # number of trials per scaling factor
+n <- 190# number of patients at trial level to be randomised 1:1, experimental and control arm. 190 in total
+m.iterations <- 2# 382number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1)#c(0.5, 1.0, 1.5, 2.0, 2.5)
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
 #c(0.25, 0.5, 1, 2, 2.5) steps for scaling factor
 # to multiply for LoE, AE_control and AE_exp ### value 0.5 should yield around 13.5% IEs, 1 ~ %, 2 ~ %, 2.5 ~
 
-n <- 190# number of patients at trial level to be randomised 1:1, experimental and control arm. 190 in total
-
 #CFE <- matrix(ncol=4,nrow=length(scaling_factor)*m.iterations)
 #colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
 
 visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline + follow-up measurements
-delta <- matrix(ncol=1,nrow=m.iterations) # treatment effect estimate at 6 weeks based on MMRM models fitted on each generated dataset
-colnames(delta) <-c("TreatmentEffect")
-betas <- matrix(ncol=2,nrow=m.iterations)
-colnames(betas) <-c("Treat", "visit42:Treat")
+delta_SMs <- matrix(ncol=1,nrow=m.iterations) # treatment effect estimate at 6 weeks based on MMRM models fitted on each generated dataset
+colnames(delta_SMs) <-c("TreatmentEffect")
+betas_SMs <- matrix(ncol=2,nrow=m.iterations)
+colnames(betas_SMs) <-c("Treat", "visit42:Treat")
 
 pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3)
 
 #confint_fit <- matrix(ncol=2,nrow=m.iterations) 
 #colnames(confint_fit) <-c("Lower boundary 95% CI", "Upper boundary 95% CI")
-#delta_errorz <- matrix(ncol=1,nrow=m.iterations)
-#colnames(delta_errorz) <- c("SE")
+#delta_SMs_errorz <- matrix(ncol=1,nrow=m.iterations)
+#colnames(delta_SMs_errorz) <- c("SE")
 
 #bias_f <- matrix(ncol=1,nrow=m.iterations)
 #colnames(bias_f) <- c("bias_f")
@@ -1656,16 +1842,20 @@ colnames(AE_and_LoE_Perc) <- c("% AE and LoE Total")
 
 pb3 <- txtProgressBar(min = 0,  max=length(scaling_factor), style=3)
 
-start_time <- Sys.time()
-
+start_time <- Sys.time() # timestamp for the start time of the nested for loop below.
+# it was used to have an estimate of time needed for different larger number of trials to be simulated upon scaling up the simulation parameters (e.g., m.iterations)
+set.seed(2147483629) # set seed
 ## Begin for loop----
 for (s in 1:length(scaling_factor)) {
   for(m in 1:m.iterations) {
     
     ### Generate longitudinal outcomes----
-    ### Generate random effects
-    re_means <- c(0, 0, 0, 0, 0, 0, 0)
-    re_covm <- matrix(c(20.2190, 17.149, 14.721, 13.087,  8.4329,  10.854,   4.6417,
+    #### Generate correlated residuals----
+    re_means <- c(0, 0, 0, 0, 0, 0, 0) # means of residuals at each timepoint
+    
+    # covariance matrix extracted from trial 003-002 (see reference to the data analysis paper in PST)
+    # this dataset is not available to share. A MMRM model was fitted and this is the corresponding covariance matrix
+    re_covm <- matrix(c(20.2190, 17.149, 14.721, 13.087,  8.4329,  10.854,   4.6417, 
                         17.1490, 48.536, 41.161, 32.151, 24.8400,  30.528,  26.0170,
                         14.7210, 41.161, 72.569, 57.866, 60.2200,  61.974,  54.5400,
                         13.0870, 32.151, 57.866, 74.080, 66.2960,  63.540,  52.1070,
@@ -1673,47 +1863,54 @@ for (s in 1:length(scaling_factor)) {
                         10.8540, 30.528, 61.974, 63.540, 90.6120, 116.410, 102.8300,
                         4.6417, 26.017, 54.540, 52.107, 80.1370, 102.830, 109.5900), nrow = 7)
     
-       #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
+    #Standard Deviations: 4.4965 6.9668 8.5188 8.607 9.8728 10.789 10.468
     
-    re_covm2 <-matrix(c(0.00001, 0, 0, 0, 0, 0, 0,
-                        0, 0.00001, 0, 0, 0, 0, 0,
-                        0, 0, 0.00001, 0, 0, 0, 0,
-                        0, 0, 0, 0.00001, 0, 0, 0,
-                        0, 0, 0, 0, 0.00001, 0, 0,
-                        0, 0, 0, 0, 0, 0.00001, 0,
-                        0, 0, 0, 0, 0, 0, 0.00001), nrow = 7)
+    # covariance matrix with 0 off-diagonal and small variances. This is useful for initial/later checks to see if the simulated data corresponds to target data to be simulated
+    size_diagonal <- 0.0000001
+    re_covm2 <-matrix(c(size_diagonal, 0, 0, 0, 0, 0, 0,
+                        0, size_diagonal, 0, 0, 0, 0, 0,
+                        0, 0, size_diagonal, 0, 0, 0, 0,
+                        0, 0, 0, size_diagonal, 0, 0, 0,
+                        0, 0, 0, 0, size_diagonal, 0, 0,
+                        0, 0, 0, 0, 0, size_diagonal, 0,
+                        0, 0, 0, 0, 0, 0, size_diagonal), nrow = 7)
     
-    re_covm3 <-re_covm/2
+    re_covm3 <-re_covm/2 # we scaled the covariance matrix as we observed the trajectories were not similar with the targeted trajectories. This is up to user's decision
     
-    re <- mvrnorm(n, re_means, re_covm3)	; re # the re covm used is re_covm3
-      #View(re)
-    
+    re <- mvrnorm(n, re_means, re_covm3)	; re # generate correlated residuals and check them
+    #View(re)
     re <- as.matrix(re)
     colnames(re) <-c("Baseline", "Week1", "Week2", "Week3", "Week4","Week5" ,"Week6") ; re
     
+    # put together the dataframe with the id of patients, visit, randomised treatment and MADRS10 values at each visit
     d <- data.frame(
       id = rep(1:n, each = length(visits)),
       visit = visits,
       Treat = rep(rbinom(n, 1, 0.5), each = length(visits)),
       MADRS10 = rep(NA, n)); d # mean(Treat)
     
-    d <- d[order(d$visit, d$id),]; #d
-       #re
+    # data wrangling to add the correlated residuals in the above dataframe such that correlated residuals are for their corresponding patient and visit 
+    d <- d[order(d$visit, d$id),]; d
+    #re
     
     j<-c(re[, 1], re[, 2], re[, 3], re[, 4], re[, 5], re[, 6], re[, 7])
     d$re <-j; #d
     
-        #class(d)
-        #View(d)
-        #head(re)
+    #class(d)
+    #View(d)
+    #head(re)
     
     d <- d[order(d$id, d$visit),]; #d
     
-        #re
+    #re
     
     d<-as.matrix(d)
     
-    # Scenario A
+    # MMRM parameters to generate the longitudinal outcomes
+    # We used as inspiration the trial 003-002 (ref data analysis paper). Here we used a simplified scenario with linear group trajectories.
+    
+    #### model parameters----
+    # for the interpretation of these parameters, please see the table under the selection model method in the body of the paper
     beta.baseline <- 29.79
     beta_week1 <- -1
     beta_week2 <- -1.5
@@ -1727,15 +1924,16 @@ for (s in 1:length(scaling_factor)) {
     beta_v3_treatment <- -2
     beta_v4_treatment <- -2.5
     beta_v5_treatment <- -3
-    
-    beta_v6_treatment <- -3.5 # 
+    beta_v6_treatment <- -3.5 
     
     treatmenteffect <-  beta_v6_treatment ; treatmenteffect
     
+    # The model used to generate the correlated repeated outcomes
     # Y_ij = (Beta_0 + bi0) + (BetaWeek1 + bi1) + (BetaWeek2 + bi2) + (BetaWeek3 + bi3) + (BetaWeek4 + bi4) + (BetaWeek5 + bi5) + (BetaWeek6 + bi6) + 
     #                          Beta_W1_Treat * T + Beta_W2_Treat * T + Beta_W3_Treat * T + Beta_W4_Treat * T + Beta_W5_Treat * T + Beta_W6_Treat * T 
     
     
+    # for loop to generate the correlated repeated outcomes that follows the above model
     for (i in 1:(n*length(visits))) {
       d[i,4] <- ifelse(d[i, 2]==0, beta.baseline + d[i,5],
                        ifelse(d[i, 2]==7, d[i-1,4] + beta_week1 + d[i,5] +  beta_v1_treatment * d[i, 3],
@@ -1746,68 +1944,78 @@ for (s in 1:length(scaling_factor)) {
                                                           d[i-6,4] + beta_week6 + d[i,5] +  beta_v6_treatment * d[i, 3]))))))
     }
     
+    # check to see how many values were negative or > 60  
+    ## flooring and ceiling
+    #d[, 4] <- ifelse(d[, 4] < 0, 0,
+    #                ifelse(d[, 4]>60, 60, d[, 4]))
     
-       ## flooring and ceiling
-       #d[, 4] <- ifelse(d[, 4] < 0, 0,
-       #                ifelse(d[, 4]>60, 60, d[, 4]))
-    
-      #View(d)
     d <-as.data.frame(d)
     d$visit <-as.factor(d$visit)
     #d$Treat <- factor(d$Treat)
-
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # MMRM on full outcome data
-        # this is the raw dataset used to check the model fit
-    d <-d[,-5] # remove re (residuals) column from the dataset, they have been added to betas
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    # this is the raw dataset used to check the model fit
+    d <-d[,-5] # remove re (residuals) column from the dataset, they have been added to betas_SMd
     
     # assign this to another object to make sure each time for each analysis the dataset used is the same
     d_orig<-d # full outcome data
     
+    # create a separate column with only the baseline outcomes, if the baseline values will be used as covariate in the model 
     length(d$id)
     tmp <- sapply(unique(d$id), FUN = function(i) nrow(d[d$id == i,]))
     BaselineMADRS10 <-  rep(d$MADRS10[d$visit == 0], tmp)
     length(BaselineMADRS10)
     d$Baseline <- BaselineMADRS10
-    d
-    d<-d[d$visit!=0,]
+    #View(d)
     
-    range(d$MADRS10[d$Treat==1 & d$visit!=0])
-    range(d$MADRS10[d$Treat==0 & d$visit!=0])
+    #d<-d[d$visit!=0,]
     
-    range(d$MADRS10[d$Treat==1 & d$visit==42])
-    range(d$MADRS10[d$Treat==0 & d$visit==42])
+    #check ranges of the generated outcomes
+    #range(d$MADRS10[d$Treat==1 & d$visit!=0])
+    #range(d$MADRS10[d$Treat==0 & d$visit!=0])
     
-    mean(d$MADRS10[d$Treat==1 & d$visit==0])
-    mean(d$MADRS10[d$Treat==0 & d$visit==0])
+    #range(d$MADRS10[d$Treat==1 & d$visit==42])
+    #range(d$MADRS10[d$Treat==0 & d$visit==42])
     
-    mean(d$MADRS10[d$Treat==1 & d$visit==42])
-    mean(d$MADRS10[d$Treat==0 & d$visit==42])
+    #mean(d$MADRS10[d$Treat==1 & d$visit==0])
+    #mean(d$MADRS10[d$Treat==0 & d$visit==0])
+    
+    #mean(d$MADRS10[d$Treat==1 & d$visit==42])
+    #mean(d$MADRS10[d$Treat==0 & d$visit==42])
+    
+    #ceiling_floor <- sum(ifelse(d$MADRS10<0 | d$MADRS10>60, 1, 0))
+    #ceiling_floor_perc <- (ceiling_floor/(n*length(visits)))*100
+    
+    #CFE[s*m,1] <- ceiling_floor
+    #CFE[s*m,2] <- ceiling_floor_perc
+    #CFE[s*m,3] <- s
+    #CFE[s*m,4] <- m
     
     
-        #ceiling_floor <- sum(ifelse(d$MADRS10<0 | d$MADRS10>60, 1, 0))
-        #ceiling_floor_perc <- (ceiling_floor/(n*length(visits)))*100
     
-        #CFE[s*m,1] <- ceiling_floor
-        #CFE[s*m,2] <- ceiling_floor_perc
-        #CFE[s*m,3] <- s
-        #CFE[s*m,4] <- m
     
-    ### Plot trajectories
+    #### plot of longitudinal outcomes ----
+    # plot the outcomes to see in big lines how they trajectories look like  
     p<- ggplot(data = d, aes(x = visit, y = MADRS10, group = id)) 
-    p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
-      scale_y_continuous(limits = c(-10, 60))
-  
-    fit<-gls(MADRS10 ~ visit * Treat + Baseline, 
-             data=d,
-             correlation = corSymm(form=~1 | id),
-             weights = varIdent(form = ~ 1 | visit), 
-             method="REML")
+    plot1 <- p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
+      scale_y_continuous(limits = c(-10, 60)) ; plot1
+    
+    
+    # fit a model to check if the estimated parameters are similar/close to the true parameters
+    fit <- gls(MADRS10 ~ visit*Treat, 
+               data=d,
+               correlation = corSymm(form=~1 | id),
+               #weights = varIdent(form = ~ 1 | visit),
+               method="REML")
     
     summary(fit)
     
-    fit$coefficients[c(7,13)]
+    fit$coefficients[c(8,14)]
 
-    sum(fit$coefficients[c(7,13)]); treatmenteffect
+    sum(fit$coefficients[c(8,14)]); treatmenteffect
     
         #fit_lme <- lme(fixed=MADRS10 ~ visit * Treat + Baseline, 
         #           random=~1 | id,
@@ -1820,23 +2028,23 @@ for (s in 1:length(scaling_factor)) {
         #model_parameters(fit_lme)
     #m<-1
     ### Store estimated parameters
-    betas[m, ] <- fit$coefficients[c(7,13)]
+    betas_SMs[m, ] <- fit$coefficients[c(8,14)]
     
-    delta[m, ] <- sum(fit$coefficients[c(7,13)])
+    delta_SMs[m, ] <- sum(fit$coefficients[c(8,14)])
     
     #bias_f[m, ] <- sum(fit$coefficients[c(7,13)]) - treatmenteffect
     
-    #delta_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
+    #delta_SMs_error <- sqrt(vcov(fit)["Treat", "Treat"] + vcov(fit)["visit42:Treat", "visit42:Treat"] + 2*vcov(fit)["Treat", "visit42:Treat"]) 
     
-    #delta_errorz[m, ] <- delta_error 
+    #delta_SMs_errorz[m, ] <- delta_SMs_error 
     
     
-    #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
-    #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
+    #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_SMs_error
+    #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_SMs_error
     
-    Randomised_Exp <- sum(d[,3])/6 #number of patients in the experimental arm
-    Randomised_Control <- n-sum(d[,3])/6 #number of patients in the control arm
-    
+    Randomised_Exp <- sum(d[,3])/7 #number of patients in the experimental arm
+    Randomised_Control <- n-sum(d[,3])/7 #number of patients in the control arm
+    #View(d)
     N_Exp[m,] <- Randomised_Exp
     N_Control[m,] <- Randomised_Control
 
@@ -1869,17 +2077,20 @@ for (s in 1:length(scaling_factor)) {
     d_mis_L <- d_mis_L[order(d_mis_L$id, d_mis_L$Visit),]; #d # order by subject id and Visit
     #summary(logit_LoE)
     
-    d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
+    d_mis_L$predicted_LoE <- plogis((1.077405 + d_mis_L$CfB*-0.355617))
+    #summary(logit_LoE)
+    #d_mis_L$predicted_LoE <- predict(logit_LoE, type="response", newdata=d_mis_L) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to lack of efficacy at trial level
         #d#describe(predict(logit_LoE, type="response", newdata=d_mis_L)) # check 
     #View(d_mis_L)
     
     d_mis_L$LoE_yes <- rep(rbinom(length(unique(d_mis_L$id)), 1, unique(d_mis_L$predicted_LoE)), each = length(visits)) 
-    d_mis_L$CfB
+    #d_mis_L$CfB
     #View(d_mis_L)
     
     trial_AE_X <- d_mis_L[d_mis_L$Treat==1,]
-    
-    trial_AE_X$predicted_AE <- predict(logit_AE_exp, type="response", newdata = trial_AE_X) #  predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the experimental arm
+    trial_AE_X$predicted_AE <- plogis(-2.370965 + trial_AE_X$CfW1*0.272188)
+    #summary(logit_AE_exp)
+    #trial_AE_X$predicted_AE <- predict(logit_AE_exp, type="response", newdata = trial_AE_X) #  predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the experimental arm
         #describe(predict(logit_LoE, type="response", newdata=d_mis_L))
     
     trial_AE_X$AE_yes <- rep(rbinom(length(unique(trial_AE_X$id)), 1, unique(trial_AE_X$predicted_AE)), each = length(visits)) 
@@ -1888,7 +2099,9 @@ for (s in 1:length(scaling_factor)) {
     
     trial_AE_C <- d_mis_L[d_mis_L$Treat==0,]
     
-    trial_AE_C$predicted_AE <- predict(logit_AE_control, type="response", newdata = trial_AE_C) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the control arm
+    trial_AE_C$predicted_AE <- plogis(-2.78108 + trial_AE_C$CfW1*-0.39944)
+    #summary(logit_AE_control)
+    #trial_AE_C$predicted_AE <- predict(logit_AE_control, type="response", newdata = trial_AE_C) # predicted occurrence of intercurrent events based on estimated probabilities from the logit models for e.g., treatment discontinuation due to adverse events in the control arm
 
     ### need to change here to not use a cutoff anymore, but directly rbinom with means equal to the estimated probabilities from the logit models
     trial_AE_C$AE_yes <- rep(rbinom(length(unique(trial_AE_C$id)), 1, unique(trial_AE_C$predicted_AE)), each = length(visits)) 
@@ -2006,18 +2219,16 @@ for (s in 1:length(scaling_factor)) {
     LoE_Exp_Perc[m,] <- round(LoE_Y_Exp/Randomised_Exp*100, digits=2)
     LoE_Control_Perc[m,] <- round(LoE_Y_Control/Randomised_Control*100, digits=2)
     
-    #AE
-    
+    ## AE ##
+
     AE_total_Perc[m,] <-  round(AE_Y_total/n*100, digits=2)
     AE_Exp_Perc[m,] <- round(AE_Y_Exp/Randomised_Exp*100, digits=2)
     AE_Control_Perc[m,] <- round(AE_Y_Control/Randomised_Control*100, digits=2)
     
     # Total AE + LoE and percentage relative to the entire study population
     
-    
     n_AE_and_LoE_T[m, ] <- LoE_Y_total + AE_Y_total
     AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
-    
     
     
     
@@ -2104,15 +2315,15 @@ for (s in 1:length(scaling_factor)) {
   
 
   # parameters extracted for MMRM fitted models on full outcome data
-  colMeans(betas)
-  colMeans(delta) ; treatmenteffect
+  colMeans(betas_SMs)
+  colMeans(delta_SMs) ; treatmenteffect
   
   
   ### assign and save parameters---- 
-  assign(paste('all_betas', s, sep="_"), betas)
-  assign(paste('all_delta', s, sep="_"), delta)
-  assign(paste('all_delta_errorz', s, sep="_"), delta_errorz)
-  assign(paste('all_confint_fit', s, sep="_"), confint_fit)
+  assign(paste('all_betas_SMs', s, sep="_"), betas_SMs)
+  assign(paste('all_delta_SMs', s, sep="_"), delta_SMs)
+  #assign(paste('delta_SMs_errorz', s, sep="_"), delta_SMs_errorz)
+  #assign(paste('all_confint_fit', s, sep="_"), confint_fit)
   assign(paste('all_N_Exp', s, sep="_"), N_Exp)
   assign(paste('all_N_Control', s, sep="_"), N_Control)
   
@@ -2123,26 +2334,26 @@ for (s in 1:length(scaling_factor)) {
 end_time <- Sys.time()
 end_time-start_time
 
-colMeans(all_betas_1)
-
+colMeans(all_betas_SMs_1)
+#> colMeans(all_betas_SMs_1)
+#Treat visit42:Treat 
+#-1.637695     -1.783089 
 
 tolerance_margin <- 0.1 
 
-difference_Verification <- abs(treatmenteffect - colMeans(all_delta_1))
+difference_Verification_SMs <- abs(treatmenteffect - colMeans(all_delta_SMs_1))
 
 # check if the result satisfies the inequality
-ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
+ifelse(isTRUE(paste(difference_Verification_SMs) < tolerance_margin), "Verification SMs *SUCCESSFUL*", "Verification SMs NOT successful :(") 
 
 
 
-min(all_betas_1)
-max(all_betas_1)
+min(all_betas_SMs_1)
+max(all_betas_SMs_1)
 
 
 
 # Table for the paper ----
-
-
 
 table_AE_SMs <- data.frame(
   # descriptives AE  
@@ -2232,7 +2443,7 @@ gt(tab2_SMs) |>
     columns = c("%", "% ", " % "),
     colors = scales::col_numeric(
       palette = c(
-        "light blue"),
+        "#add8e6"),
       domain = NULL)
   ) |> 
   cols_align(
@@ -2253,5 +2464,8 @@ gt(tab2_SMs) |>
 
 ## Session info---- 
 sessionInfo()
+#
+
+
 installed.packages()
 

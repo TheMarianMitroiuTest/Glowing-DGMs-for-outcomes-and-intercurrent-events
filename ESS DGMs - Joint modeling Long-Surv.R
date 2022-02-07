@@ -16,7 +16,7 @@
 # add the ceiling to make sure the time to event are at the next visit.
 # change 0 to Inf for those that do not experience the intercurrent event.
 ### DGM
-rm(list=ls())
+#rm(list=ls())
 library(gmailr)
 library(MASS)
 library(tidyverse)
@@ -47,12 +47,9 @@ Scenario <- c("A")
 
 # simulation
 
-
 set.seed(2147483629) # set seed for reproducibility
-
 n <- 190# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
-
 m.iterations <- 500 # 416 as per the LMM also used in the SPM DGM to verify the longitudinal outcomes
 
 # proportions of Intercurrent events. These correspond to the qt values for the standardisation of time to IE
@@ -70,14 +67,12 @@ treatmenteffect <- -3.5
 
 adjustment.fctr <- 1.15
 
-
 visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# schduled visits
 
-
-delta <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
-colnames(delta) <-c("TreatmentEffect")
-betas <- matrix(ncol=2,nrow=m.iterations) # object to store parameters for the treatment effect at week 6 based on the MMRM model fitted on each generated dataset
-colnames(betas) <-c("Treat", "visit42:Treat")
+delta_jm <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
+colnames(delta_jm) <-c("TreatmentEffect")
+betas_jm <- matrix(ncol=2,nrow=m.iterations) # object to store parameters for the treatment effect at week 6 based on the MMRM model fitted on each generated dataset
+colnames(betas_jm) <-c("Treat", "visit42:Treat")
 
 pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
 
@@ -192,49 +187,6 @@ for (m in 1:m.iterations) {
   #bi_covm <- matrix(c(24.611, 0.5869809, 0.5869809, 1.157), nrow = 2) original
   bi <- mvrnorm(n, bi_means, bi_covm)	# generate random effects for n patients, with bi_means and covariance bi_covm
   eps.sd <-3.285955 # 3.247  # residual error
-  
-  
-  
-  # summary(fit_lme)
-  # you should get:
-  #> summary(fit_lme)
-  #Linear mixed-effects model fit by REML
-  #Data: SimTrial_sm_2000_1_5 
-  #AIC      BIC    logLik
-  #62297.98 62348.92 -31141.99
-  
-  #Random effects:
-  #  Formula: ~1 + Visit | id
-  #Structure: General positive-definite, Log-Cholesky parametrization
-  #StdDev   Corr  
-  #(Intercept) 4.450225 (Intr)
-  #Visit       1.285742 0.406 
-  #Residual    3.146991       
-  
-  #Fixed effects:  MADRS10 ~ Visit + Visit:Treat 
-  #Value  Std.Error   DF   t-value
-  #(Intercept)  29.431012 0.11225159 8702 262.18792
-  #Visit        -0.778194 0.05138492 8702 -15.14440
-  #Visit:Treat1 -0.680775 0.07275641 8702  -9.35691
-  #p-value
-  #(Intercept)        0
-  #Visit              0
-  #Visit:Treat1       0
-  #Correlation: 
-  #  (Intr) Visit 
-  #Visit         0.049       
-  #Visit:Treat1  0.002 -0.704
-  
-  #Standardized Within-Group Residuals:
-  #  Min           Q1          Med           Q3 
-  #-3.728498689 -0.555451594  0.003379324  0.559799434 
-  #Max 
-  #3.437608725 
-  
-  #Number of Observations: 10704
-  #Number of Groups: 2000 
-  
-  
 
 
 d <- data.frame(
@@ -265,8 +217,6 @@ p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id))
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
   scale_y_continuous(limits = c(-10, 60))
 
-
-
 fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat, 
                random=~1 + visit| id,
                method="REML", 
@@ -276,8 +226,8 @@ fit_lme <- lme(fixed=MADRS10_collected ~ visit + visit:Treat,
 
 summary(fit_lme)
 #m<-1
-betas[m, ] <- fixef(fit_lme)[2:3]
-delta[m, ] <- fixef(fit_lme)[3] * max(visits)
+betas_jm[m, ] <- fixef(fit_lme)[2:3]
+delta_jm[m, ] <- fixef(fit_lme)[3] * max(visits)
 
 
 #m<-1
@@ -297,14 +247,14 @@ N_Control[m,] <- Randomised_Control
 
 
 
-intercept_LoE <- 3.3639
-c_LoE <- 0.1616 #-0.5# coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
-Alpha_LoE <- -0.0447
+intercept_LoE <- 2.8789#3.3639
+c_LoE <- 0.3111#0.1616 #-0.5# coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
+Alpha_LoE <- -0.0279#-0.0447
 # parameters of the Weibull distributions
 # To fit with the assumptions, a trial-and-error/finetuning process can be employed, to find/generate the distribution that fits with the targeted survival data to be generated.
 
-lambda_LoE 	<- 1.8329 #3.5			# scale parameter
-nu_LoE 		<- 	1.8329 #1.4		# shape parameter
+lambda_LoE 	<- 1.7618#1.8329 #3.5			# scale parameter
+nu_LoE 		<- 	1.7618#1.8329 #1.4		# shape parameter
 # other distributions could be used (e.g., exponential) to describe the time to intercurrent event distribution.
 
 # linear predictor
@@ -325,7 +275,7 @@ t.event_LoE <- (-log(rep(runif(length(unique(d$id))), each=length(visits)))/(lam
 # Other Weibull distributions (parameters) can be used to better describe the wanted time to events
 # Depending on the desired percentages of intercurrent events and how they can be achieved. The standardisation can be used such that only a certain percentage of patients experience
 # the intercurrent event during the trial (e.g., standardise it to fit to longer than end of trial (week 6), or it can be standardised to week 6 and then use a Binomial distribution to
-# achieve a certain percentage, as we illustrate and use below).
+# achieve a certain percentage
 
 #describe(t.event_LoE)
 d$time.LoE <- t.event_LoE
@@ -347,8 +297,6 @@ hist(d$t.LoE[d$Treat==1])
 # this particular step could be also used piecewise with different Binomial probabilities for time intervals, while keeping the intercurrent event percentage similar at  trial level.
 
 
-
-
 #d$t.LoE <- d$t.LoE * rep(rbinom(n, 1, 0.5), each = length(visits))
 # this particular step could be also used piecewise with different Binomial probabilities for time intervals, while keeping the intercurrent event percentage similar at  trial level.
 
@@ -368,7 +316,6 @@ d$LoE_yes <- ifelse(d$t.LoE <=6 & d$t.LoE!=0, 1, 0)
     #View(d[,c(1, 3, 4, 5, 8, 9)])
     #View(d)
 
-
 #describe(t.event_LoE[d$Treat==1])
 #describe(t.event_LoE[d$Treat==0])
 #View(d)
@@ -383,25 +330,21 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE pattern")
 
 
-
 # LoE
 p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id, color=factor(LoE_yes))) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-LoE all")
 
-
-
 #Weibull model for Adverse events in both arms. Standardisation after generating the survival times.
 
-
-intercept_AE <- 4.0580
-c_AE <- -0.7469 #-0.5# coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
-Alpha_AE <- -0.0014
+intercept_AE <- 3.7550#4.0580
+c_AE <- -0.5394-0.7469 #-0.5# coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
+Alpha_AE <- 0.0076#-0.0014
 # parameters of the Weibull distributions
 # To fit with the assumptions, a trial-and-error/finetuning process can be employed, to find/generate the distribution that fits with the targeted survival data to be generated.
 
-lambda_AE 	<- 0.9785 #3.5			# scale parameter
-nu_AE 		<- 	0.9785 #1.4		# shape parameter
+lambda_AE 	<- 0.9719#0.9785 #3.5			# scale parameter
+nu_AE 		<- 	0.9719#0.9785 #1.4		# shape parameter
 # other distributions could be used (e.g., exponential) to describe the time to intercurrent event distribution.
 
 # linear predictor
@@ -441,14 +384,10 @@ d$AE_yes <- ifelse(d$t.AE <=6 & d$t.AE!=0, 1, 0)
 
 #describe(d$t.AE)
 
-
-
 #describe(t.event_AE[d$Treat==1])
 #describe(t.event_AE[d$Treat==0])
 #View(d)
 head(d)
-
-
 
 
 # just AE all
@@ -457,16 +396,13 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-AE pattern")
 
 
-
 # AE all
 p<- ggplot(data = d, aes(x = visit, y = MADRS10_collected, group = id, color=factor(AE_yes))) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat)+
   scale_y_continuous(limits = c(-10, 60))+ ggtitle("JM-AE all")
 
 
-
 d_united <- d
-
 
 
 class(d_united$visit)
@@ -488,7 +424,6 @@ d_united$Behavior <- ifelse(d_united$AE_YES==1, "AE",
 #describe(d_united$Behavior)
 
 
-
 #### assign and save the generated datasets----
 # naming sequence is "SimTrial"_"Method"_"trial sample size"_"iteration number"
 
@@ -497,7 +432,6 @@ assign(paste0("SimTrial_jm", "_", n), d)
 dataset_name.Rdata <- paste0("SimTrial_jm", "_", n, ".Rdata")
 dataset_name <- paste0("SimTrial_jm", "_", n)
 save(dataset_name, file = dataset_name.Rdata)
-
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -560,7 +494,6 @@ AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
 
 
 
-
 p<- ggplot(data = d_united, aes(x = visit, y = MADRS10_collected, group = id)) 
 p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape = 18, size = 3, col="red") + facet_wrap(~ Treat) +
   scale_y_continuous(limits = c(-10, 60))
@@ -611,22 +544,18 @@ end_time-start_time
 
 
 
-betas; 
-colMeans(delta); treatmenteffect
+betas_jm; 
+colMeans(delta_jm); treatmenteffect
 
 tolerance_margin <- 0.1 
-difference_Verification <- abs(treatmenteffect - colMeans(delta))
+difference_Verification_jm <- abs(treatmenteffect - colMeans(delta_jm))
 
 # check if the result satisfies the inequality
-ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
+ifelse(isTRUE(paste(difference_Verification_jm) < tolerance_margin), "Verification JM *SUCCESSFUL*", "Verification JM NOT successful :(") 
 
 
 
 
-
-
-
-# compile to report
 
 # Table for the paper ----
 
@@ -637,8 +566,6 @@ table_AE_JM <- data.frame(
 
 mean(n_AE_Control)
 mean(n_AE_Exp)
-
-
 
 
 # descriptives LoE  
@@ -782,18 +709,18 @@ installed.packages()
 ## ONLY AFTER ALL four DGMs have been ran
 ## Plots for the paper after running all DGMs
 ## LoE patterns side by side by each DGM
-(plot_LoE_SM + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
+(plot_LoE_SMd + plot_LoE_PMMM) / (plot_LoE_SPM + plot_LoE_JM)
 
 ### AE patterns side by side by each DGM
-(plot_AE_SM + plot_AE_PMMM) / (plot_AE_SPM + plot_AE_JM)
+(plot_AE_SMd + plot_AE_PMMM) / (plot_AE_SPM + plot_AE_JM)
 
 
 ### No IE patterns side by side by each DGM
-(plot_NoIE_SM + plot_NoIE_PMMM) / (plot_NoIE_SPM + plot_NoIE_JM)
+(plot_NoIE_SMd + plot_NoIE_PMMM) / (plot_NoIE_SPM + plot_NoIE_JM)
 
 
 ### All patterns in a trial side by side by each DGM
-(plot_all_SM + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
+(plot_all_SMd + plot_all_PMMM) / (plot_all_SPM + plot_all_JM)
 
 
 

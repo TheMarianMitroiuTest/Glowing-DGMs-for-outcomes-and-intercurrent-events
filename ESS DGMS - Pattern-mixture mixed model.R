@@ -19,7 +19,7 @@
 # visualisation of longitudinal outcomes and intercurrent events\
 
 # with differing number of patients per pattern, the overall treatment effect will change obviously.
-# Need to finetune the betas for each pattern for all the wanted treatment effects and factoring in the scaling factor.
+# Need to finetune the betas_pmmm for each pattern for all the wanted treatment effects and factoring in the scaling factor.
 # create simple function to sample few and visualise them
 
 
@@ -90,10 +90,10 @@ prop_AE <-prop_AE_exp + prop_AE_control
 #colnames(CFE) <-c("N ceiled_floored", "% ceiled_floored", "scaling factor", "simulated trial n")
 
 visits <- as.numeric(c(0, 7, 14, 21, 28, 35, 42)) # number of measurements, baseline + follow-up measurements
-delta <- matrix(ncol=1,nrow=m.iterations) # treatment effect estimate at 6 weeks based on MMRM models fitted on each generated dataset
-colnames(delta) <-c("TreatmentEffect")
-betas <- matrix(ncol=1,nrow=m.iterations)
-colnames(betas) <-c("visit42:Treat")
+delta_pmmm <- matrix(ncol=1,nrow=m.iterations) # treatment effect estimate at 6 weeks based on MMRM models fitted on each generated dataset
+colnames(delta_pmmm) <-c("TreatmentEffect")
+betas_pmmm <- matrix(ncol=1,nrow=m.iterations)
+colnames(betas_pmmm) <-c("visit42:Treat")
 
 pb1 <- txtProgressBar(min = 0,  max=m.iterations, style=3) # progress bar in percentages relative to the total number of m.iterations
 
@@ -210,7 +210,7 @@ for (s in 1:length(scaling_factor)) {
           0, 0, 0, 0, 0, 0, size_diag), nrow = 7)
       
       
-# from a SM model as source trial with n=2000 and re_covm= re_covm3
+# from a SM model as source trial with n=2000 and re_covm3
 #[1,] 34.115 22.836 17.029 15.798 14.997 18.416 21.863
 #[2,] 22.836 34.115 26.096 21.885 16.963 18.191 18.452
 #[3,] 17.029 26.096 34.115 26.343 23.728 21.558 19.976
@@ -316,7 +316,7 @@ for (s in 1:length(scaling_factor)) {
       # MMRM on full outcome data LoE
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       # this is the raw dataset used to check the model fit
-      d_LoE_all <-d_LoE_all[,-5] # remove re (residuals) column from the dataset, they have been added to betas
+      d_LoE_all <-d_LoE_all[,-5] # remove re (residuals) column from the dataset, they have been added to betas_pmmm
       
       # assign this to another object to make sure each time for each analysis the dataset used is the same
       d_orig<-d_LoE_all # full outcome data
@@ -407,24 +407,26 @@ for (s in 1:length(scaling_factor)) {
       re_means <- c(0, 0, 0, 0, 0, 0, 0)
       
 #new covariance matrix  
-      #[,1]   [,2]    [,3]    [,4]    [,5]    [,6]    [,7]
-      #[1,]  7.3501 10.053  9.9303  9.2668  8.6346  9.8879  7.5346
-      #[2,] 10.0530 20.413 19.9910 18.0370 16.8690 19.2500 15.5700
-      #[3,]  9.9303 19.991 36.0570 31.6680 34.9120 36.6240 32.6440
-      #[4,]  9.2668 18.037 31.6680 41.2450 38.8030 39.3700 33.1060
-      #[5,]  8.6346 16.869 34.9120 38.8030 53.1860 50.1170 43.3090
-      #[6,]  9.8879 19.250 36.6240 39.3700 50.1170 65.2230 55.7720
-      #[7,]  7.5346 15.570 32.6440 33.1060 43.3090 55.7720 56.0990
+      #Marginal variance covariance matrix
+      #[,1]   [,2]   [,3]   [,4]   [,5]   [,6]    [,7]
+      #[1,] 10.2670 13.548 13.753 12.890 11.415 12.529  8.8644
+      #[2,] 13.5480 23.940 23.483 21.243 18.407 20.406 15.6570
+      #[3,] 13.7530 23.483 39.955 35.670 37.071 38.650 32.9240
+      #[4,] 12.8900 21.243 35.670 45.898 42.849 42.779 34.7890
+      #[5,] 11.4150 18.407 37.071 42.849 58.245 55.731 47.1980
+      #[6,] 12.5290 20.406 38.650 42.779 55.731 70.073 59.6430
+      #[7,]  8.8644 15.657 32.924 34.789 47.198 59.643 59.5540
+      #Standard Deviations: 3.2042 4.8929 6.321 6.7748 7.6319 8.371 7.7171 
 
       
       re_covm_AE_all <- matrix(
-        c( 7.3501, 10.053,  9.9303,  9.2668,  8.6346,  9.8879,  7.5346,
-          10.0530, 20.413, 19.9910, 18.0370, 16.8690, 19.2500, 15.5700,
-           9.9303, 19.991, 36.0570, 31.6680, 34.9120, 36.6240, 32.6440,
-           9.2668, 18.037, 31.6680, 41.2450, 38.8030, 39.3700, 33.1060,
-           8.6346, 16.869, 34.9120, 38.8030, 53.1860, 50.1170, 43.3090,
-           9.8879, 19.250, 36.6240, 39.3700, 50.1170, 65.2230, 55.7720,
-           7.5346, 15.570, 32.6440, 33.1060, 43.3090, 55.7720, 56.0990), nrow = 7)
+        c(10.2670, 13.548, 13.753, 12.890, 11.415, 12.529,  8.8644,
+          13.5480, 23.940, 23.483, 21.243, 18.407, 20.406, 15.6570,
+          13.7530, 23.483, 39.955, 35.670, 37.071, 38.650, 32.9240,
+          12.8900, 21.243, 35.670, 45.898, 42.849, 42.779, 34.7890,
+          11.4150, 18.407, 37.071, 42.849, 58.245, 55.731, 47.1980,
+          12.5290, 20.406, 38.650, 42.779, 55.731, 70.073, 59.6430,
+           8.8644, 15.657, 32.924, 34.789, 47.198, 59.643, 59.5540), nrow = 7)
       
       
 #covariance matrix used before 5-Feb-2022
@@ -507,7 +509,7 @@ for (s in 1:length(scaling_factor)) {
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       
       # this is the raw dataset used to check the model fit
-      d_AE_all <-d_AE_all[,-5] # remove re (residuals) column from the dataset, they have been added to betas
+      d_AE_all <-d_AE_all[,-5] # remove re (residuals) column from the dataset, they have been added to betas_pmmm
       
       # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       # change the numbers of the columns with the names of the variables
@@ -701,7 +703,7 @@ for (s in 1:length(scaling_factor)) {
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
       # this is the raw dataset used to check the model fit
-      d_No_IE <-d_No_IE[,-5] # remove re (residuals) column from the dataset, they have been added to betas
+      d_No_IE <-d_No_IE[,-5] # remove re (residuals) column from the dataset, they have been added to betas_pmmm
       
       # assign this to another object to make sure each time for each analysis the dataset used is the same
       d_orig<-d_No_IE # full outcome data
@@ -893,18 +895,18 @@ for (s in 1:length(scaling_factor)) {
     sum(fit_pmmm$coefficients[c(13)]); treatmenteffect_pmmm
     # store parameters from model fit on each dataset
     #summary(fit_pmmm)
-    betas[m, ] <- fit_pmmm$coefficients[c(13)]
+    betas_pmmm[m, ] <- fit_pmmm$coefficients[c(13)]
     
-    delta[m, ] <- sum(fit_pmmm$coefficients[c(13)])
-    #mean(delta)
+    delta_pmmm[m, ] <- sum(fit_pmmm$coefficients[c(13)])
+    #mean(delta_pmmm)
     #bias_f[m, ] <- sum(fit_pmmm$coefficients[c(7,13)]) - treatmenteffect
     
-    #delta_error <- sqrt(vcov(fit_pmmm)["Treat1", "Treat1"] + vcov(fit_pmmm)["visit42:Treat1", "visit42:Treat1"] + 2*vcov(fit_pmmm)["Treat1", "visit42:Treat1"]) 
+    #delta_pmmm_error <- sqrt(vcov(fit_pmmm)["Treat1", "Treat1"] + vcov(fit_pmmm)["visit42:Treat1", "visit42:Treat1"] + 2*vcov(fit_pmmm)["Treat1", "visit42:Treat1"]) 
     
-    #delta_errorz[m, ] <- delta_error 
+    #delta_pmmm_errorz[m, ] <- delta_pmmm_error 
     
-    #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_error
-    #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_error
+    #confint_fit[m,1] <- sum(fit$coefficients[c(7,13)])-qnorm(0.975)*delta_pmmm_error
+    #confint_fit[m,2] <- sum(fit$coefficients[c(7,13)])+qnorm(0.975)*delta_pmmm_error
     
     #### assign and save the generated datasets----
     # naming sequence is "SimTrial"_"Method"_"trial sample size"_"iteration number"_"scaling factor"
@@ -998,13 +1000,13 @@ for (s in 1:length(scaling_factor)) {
   
   
   # parameters extracted for MMRM fitted models on full outcome data
-  colMeans(betas)
-  colMeans(delta) ; treatmenteffect_pmmm
+  colMeans(betas_pmmm)
+  colMeans(delta_pmmm) ; treatmenteffect_pmmm
 
   # assign   
-  assign(paste('all_betas', s, sep="_"), betas)
+  assign(paste('all_betas_pmmm', s, sep="_"), betas_pmmm)
   
-  assign(paste('all_delta', s, sep="_"), delta)
+  assign(paste('all_delta_pmmm', s, sep="_"), delta_pmmm)
   
   setTxtProgressBar(pb3, s)
 }
@@ -1012,26 +1014,26 @@ end_time <- Sys.time()
 
 end_time-start_time
 
-all_betas_1; 
-colMeans(all_delta_1); treatmenteffect_pmmm
+all_betas_pmmm_1; 
+colMeans(all_delta_pmmm_1); treatmenteffect_pmmm
 
 
 tolerance_margin <- 0.1 
 
-difference_Verification <- abs(treatmenteffect_pmmm - colMeans(all_delta_1))
+difference_Verification_pmmm <- abs(treatmenteffect_pmmm - colMeans(all_delta_pmmm_1))
 
 # check if the result satisfies the inequality
-ifelse(isTRUE(paste(difference_Verification) < tolerance_margin), "Verification SUCCESSFUL", "Verification NOT successful") 
+ifelse(isTRUE(paste(difference_Verification_pmmm) < tolerance_margin), "Verification PMMM *SUCCESSFUL*", "Verification PMMM NOT successful :(") 
 
-#hist(treatmenteffect_pmmm - all_betas_1)
+#hist(treatmenteffect_pmmm - all_betas_pmmm_1)
 
-#hist(all_betas_1)
+#hist(all_betas_pmmm_1)
 
-#colMeans(all_betas_1) + 1.96*sd(all_betas_1)/sqrt(n)
-#colMeans(all_betas_1) - 1.96*sd(all_betas_1)/sqrt(n)
+#colMeans(all_betas_pmmm_1) + 1.96*sd(all_betas_pmmm_1)/sqrt(n)
+#colMeans(all_betas_pmmm_1) - 1.96*sd(all_betas_pmmm_1)/sqrt(n)
 
-min(all_betas_1)
-max(all_betas_1)
+min(all_betas_pmmm_1)
+max(all_betas_pmmm_1)
 
 
 # Table for the paper ----
@@ -1148,11 +1150,11 @@ gt(tab2_PMMM) |>
   )
 
 
-colMeans(all_delta_1); treatmenteffect_pmmm
+colMeans(all_delta_pmmm_1); treatmenteffect_pmmm
 
-min(all_delta_1)
-max(all_delta_1)
-hist(all_delta_1)
+min(all_delta_pmmm_1)
+max(all_delta_pmmm_1)
+hist(all_delta_pmmm_1)
 
 
 ## Session info---- 
