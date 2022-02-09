@@ -664,7 +664,6 @@ gt(tab2_JM) |>
   )
 
 
-
 ## Session info---- 
 sessionInfo()
 # 6 February 2022
@@ -703,8 +702,6 @@ installed.packages()
 
 
 
-
-
 # PLOT EVERYTHING----
 ## ONLY AFTER ALL four DGMs have been ran
 ## Plots for the paper after running all DGMs
@@ -724,9 +721,8 @@ installed.packages()
 
 
 
-
 # determine the number of trials needed to simulate for the verification of the longitudinal outcomes
 # the underlying linear mixed effects model used in the JM is the exact same linear mixed effects model from the SPM DGM
 # please see details there.
-# the verification was successful, obviously.
+# the verification was successful, obviously, as in SPM.
 

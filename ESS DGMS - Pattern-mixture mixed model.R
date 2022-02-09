@@ -66,7 +66,6 @@ Scenario <- c("A")
 ## simulation parameters #----
 
 set.seed(2147483629) # set seed
-#set.seed(2147483399)
 m.iterations <- 500 # 482 is the number of trials needed for the verification of the longitudinal outcomes # number of generated datasets # number of trials per scaling factor
 scaling_factor <-  c(1) # this is used for coding consistency between the four methods.
 # In this simulation the scaling factor does not play any role.
@@ -988,11 +987,8 @@ for (s in 1:length(scaling_factor)) {
     
     # Total AE + LoE and percentage relative to the entire study population
     
-    
     n_AE_and_LoE_T[m, ] <- LoE_Y_total + AE_Y_total
     AE_and_LoE_Perc[m, ] <- round((LoE_Y_total + AE_Y_total)/n*100, digits=2)
-    
-    
     
     
     setTxtProgressBar(pb1, m)

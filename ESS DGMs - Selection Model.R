@@ -41,7 +41,7 @@
 
 
 ## load libraries ----
-rm(list=ls()) #
+#rm(list=ls()) #
 library(gmailr)
 library(MASS)#
 library(tidyverse)#
@@ -741,7 +741,7 @@ ifelse(isTRUE(paste(difference_Verification_SMd) < tolerance_margin), "Verificat
 # Plot relevant graphs for the paper----
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-the_plot_SM <- (plot_all_SM / plot_LoE_SM) | (plot_AE_SM / plot_NoIE_SM); the_plot_SM
+the_plot_SMd <- (plot_all_SMd / plot_LoE_SMd) | (plot_AE_SMd / plot_NoIE_SMd); the_plot_SMd
 
 
 
@@ -1724,7 +1724,7 @@ summary(jointFit.AE)
  # most of the code below is very similar with the code above, in terms of scope and operational reasons, as well as meaning and interpretation
  # code for longitudinal outcomes generation is as above
 
-rm(list=ls()) #
+#rm(list=ls()) #
 # needed for the selection model method
 library(gmailr)
 library(MASS)#
@@ -1752,7 +1752,7 @@ Scenario <- c("A")
 
 #set.seed(2147483399)
 n <- 190# number of patients at trial level to be randomised 1:1, experimental and control arm. 190 in total
-m.iterations <- 2# 382number of generated datasets # number of trials per scaling factor
+m.iterations <- 500# 382number of generated datasets needed for verification of longitudinal outcomes# number of trials per scaling factor
 scaling_factor <-  c(1)#c(0.5, 1.0, 1.5, 2.0, 2.5)
 # total number of simulated trials = m.iterations * length(scaling_factor)
 # try with c(0.4, 1.1, 1.8, 2.3, 3)
@@ -2464,7 +2464,35 @@ gt(tab2_SMs) |>
 
 ## Session info---- 
 sessionInfo()
-#
+# 7 February 2022
+#> sessionInfo()
+#R version 4.1.2 (2021-11-01)
+#Platform: x86_64-apple-darwin17.0 (64-bit)
+#Running under: macOS Monterey 12.1
+
+#Matrix products: default
+#LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+#Random number generation:
+#  RNG:     Mersenne-Twister 
+#Normal:  Inversion 
+#Sample:  Rounding 
+
+#locale:
+#  [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+#attached base packages:
+#  [1] splines   stats     graphics  grDevices utils    
+#[6] datasets  methods   base     
+
+#other attached packages:
+#  [1] JM_1.4-8        foreign_0.8-82  survival_3.2-13
+#[4] patchwork_1.1.1 gt_0.3.1        janitor_2.1.0  
+#[7] lme4_1.1-28     Matrix_1.4-0    nlme_3.1-155   
+#[10] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.7    
+#[13] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0    
+#[16] tibble_3.1.6    ggplot2_3.3.5   tidyverse_1.3.1
+#[19] MASS_7.3-55     gmailr_1.0.1   
 
 
 installed.packages()
