@@ -50,7 +50,7 @@ Scenario <- c("A")
 set.seed(2147483629) # set seed for reproducibility
 n <- 190# number of patients to be simulated (sample size)
 # this is based on a t-test to ensure  90% power at alpha level=0.025 one-sided 
-m.iterations <- 500 # 416 as per the LMM also used in the SPM DGM to verify the longitudinal outcomes
+m.iterations <- 1 # 416 as per the LMM also used in the SPM DGM to verify the longitudinal outcomes
 
 # proportions of Intercurrent events. These correspond to the qt values for the standardisation of time to IE
 # for 0.35 LoE
