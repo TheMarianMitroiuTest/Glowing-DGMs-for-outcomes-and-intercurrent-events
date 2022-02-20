@@ -338,7 +338,7 @@ p + geom_line() + stat_summary(aes(group = 1), geom = "point", fun = mean, shape
 #Weibull model for Adverse events in both arms. Standardisation after generating the survival times.
 
 intercept_AE <- 3.7550#4.0580
-c_AE <- -0.5394-0.7469 #-0.5# coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
+c_AE <- -0.5394#-0.7469 #-0.5# coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
 Alpha_AE <- 0.0076#-0.0014
 # parameters of the Weibull distributions
 # To fit with the assumptions, a trial-and-error/finetuning process can be employed, to find/generate the distribution that fits with the targeted survival data to be generated.
