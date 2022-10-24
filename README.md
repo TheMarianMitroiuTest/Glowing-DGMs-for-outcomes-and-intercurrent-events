@@ -2,7 +2,7 @@
 © 2021 See license for code
 
 Data-generating models for outcomes and intercurrent events in order to evaluate estimation methods of estimands
-Preliminary work needed for the Application paper Mitroiu et al. SMMR
+Preliminary work needed for an Application paper (in preparation).
 
 Verbose and annotated R code is provided for four methods to model the joint distribution of outcomes and intercurrent events in order to simulate target trial data.
 
