@@ -12,4 +12,4 @@ Each of the four methods can be used to simulate target trial data of outcomes a
 
 An application companion paper is published where multiple estimands are evaluated using this methodology. 
 
-For questions or supplementary information, please contact the corresponding author at: themarianmitroiutest@gmail.com 
+For questions or supplementary information, please contact the corresponding author at: themarianmitroiutest@gmail.com or marian.mitroiu@icloud.com
