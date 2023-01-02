@@ -30,14 +30,18 @@ library(patchwork)
 
 
 
-google_app <- httr::oauth_app(
-  "renamedapp",
-  key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
-  secret = "Orgt-B5-eAEplGIbfWmr4Uhy"
-)
+## gmail setup----
+# setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
+# various tutorials can be found to set this up
 
-gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
-                  secret = "Orgt-B5-eAEplGIbfWmr4Uhy")
+#google_app <- httr::oauth_app(
+#  "renamedapp",
+#  key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
+#  secret = "Orgt-B5-eAEplGIbfWmr4Uhy"
+#)
+#
+#gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
+#                  secret = "Orgt-B5-eAEplGIbfWmr4Uhy")
 
 
 
