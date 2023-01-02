@@ -29,7 +29,9 @@ library(survival)
 library(gt)
 library(patchwork)
 
-# Setup to receive e-mails with results of simulations, very useful when running multiple simulations in parallel.
+## gmail setup----
+# setup to receive e-mails with results of the simulations. Useful to store results, but most importantly to be notified when the simulation is concluded.
+# various tutorials can be found to set this up
 
 #google_app <- httr::oauth_app(
 #  "renamedapp",
