@@ -52,14 +52,6 @@ Scenario <- c("A")
 # simulation
 
 
-
-
-#0.11*sqrt(24.611*1.157)
-
-#0.12*sqrt(24.893*1.049)
-# resume here, integrate this code in this structure
-
-
 ## simulation parameters #----
 
 set.seed(2147483629)
