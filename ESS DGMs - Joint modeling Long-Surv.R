@@ -244,7 +244,7 @@ N_Control[m,] <- Randomised_Control
 
 
 #################################################################
-# Cox model and survival for LoE at trial level amd within arms #
+# Weibull model and survival for LoE at trial level and within arms #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
