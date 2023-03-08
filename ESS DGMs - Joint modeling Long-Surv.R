@@ -248,7 +248,6 @@ N_Control[m,] <- Randomised_Control
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
-
 intercept_LoE <- 2.8789#3.3639
 c_LoE <- 0.3111#0.1616 #-0.5# coefficient for the Treatment in the linear predictor that contains also the random effects, to be used in the generation of the time to intercurrent event data
 Alpha_LoE <- -0.0279#-0.0447
