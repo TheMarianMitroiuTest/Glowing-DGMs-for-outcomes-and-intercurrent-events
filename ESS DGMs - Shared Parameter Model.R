@@ -786,6 +786,6 @@ installed.packages()
 
 #n.trials_needed <- ceiling(((qnorm(0.975) * std.e)/tolerance_margin)^2) ; n.trials_needed # for the verification 
 # 416 trials
-# verification of the longituinal outcomes was successful
+# verification of the longitudinal outcomes was successful
 
 
