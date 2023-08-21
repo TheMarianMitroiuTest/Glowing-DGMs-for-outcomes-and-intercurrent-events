@@ -1,6 +1,6 @@
 # License CC-BY-4.0 ----
 ## Creative Commons Attribution 4.0 International
-## Mitroiu M. et al SMMR
+## Mitroiu M. et al TBC
 
 
 # Simulation study ----
