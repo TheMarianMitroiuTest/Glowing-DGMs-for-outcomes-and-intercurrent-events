@@ -469,7 +469,7 @@ for (s in 1:length(scaling_factor)) {
     
     
     # determine adjustment factors (parameters) in order to obtain desired percentages of intercurrent events
-    # simulate a trial with samplesize 10^5, see how many patients fit the IE rules
+    # simulate a trial with sample size 10^5, see how many patients fit the IE rules
     # then determine adjustment factors for the Bernoulli process in order to obtain the desired percentages of intercurrent events
     
     
@@ -482,7 +482,7 @@ for (s in 1:length(scaling_factor)) {
         #View(d_mis_w)  
     
     # same method is applied for e.g., treatment discontinuations due to adverse events at arm level
-    # too much efficacy >8 points on MADRS10 at week 2
+    # too much efficacy >5 points on MADRS10 at week 2
     
     p_AE_Exp <- sample(p_AE_Exp_sample, 1) * scaling_factor[s]
     
