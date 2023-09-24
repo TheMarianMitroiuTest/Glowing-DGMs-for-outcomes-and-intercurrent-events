@@ -69,7 +69,7 @@ treatmenteffect <- -3.5
 
 adjustment.fctr <- 1.15
 
-visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# schduled visits
+visits <- as.numeric(c(0, 1, 2, 3, 4, 5, 6))	# scheduled visits
 
 delta_jm <- matrix(ncol=1,nrow=m.iterations) # object to store treatment effect estimates at 6 weeks based on MMRM model fitted on each generated dataset
 colnames(delta_jm) <-c("TreatmentEffect")
