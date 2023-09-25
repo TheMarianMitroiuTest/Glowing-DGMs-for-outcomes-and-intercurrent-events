@@ -35,12 +35,12 @@ library(patchwork)
 
 #google_app <- httr::oauth_app(
 #  "renamedapp",
-#  key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
-#  secret = "Orgt-B5-eAEplGIbfWmr4Uhy"
+#  key = "xx",
+#  secret = "xx"
 #)
 #
-#gm_auth_configure(key = "126364165263-nudc2q7h24voutu33a9i6pik9rjou09i.apps.googleusercontent.com",
-#                  secret = "Orgt-B5-eAEplGIbfWmr4Uhy")
+#gm_auth_configure(key = "xx",
+#                  secret = "xx")
 
 
 options(mc.cores = parallel::detectCores()) # M1 with parallel, Old1 without parallel
