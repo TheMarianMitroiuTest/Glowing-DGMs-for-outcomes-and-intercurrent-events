@@ -1,6 +1,7 @@
 ## License CC-BY-4.0 
 ## Creative Commons Attribution 4.0 International
-## Mitroiu M. et al TBC
+## Mitroiu M, Teerenstra S, Oude Rengerink K, Pétavy F, Roes K. Possible data-generating models of longitudinal continuous outcomes and intercurrent events to investigate estimands. Statistics in Biopharmaceutical Research. 
+## https://doi.org/10.1080/19466315.2024.2369266
 
 
 # Simulation study ----
