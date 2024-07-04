@@ -3,7 +3,7 @@
 
 Possible data-generating models of longitudinal continuous outcomes and intercurrent events to investigate estimands
 
-Preliminary work needed for simulation studies with intercurrent events and strategies for addressing intercurrent events.
+Preliminary work needed for simulation studies with intercurrent events and strategies for addressing intercurrent events to evaluate estimands.
 
 Verbose and annotated R code is provided for four methods to model the joint distribution of outcomes and intercurrent events in order to simulate target trial data.
 
